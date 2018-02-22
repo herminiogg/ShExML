@@ -11,8 +11,8 @@ object Main {
     val example =
       """
         |PREFIX ex: <http://ex.com/>
-        |SOURCE performances_json <events.json>
-        |SOURCE events_xml <events.xml>
+        |SOURCE performances_json <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.json>
+        |SOURCE events_xml <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.xml>
         |QUERY performances <$.Performances[*].Perf_ID>
         |QUERY events </Events/Exhibition/@id>
         |QUERY venues_ids <$.Performances[*].Venue.Venue_ID>
