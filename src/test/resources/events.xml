@@ -1,0 +1,16 @@
+<Events>
+ <Exhibition id="398">
+ <Venue>STAM</Venue>
+  <Location>
+   <lat>51.076891</lat>
+   <long>3.717222</long>
+  </Location>
+ </Exhibition>
+ <Exhibition id="444">
+ <Venue>STOM</Venue>
+  <Location>
+   <lat>51.076891</lat>
+   <long>3.717222</long>
+  </Location>
+ </Exhibition>
+</Events>
