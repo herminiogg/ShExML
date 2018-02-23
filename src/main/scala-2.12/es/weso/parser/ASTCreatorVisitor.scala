@@ -7,6 +7,7 @@ import es.weso.ast.URL
 import org.antlr.v4.runtime.tree.TerminalNode
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 
 /**
@@ -115,7 +116,7 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
   }
 
   def createVar(variable: TerminalNode): Var = {
-    Var(variable.getText)
+    Var(Try(variable.getText).getOrElse(""))
   }
 
   def createShapeVar(tripleElementContext: TripleElementContext): ShapeVar = {
