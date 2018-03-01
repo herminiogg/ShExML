@@ -37,13 +37,14 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val zipped = predicateObjectsList.map((_, actions))
       zipped.foreach {
         case (p, a) => {
-          if(a != null && p!= null && a.length == p.length) {
-            for (i <- p.indices) {
-              val predicateObject = p(i).split(" ")
-              if(predicateObject(1).contains(":"))
-                output.add(createStatement(prefixTable(shapePrefix) + a(i), predicateObject(0), predicateObject(1)))
+          if(a != null && p!= null && a.length <= p.length) {
+            for (i <- a.indices) {
+              val predicateObject = p(i).split(" ", 2)
+              val action = a(i).replace(" ", "_")
+              if(predicateObject(1).contains("http://") || predicateObject(1).contains("https://"))
+                output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1).replace(" ", "_")))
               else
-                output.add(createStatementWithLiteral(prefixTable(shapePrefix) + a(i), predicateObject(0), predicateObject(1)))
+                output.add(createStatementWithLiteral(prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1)))
             }
           }
         }
