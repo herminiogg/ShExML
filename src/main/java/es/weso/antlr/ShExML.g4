@@ -57,4 +57,4 @@ WS: [ \t\n\r] -> skip ;
 
 fragment LETTER: [a-zA-Z] ;
 fragment DIGIT: [0-9] ;
-fragment ALLOWED_CHARACTERS: LETTER | DIGIT | '[' | ']' | '*' | '_' | '/' | '@' | ',' | '.' | '%' | '-' | '(' | ')' ;
+fragment ALLOWED_CHARACTERS: LETTER | DIGIT | '[' | ']' | '*' | '_' | '/' | '@' | ',' | '.' | '%' | '-' | '(' | ')' | '?' | '=' | '&' ;

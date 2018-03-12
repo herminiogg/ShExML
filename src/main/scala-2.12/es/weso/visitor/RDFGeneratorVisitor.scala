@@ -40,9 +40,9 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           if(a != null && p!= null && a.length <= p.length) {
             for (i <- a.indices) {
               val predicateObject = p(i).split(" ", 2)
-              val action = a(i).replace(" ", "_")
+              val action = normaliseURI(a(i))
               if(predicateObject(1).contains("http://") || predicateObject(1).contains("https://"))
-                output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1).replace(" ", "_")))
+                output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
               else
                 output.add(createStatementWithLiteral(prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1)))
             }
@@ -66,22 +66,23 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
     case ObjectElement(prefix, action) => {
       val result = doVisit(action, optionalArgument)
-      result.asInstanceOf[List[String]].map(prefixTable.getOrElse(prefix, "") + _)
+      result.asInstanceOf[List[_]].map(_.toString).map(prefixTable.getOrElse(prefix, "") + _)
     }
 
     case Union(left, right) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[String]]
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[String]]
+      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[_]].map(_.toString)
+      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[_]].map(_.toString)
       leftList.union(rightList)
     }
 
     case Join(left, right, join) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[String]]
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[String]]
-      val joinList = doVisit(join, optionalArgument).asInstanceOf[List[String]]
-      val joinUnionList = leftList.indices.map(i => {
-        if(rightList(i) == joinList(i)) leftList(i) else rightList(i)
-      })
+      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[_]].map(_.toString)
+      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[_]].map(_.toString)
+      val joinList = doVisit(join, optionalArgument).asInstanceOf[List[_]].map(_.toString)
+      val joinUnionList = for (i <- rightList.indices) yield {
+        val index = joinList.indexOf(rightList(i))
+        if(index >= 0) leftList(index) else rightList(i)
+      }
       leftList.union(joinUnionList)
     }
 
@@ -91,8 +92,8 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case StringOperation(left, right, unionString) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[String]]
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[String]]
+      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[_]].map(_.toString)
+      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[_]].map(_.toString)
       for ((l, r) <- leftList zip rightList) yield l + unionString + r
     }
 
@@ -156,6 +157,13 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       XSDDatatype.XSDboolean
     else
       XSDDatatype.XSDstring
+  }
+
+  private def normaliseURI(uri: String): String = {
+    uri.replaceAll("[\\s,_()']", "_")
+      .replace("&quot;", "")
+      .replace("&#209;", "N").replace("&#241;", "n")
+      .replace("&#220;", "U").replace("&#252;", "u")
   }
 
 }
