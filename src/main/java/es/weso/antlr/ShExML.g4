@@ -53,6 +53,7 @@ JSONPATH: '$.' ALLOWED_CHARACTERS* ;
 XMLPATH: '/' ALLOWED_CHARACTERS* ;
 URL: ('http' | 'https' | 'file') '://' ALLOWED_CHARACTERS* ;
 STRINGOPERATOR: '"' ALLOWED_CHARACTERS+ '"' ;
+COMMENT: '#' ~[\r\n]* -> skip ;
 WS: [ \t\n\r] -> skip ;
 
 fragment LETTER: [a-zA-Z] ;

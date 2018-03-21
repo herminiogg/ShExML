@@ -23,7 +23,7 @@ public class ShExMLParser extends Parser {
 		GREATER_SYMBOL=8, DOLLAR=9, BRACKET_LEFT=10, BRACKET_RIGHT=11, BRACE_LEFT=12, 
 		BRACE_RIGHT=13, SEMICOLON=14, DOT=15, AT=16, ADD=17, QUOTE=18, VAR=19, 
 		NORMAL_VAR=20, URI_VAR=21, JSONPATH=22, XMLPATH=23, URL=24, STRINGOPERATOR=25, 
-		WS=26;
+		COMMENT=26, WS=27;
 	public static final int
 		RULE_shExML = 0, RULE_decl = 1, RULE_prefix = 2, RULE_source = 3, RULE_query = 4, 
 		RULE_expression = 5, RULE_exp = 6, RULE_stringOperation = 7, RULE_sourceQuery = 8, 
@@ -47,7 +47,8 @@ public class ShExMLParser extends Parser {
 		null, "PREFIX", "SOURCE", "QUERY", "EXPRESSION", "UNION", "JOIN", "LESS_SYMBOL", 
 		"GREATER_SYMBOL", "DOLLAR", "BRACKET_LEFT", "BRACKET_RIGHT", "BRACE_LEFT", 
 		"BRACE_RIGHT", "SEMICOLON", "DOT", "AT", "ADD", "QUOTE", "VAR", "NORMAL_VAR", 
-		"URI_VAR", "JSONPATH", "XMLPATH", "URL", "STRINGOPERATOR", "WS"
+		"URI_VAR", "JSONPATH", "XMLPATH", "URL", "STRINGOPERATOR", "COMMENT", 
+		"WS"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -1468,7 +1469,7 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\34\u00b4\4\2\t\2"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\35\u00b4\4\2\t\2"+
 		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\3\2\7\2\60\n\2\f\2"+
