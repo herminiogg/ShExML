@@ -90,6 +90,30 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterMatcher(ShExMLParser.MatcherContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMatcher(ShExMLParser.MatcherContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterReplacedStrings(ShExMLParser.ReplacedStringsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitReplacedStrings(ShExMLParser.ReplacedStringsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterExp(ShExMLParser.ExpContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -277,6 +301,18 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitPrefixVar(ShExMLParser.PrefixVarContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVariable(ShExMLParser.VariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVariable(ShExMLParser.VariableContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

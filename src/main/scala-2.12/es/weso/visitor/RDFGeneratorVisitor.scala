@@ -64,9 +64,13 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action) => {
+    case ObjectElement(prefix, action, matcher) => {
       val result = doVisit(action, optionalArgument)
-      result.asInstanceOf[List[_]].map(_.toString).map(prefixTable.getOrElse(prefix, "") + _)
+      val matchedResultList = matcher match {
+        case Some(matcherVar) => doVisit(matcherVar, result)
+        case None => result
+      }
+      matchedResultList.asInstanceOf[List[_]].map(_.toString).map(prefixTable.getOrElse(prefix, "") + _)
     }
 
     case Union(left, right) => {
@@ -122,6 +126,11 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
         case Some(xPathQuery) => fileContent.evalXPath[List[String]](xPathQuery).getOrElse(Nil)
         case None => throw new Exception("Bad xPath query")
       }
+    }
+
+    case Matcher(_, replacedStrings, replacement) => {
+      val listToMatch = optionalArgument.asInstanceOf[List[_]].map(_.toString)
+      listToMatch.map(s => if(replacedStrings.strings.contains(s)) replacement else s)
     }
 
     case ShapeLink(shapeVar) => {

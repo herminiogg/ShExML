@@ -17,6 +17,7 @@ case class Prefix(name: Var, url: URL) extends DeclarationStatement
 case class Source(name: Var, filePath: URL) extends DeclarationStatement
 case class Query(name: Var, queryClause: QueryClause) extends DeclarationStatement
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
+case class Matcher(name: Var, replacedStrings: ReplacedStrings, replacement: String) extends DeclarationStatement with VarResult
 
 
 sealed trait QueryClause extends VarResult {
@@ -49,9 +50,10 @@ case class Predicate(prefix: String, extension: String) extends AST
 
 sealed trait ObjectOrShapeLink extends AST
 
-case class ObjectElement(prefix: String, action: ExpOrVar) extends ObjectOrShapeLink
+case class ObjectElement(prefix: String, action: ExpOrVar, matcher: Option[Var]) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 
 sealed trait VarResult extends AST
 
 case class URL(url: String) extends VarResult
+case class ReplacedStrings(strings: List[String]) extends AST
