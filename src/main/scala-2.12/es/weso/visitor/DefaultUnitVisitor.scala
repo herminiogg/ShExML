@@ -47,7 +47,7 @@ abstract class DefaultUnitVisitor {
       doVisit(predicate)
     }
 
-    case ObjectElement(_, action) => doVisit(action)
+    case ObjectElement(_, action, _) => doVisit(action)
 
     case _ => // do nothing
   }

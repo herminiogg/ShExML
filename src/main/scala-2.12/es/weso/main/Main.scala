@@ -10,7 +10,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     val example =
       """
-        |PREFIX ex: <http://ex.com/>
+        |PREFIX : <http://ex.com/>
         |SOURCE performances_json <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.json>
         |SOURCE events_xml <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.xml>
         |QUERY performances <$.Performances[*].Perf_ID>
@@ -29,14 +29,14 @@ object Main {
         |EXPRESSION lat_union <$performances_json.lat_json UNION $events_xml.lat_xml>
         |EXPRESSION long_union <$performances_json.long_json UNION $events_xml.long_xml>
         |
-        |ex:Performance ex:[performances_union] {
-        |  ex:venue ex:[venues_union] ;
-        |  ex:location @ex:Location ;
+        |:Performance :[performances_union] {
+        |  :venue :[venues_union] ;
+        |  :location @:Location ;
         |}
         |
-        |ex:Location ex:[location_union] {
-        |  ex:lat [lat_union] ;
-        |  ex:long [long_union] ;
+        |:Location :[location_union] {
+        |  :lat [lat_union] ;
+        |  :long [long_union] ;
         |}
       """.stripMargin
     val mappingLauncher = new MappingLauncher()

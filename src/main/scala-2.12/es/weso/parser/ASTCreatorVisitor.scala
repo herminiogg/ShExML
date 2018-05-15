@@ -7,6 +7,7 @@ import es.weso.ast.URL
 import org.antlr.v4.runtime.tree.TerminalNode
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 
 /**
@@ -27,25 +28,25 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
 
   override def visitPrefix(ctx: PrefixContext): AST = {
     val url = URL(ctx.URL().getText)
-    val name = createVar(ctx.VAR())
+    val name = createVar(ctx.variable())
     Prefix(name, url)
   }
 
   override def visitSource(ctx: SourceContext): AST = {
     val url = URL(ctx.fileSource().getText)
-    val name = createVar(ctx.VAR())
+    val name = createVar(ctx.variable())
     Source(name, url)
   }
 
   override def visitQuery(ctx: QueryContext): AST = {
     val queryClause = visit(ctx.queryClause()).asInstanceOf[QueryClause]
-    val name = createVar(ctx.VAR())
+    val name = createVar(ctx.variable())
     Query(name, queryClause)
   }
 
   override def visitExpression(ctx: ExpressionContext): AST = {
     val exp = visit(ctx.exp()).asInstanceOf[Exp]
-    val name = createVar(ctx.VAR())
+    val name = createVar(ctx.variable())
     Expression(name, exp)
   }
 
@@ -56,9 +57,26 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
   }
 
   override def visitSourceQuery(ctx: SourceQueryContext): AST = {
-    val fileVar = createVar(ctx.VAR(0))
-    val expressionVar = createVar(ctx.VAR(1))
+    val fileVar = createVar(ctx.variable(0))
+    val expressionVar = createVar(ctx.variable(1))
     SourceQuery(fileVar, expressionVar)
+  }
+
+  override def visitMatcher(ctx: MatcherContext): AST = {
+    val matcherVar = createVar(ctx.variable())
+    val replacedStrings = visit(ctx.replacedStrings()).asInstanceOf[ReplacedStrings]
+    val replacementString = ctx.STRING_OR_VAR().getText
+    Matcher(matcherVar, replacedStrings, replacementString)
+  }
+
+  override def visitReplacedStrings(ctx: ReplacedStringsContext): AST = {
+    val replacedStrings =
+      if(ctx.replacedStrings() != null)
+        visit(ctx.replacedStrings()).asInstanceOf[ReplacedStrings].strings
+      else
+        Nil
+    val string = ctx.STRING_OR_VAR().getText
+    ReplacedStrings(replacedStrings.::(string))
   }
 
   override def visitUnion(ctx: UnionContext): AST = {
@@ -84,7 +102,7 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
   override def visitShape(ctx: ShapeContext): AST = {
     val shapeName = createShapeVar(ctx.tripleElement)
     val shapePrefix = ctx.prefixVar().getText
-    val action = if(ctx.exp() == null) createVar(ctx.VAR) else visit(ctx.exp()).asInstanceOf[Exp]
+    val action = if(ctx.exp() == null) createVar(ctx.variable()) else visit(ctx.exp()).asInstanceOf[Exp]
     val predicateObjects = ctx.predicateObject().asScala.map(visit(_).asInstanceOf[PredicateObject]).toList
     Shape(shapeName, shapePrefix, action, predicateObjects)
   }
@@ -99,14 +117,15 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
 
   override def visitPredicate(ctx: PredicateContext): AST = {
     val prefix = ctx.prefixVar().getText
-    val name = ctx.VAR().getText
+    val name = ctx.variable().getText
     Predicate(prefix, name)
   }
 
   override def visitObjectElement(ctx: ObjectElementContext): AST = {
     val prefix = if(ctx.prefixVar() != null) ctx.prefixVar().getText else ""
-    val expOrVar = if(ctx.VAR() != null) createVar(ctx.VAR()) else visit(ctx.exp()).asInstanceOf[ExpOrVar]
-    ObjectElement(prefix, expOrVar)
+    val expOrVar = if(ctx.variable() != null) createVar(ctx.variable(0)) else visit(ctx.exp()).asInstanceOf[ExpOrVar]
+    val matcherVar = Option(ctx.variable(1)).map(createVar)
+    ObjectElement(prefix, expOrVar, matcherVar)
   }
 
   override def visitShapeLink(ctx: ShapeLinkContext): AST = {
@@ -114,8 +133,8 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
     ShapeLink(shapeName)
   }
 
-  def createVar(variable: TerminalNode): Var = {
-    Var(variable.getText)
+  def createVar(variable: VariableContext): Var = {
+    Var(Try(variable.getText).getOrElse(""))
   }
 
   def createShapeVar(tripleElementContext: TripleElementContext): ShapeVar = {

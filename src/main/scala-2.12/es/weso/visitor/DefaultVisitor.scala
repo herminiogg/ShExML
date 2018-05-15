@@ -47,7 +47,7 @@ abstract class DefaultVisitor[T] {
       doVisit(predicate, optionalArgument)
     }
 
-    case ObjectElement(_, action) => doVisit(action, optionalArgument)
+    case ObjectElement(_, action, _) => doVisit(action, optionalArgument)
 
     case _ => optionalArgument // do nothing
 

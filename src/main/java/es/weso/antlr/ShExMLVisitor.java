@@ -49,6 +49,18 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExpression(ShExMLParser.ExpressionContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#matcher}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMatcher(ShExMLParser.MatcherContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#replacedStrings}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitReplacedStrings(ShExMLParser.ReplacedStringsContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#exp}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -144,4 +156,10 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitPrefixVar(ShExMLParser.PrefixVarContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#variable}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVariable(ShExMLParser.VariableContext ctx);
 }

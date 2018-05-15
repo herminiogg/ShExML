@@ -70,6 +70,26 @@ public interface ShExMLListener extends ParseTreeListener {
 	 */
 	void exitExpression(ShExMLParser.ExpressionContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#matcher}.
+	 * @param ctx the parse tree
+	 */
+	void enterMatcher(ShExMLParser.MatcherContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#matcher}.
+	 * @param ctx the parse tree
+	 */
+	void exitMatcher(ShExMLParser.MatcherContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#replacedStrings}.
+	 * @param ctx the parse tree
+	 */
+	void enterReplacedStrings(ShExMLParser.ReplacedStringsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#replacedStrings}.
+	 * @param ctx the parse tree
+	 */
+	void exitReplacedStrings(ShExMLParser.ReplacedStringsContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#exp}.
 	 * @param ctx the parse tree
 	 */
@@ -229,4 +249,14 @@ public interface ShExMLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitPrefixVar(ShExMLParser.PrefixVarContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#variable}.
+	 * @param ctx the parse tree
+	 */
+	void enterVariable(ShExMLParser.VariableContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#variable}.
+	 * @param ctx the parse tree
+	 */
+	void exitVariable(ShExMLParser.VariableContext ctx);
 }
