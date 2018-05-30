@@ -6,13 +6,13 @@
             "year": "2010",
             "country": "USA",
             "director": "Christopher Nolan"
-        }, 
+        },
         {
             "id": 4,
             "name": "The Prestige",
             "year": "2006",
             "country": "USA",
-            "director": "Christopher Nolan"
+            "director": ["Christopher Nolan", "Jonathan Nolan"]
         }
     ]
 }
