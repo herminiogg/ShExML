@@ -5,7 +5,7 @@ QUERY film_ids_xml <//film/@id>
 QUERY film_names_xml <//film/name>
 QUERY film_years_xml <//film/year>
 QUERY film_countries_xml <//film/country>
-QUERY film_directors_xml <//film/directors/director[*]>
+QUERY film_directors_xml <//film/directors/director>
 QUERY film_ids_json <$.films[*].id>
 QUERY film_names_json <$.films[*].name>
 QUERY film_years_json <$.films[*].year>
