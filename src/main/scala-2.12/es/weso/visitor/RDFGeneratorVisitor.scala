@@ -15,7 +15,7 @@ import scala.util.Try
 /**
   * Created by herminio on 26/12/17.
   */
-class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any] {
+class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any, Any] {
 
   private val prefixTable = mutable.HashMap[String, String]()
 
@@ -194,5 +194,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       .replace("&#209;", "N").replace("&#241;", "n")
       .replace("&#220;", "U").replace("&#252;", "u")
   }
+
+  override def doVisitDefault(): Any = Nil
 
 }

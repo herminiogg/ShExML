@@ -78,6 +78,18 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterQuerySet(ShExMLParser.QuerySetContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitQuerySet(ShExMLParser.QuerySetContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterExpression(ShExMLParser.ExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -85,6 +97,18 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitExpression(ShExMLParser.ExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterExpressionSet(ShExMLParser.ExpressionSetContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExpressionSet(ShExMLParser.ExpressionSetContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -313,6 +337,18 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitVariable(ShExMLParser.VariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVariables(ShExMLParser.VariablesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVariables(ShExMLParser.VariablesContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

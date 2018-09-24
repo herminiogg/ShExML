@@ -5,7 +5,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import es.weso.antlr.{ShExMLLexer, ShExMLParser}
 import es.weso.ast.{AST, VarResult, Variable}
 import es.weso.parser.ASTCreatorVisitor
-import es.weso.visitor.{RDFGeneratorVisitor, VarTableBuilderVisitor}
+import es.weso.visitor.{RDFGeneratorVisitor, SetBuilderVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.rdf.model.{Model, ModelFactory}
 
@@ -28,6 +28,7 @@ class MappingLauncher {
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
+    generateSetExpressions(ast, varTable)
     generateResultingRDF(ast, varTable)
   }
 
@@ -47,6 +48,10 @@ class MappingLauncher {
     val varTable = mutable.HashMap[Variable, VarResult]()
     new VarTableBuilderVisitor(varTable).visit(ast)
     varTable
+  }
+
+  private def generateSetExpressions(ast: AST, varTable: mutable.HashMap[Variable, VarResult]) = {
+    new SetBuilderVisitor(varTable).visit(ast, null)
   }
 
   private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Model = {

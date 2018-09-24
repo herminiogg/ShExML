@@ -16,7 +16,9 @@ sealed trait DeclarationStatement extends AST
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
 case class Source(name: Var, filePath: URL) extends DeclarationStatement
 case class Query(name: Var, queryClause: QueryClause) extends DeclarationStatement
+case class QuerySet(name: Var, queryClause: List[QueryClause]) extends DeclarationStatement
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
+case class ExpressionSet(name: Var, variables: Variables, exp: Exp) extends DeclarationStatement
 case class Matcher(name: Var, replacedStrings: ReplacedStrings, replacement: String) extends DeclarationStatement with VarResult
 
 
@@ -57,3 +59,4 @@ sealed trait VarResult extends AST
 
 case class URL(url: String) extends VarResult
 case class ReplacedStrings(strings: List[String]) extends AST
+case class Variables(variables: List[String]) extends AST

@@ -5,11 +5,13 @@ package es.weso.antlr;
 }
 
 shExML: decl* shape* ;
-decl: (source | prefix | query | expression | matcher) ;
+decl: (source | prefix | query | querySet | expression | expressionSet | matcher) ;
 prefix: PREFIX variable '<' URL '>' ;
 source: SOURCE variable '<' fileSource '>' ;
 query: QUERY variable '<' queryClause '>' ;
+querySet: QUERY_SET variable '<' queryClause '>' ;
 expression: EXPRESSION variable '<' exp '>' ;
+expressionSet: EXPRESSION_SET variable '(' variables ')' '<' exp '>' ;
 matcher: MATCHER variable '<' replacedStrings AS STRING_OR_VAR '>' ;
 replacedStrings: STRING_OR_VAR ',' replacedStrings | STRING_OR_VAR ;
 exp: sourceQuery | union | join | stringOperation;
@@ -29,6 +31,7 @@ queryClause: JSONPATH | XMLPATH ;
 tripleElement: predicate | '<' variable '>' ;
 prefixVar: variable | URL ;
 variable: STRING_OR_VAR | URI_VAR ;
+variables: variable | variable ',' variables ;
 
 
 PREFIX: 'PREFIX' ;
@@ -40,17 +43,22 @@ JOIN: 'JOIN' ;
 MATCHER: 'MATCHER' ;
 AS: 'AS' ;
 MATCHING: 'MATCHING' ;
+QUERY_SET: 'QUERY_SET' ;
+EXPRESSION_SET: 'EXPRESSION_SET' ;
 LESS_SYMBOL: '<' ;
 GREATER_SYMBOL: '>' ;
 DOLLAR: '$' ;
 BRACKET_LEFT: '[' ;
 BRACKET_RIGHT: ']' ;
+PAREN_LEFT: '(' ;
+PAREN_RIGHT: ')' ;
 BRACE_LEFT: '{' ;
 BRACE_RIGHT: '}' ;
 SEMICOLON: ';' ;
 DOT: '.' ;
 AT: '@' ;
 ADD: '+' ;
+COMMA: ',' ;
 QUOTE: '"' ;
 STRING_OR_VAR: LETTER (LETTER | DIGIT | '_')* ;
 URI_VAR: (LETTER | DIGIT | '_')* ':' ;
@@ -63,4 +71,5 @@ WS: [ \t\n\r] -> skip ;
 
 fragment LETTER: [a-zA-Záéíóú] ;
 fragment DIGIT: [0-9] ;
-fragment ALLOWED_CHARACTERS: LETTER | DIGIT | '[' | ']' | '*' | '_' | '/' | '@' | ',' | '.' | '%' | '-' | '(' | ')' | '?' | '=' | '&' | '#' ;
+fragment ALLOWED_CHARACTERS: LETTER | DIGIT | '[' | ']' | '*' | '_' | '/' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
+        | '?' | '=' | '&' | '#' | [ ] ;

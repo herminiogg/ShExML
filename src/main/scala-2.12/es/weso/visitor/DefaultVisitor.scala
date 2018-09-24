@@ -5,9 +5,9 @@ import es.weso.ast._
 /**
   * Created by herminio on 22/12/17.
   */
-abstract class DefaultVisitor[T] {
+abstract class DefaultVisitor[A, B] {
 
-  def visit(ast: AST, optionalArgument: T): T = ast match {
+  def visit(ast: AST, optionalArgument: A): B = ast match {
 
     case ShExML(declarations, shapes) => {
       declarations.foreach(doVisit(_, optionalArgument))
@@ -24,7 +24,11 @@ abstract class DefaultVisitor[T] {
 
     case Query(_, queryClause) => doVisit(queryClause, optionalArgument)
 
+    case QuerySet(_, queryClauses) => queryClauses.map(doVisit(_, optionalArgument)).head
+
     case Expression(_, exp) => doVisit(exp, optionalArgument)
+
+    case ExpressionSet(_, _, exp) => doVisit(exp, optionalArgument)
 
     case Union(left, right) => {
       doVisit(left, optionalArgument)
@@ -49,10 +53,14 @@ abstract class DefaultVisitor[T] {
 
     case ObjectElement(_, action, _) => doVisit(action, optionalArgument)
 
-    case _ => optionalArgument // do nothing
+    case _ => doVisitDefault()
+
+    //case _ => optionalArgument // do nothing
 
   }
 
-  def doVisit(ast: AST, optionalArgument: T): T
+  def doVisit(ast: AST, optionalArgument: A): B
+
+  def doVisitDefault(): B
 
 }
