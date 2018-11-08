@@ -37,6 +37,18 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSource(ShExMLParser.SourceContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#iterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIterator(ShExMLParser.IteratorContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#field}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitField(ShExMLParser.FieldContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#query}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -90,6 +102,24 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitSourceQuery(ShExMLParser.SourceQueryContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#iteratorQuery}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIteratorQuery(ShExMLParser.IteratorQueryContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#queryAlternative}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitQueryAlternative(ShExMLParser.QueryAlternativeContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#queryClause}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitQueryClause(ShExMLParser.QueryClauseContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#join}.
 	 * @param ctx the parse tree
@@ -145,18 +175,6 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPredicate(ShExMLParser.PredicateContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#fileSource}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFileSource(ShExMLParser.FileSourceContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#queryClause}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitQueryClause(ShExMLParser.QueryClauseContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#tripleElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -180,4 +198,10 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitVariables(ShExMLParser.VariablesContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#queryParts}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitQueryParts(ShExMLParser.QueryPartsContext ctx);
 }

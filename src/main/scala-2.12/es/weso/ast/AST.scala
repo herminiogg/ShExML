@@ -16,6 +16,8 @@ sealed trait DeclarationStatement extends AST
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
 case class Source(name: Var, filePath: URL) extends DeclarationStatement
 case class Query(name: Var, queryClause: QueryClause) extends DeclarationStatement
+case class Iterator(name: Var, queryClause: QueryClause) extends DeclarationStatement
+case class Field(name: Var, queryClause: QueryClause) extends DeclarationStatement
 case class QuerySet(name: Var, queryClause: List[QueryClause]) extends DeclarationStatement
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
 case class ExpressionSet(name: Var, variables: Variables, exp: Exp) extends DeclarationStatement
@@ -28,16 +30,19 @@ sealed trait QueryClause extends VarResult {
 
 case class JsonPath(query: String) extends QueryClause
 case class XmlPath(query: String) extends QueryClause
+case class FieldQuery(query: String) extends QueryClause
 
 
 sealed trait Exp extends ExpOrVar with VarResult
 sealed trait LeftUnion extends Exp
 sealed trait RightUnion extends Exp
+sealed trait AlternativeQuery extends LeftUnion with RightUnion
 
-case class SourceQuery(fileVar: Var, expressionVar: Var) extends LeftUnion with RightUnion
+case class SourceQuery(fileVar: Var, expressionVar: Var) extends AlternativeQuery
 case class Union(left: LeftUnion, right: RightUnion) extends RightUnion
-case class StringOperation(left: SourceQuery, right: SourceQuery, unionString: String) extends LeftUnion with RightUnion
-case class Join(leftUnion: SourceQuery, rightUnion: SourceQuery, joinClause: SourceQuery) extends Exp
+case class StringOperation(left: AlternativeQuery, right: AlternativeQuery, unionString: String) extends LeftUnion with RightUnion
+case class Join(leftUnion: AlternativeQuery, rightUnion: AlternativeQuery, joinClause: AlternativeQuery) extends Exp
+case class IteratorQuery(fileVar: Var, iteratorVar: Var, expressionVar: Var) extends AlternativeQuery
 
 
 sealed trait ExpOrVar extends AST

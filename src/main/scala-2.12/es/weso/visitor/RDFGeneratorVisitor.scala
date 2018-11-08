@@ -1,16 +1,14 @@
 package es.weso.visitor
+import java.util
 import com.fasterxml.jackson.databind.ObjectMapper
 import es.weso.ast._
 import es.weso.helper.SourceHelper
 import kantan.xpath.XPathCompiler
-
 import scala.collection.mutable
 import kantan.xpath.implicits._
-import org.apache.commons.text.similarity.{LevenshteinDistance, LongestCommonSubsequence}
 import org.apache.jena.datatypes.RDFDatatype
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.rdf.model.{Model, ResourceFactory, Statement}
-
 import scala.util.Try
 
 /**
@@ -34,22 +32,12 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
     case Shape(shapeName, shapePrefix, action, predicateObjects) => {
       val actions = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
-      val flattenActions = actions.flatMap(_.results).map(String.valueOf)
-      val idQueries = getQueriesFromAction(action)
-      val arguments =
-        if(optionalArgument == null) Map("ids" -> flattenActions, "idQueries" -> idQueries)
-        else optionalArgument
-      val predicateObjectsList = predicateObjects.map(doVisit(_, arguments)).asInstanceOf[List[List[Result]]]
-      for(a <- flattenActions) {
-        val finalPredicateObjectsList =
-          if(optionalArgument == null) predicateObjectsList.flatten.filter(_.id == a)
-          else {
-            val id = actions.filter(_.results.contains(a)).head.id
-            predicateObjectsList.flatten.filter(_.id == id)
-          }
+      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument)).asInstanceOf[List[List[Result]]]
+      for(a <- actions) {
+        val finalPredicateObjectsList = predicateObjectsList.flatten.filter(_.id == a.id)
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
-          val action = normaliseURI(a)
+          val action = normaliseURI(a.results.head)
           for(predicateObject <- predicateObjects) {
             if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://"))
               output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
@@ -128,6 +116,23 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       }
     }
 
+    case IteratorQuery(fileVar, iteratorVar, expressionVar) => {
+      val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
+      val fileContent = doVisit(fileVar, optionalArgument).asInstanceOf[String]
+      val fileMap = Map("fileContent" -> fileContent)
+      val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
+      val iteratorQuery = doVisit(iteratorVar, middleArguments).asInstanceOf[Result]
+      val finalArguments = middleArguments.++(Map("iteratorQuery" -> iteratorQuery))
+      val queries = iteratorQuery.results.indices.map(i => {
+        val queryClause = varTable(iteratorVar) match {
+          case JsonPath(query) => JsonPath(query.replace("*", i.toString) + "." + varTable(expressionVar).asInstanceOf[FieldQuery].query)
+          case XmlPath(query) => XmlPath(query + "[" + (i + 1) + "]/" + varTable(expressionVar).asInstanceOf[FieldQuery].query)
+        }
+        (i, queryClause)
+      })
+      queries.map(t => doVisit(t._2, finalArguments.+("index" -> t._1)).asInstanceOf[Result]).toList
+    }
+
     case v: Var => {
       doVisit(varTable(v), optionalArgument)
     }
@@ -138,62 +143,35 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
     case JsonPath(query) => {
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
+      val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
+      val index = arguments.getOrElse("index", "")
       val fileContent = arguments.getOrElse("fileContent", null).asInstanceOf[String]
-      val idQueries = arguments.getOrElse("idQueries", Nil).asInstanceOf[List[String]]
-      val ids = arguments.getOrElse("ids", Nil).asInstanceOf[List[String]]
-      val finalQueries =
-        if(ids.nonEmpty) composeJsonPathQueryById(query, idQueries, ids)
-        else List(QueryByID(query.hashCode.toString, query))
-      finalQueries.map(finalQuery => {
-        val jsonContent = new ObjectMapper().readValue(fileContent, classOf[Object])
-        val verificationQuery = finalQuery.query.splitAt(finalQuery.query.lastIndexOf("."))._1
-        val verificationResult = io.gatling.jsonpath.JsonPath.query(verificationQuery, jsonContent)
-        val finalResult = verificationResult match {
-          case Left(_) => Nil
-          case Right(vr) => {
-            if(vr.nonEmpty) {
-              val result = io.gatling.jsonpath.JsonPath.query(finalQuery.query, jsonContent)
-              result match {
-                case Left(l) => throw new Exception(l.reason)
-                case Right(r) => if (r.isEmpty) Nil else r.flatMap(e => {
-                  if (e.toString.contains("[") && e.toString.contains("]"))
-                    e.toString.substring(1, e.toString.length - 1).split(",").toList.map(_.trim)
-                  else
-                    List(e)
-                })
-              }
-            } else Nil
-          }.toList
+      val id = (iteratorQuery + fileContent + index).hashCode.toString
+      val jsonContent = new ObjectMapper().readValue(fileContent, classOf[Object])
+      val result = io.gatling.jsonpath.JsonPath.query(query, jsonContent)
+      result match {
+        case Left(_) => Nil
+        case Right(r) => {
+          val finalList = r.toList.flatMap({
+            case l: util.ArrayList[_] => l.toArray.map(_.toString)
+            case default => List(default.toString)
+          })
+          Result(id, finalList)
         }
-        Result(finalQuery.id, finalResult.map(String.valueOf))
-      })
+      }
     }
 
     case XmlPath(query) => {
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
+      val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
+      val index = arguments.getOrElse("index", "")
       val fileContent = arguments.getOrElse("fileContent", null).asInstanceOf[String]
-      val idQueries = arguments.getOrElse("idQueries", Nil).asInstanceOf[List[String]]
-      val ids = arguments.getOrElse("ids", Nil).asInstanceOf[List[String]]
-      val finalQueries =
-        if(ids.nonEmpty) composeXPathQueryById(query, idQueries, ids)
-        else List(QueryByID(query.hashCode.toString, query))
-      finalQueries.map(finalQuery => {
-        val queries = finalQuery.query.splitAt(finalQuery.query.lastIndexOf("/"))
-        val compilationResult = XPathCompiler.builtIn.compile(queries._1)
-        compilationResult.toOption match {
-          case Some(xPathQuery) => {
-            val count = fileContent.evalXPath[List[String]](xPathQuery).getOrElse(Nil).size
-            val results = (1 to count).flatMap(i => {
-              XPathCompiler.builtIn.compile("(" + queries._1 + ")[" + i + "]" + queries._2).toOption match {
-                case Some(xPathFullQuery) => fileContent.evalXPath[List[String]](xPathFullQuery).getOrElse(Nil)
-                case None => throw new Exception("Bad xPath query")
-              }
-            }).toList
-            Result(finalQuery.id, results)
-          }
-          case None => throw new Exception("Bad xPath query")
-        }
-      })
+      val id = (iteratorQuery + fileContent + index).hashCode.toString
+      val compilationResult = XPathCompiler.builtIn.compile(query)
+      compilationResult.toOption match {
+        case Some(value) => Result(id, fileContent.evalXPath[List[String]](value).getOrElse(Nil))
+        case None => throw new Exception("Bad iterator query: " + query)
+      }
     }
 
     case Matcher(_, replacedStrings, replacement) => {
