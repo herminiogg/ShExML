@@ -95,14 +95,6 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       leftList.union(joinUnionList)
     }
 
-    case SourceQuery(fileVar, expressionVar) => {
-      val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
-      val file = doVisit(fileVar, optionalArgument).asInstanceOf[String]
-      val fileMap = Map("fileContent" -> file)
-      val finalArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
-      doVisit(expressionVar, finalArguments)
-    }
-
     case StringOperation(left, right, unionString) => {
       val leftList = doVisit(left, optionalArgument).asInstanceOf[List[Result]]
       val rightList = doVisit(right, optionalArgument).asInstanceOf[List[Result]]
@@ -123,10 +115,11 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
       val iteratorQuery = doVisit(iteratorVar, middleArguments).asInstanceOf[Result]
       val finalArguments = middleArguments.++(Map("iteratorQuery" -> iteratorQuery))
+      val fieldVar = Var(iteratorVar.name + "." + expressionVar.name)
       val queries = iteratorQuery.results.indices.map(i => {
         val queryClause = varTable(iteratorVar) match {
-          case JsonPath(query) => JsonPath(query.replace("*", i.toString) + "." + varTable(expressionVar).asInstanceOf[FieldQuery].query)
-          case XmlPath(query) => XmlPath(query + "[" + (i + 1) + "]/" + varTable(expressionVar).asInstanceOf[FieldQuery].query)
+          case JsonPath(query) => JsonPath(query.replace("*", i.toString) + "." + varTable(fieldVar).asInstanceOf[FieldQuery].query)
+          case XmlPath(query) => XmlPath(query + "[" + (i + 1) + "]/" + varTable(fieldVar).asInstanceOf[FieldQuery].query)
         }
         (i, queryClause)
       })
@@ -221,65 +214,6 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       .replace("&quot;", "")
       .replace("&#209;", "N").replace("&#241;", "n")
       .replace("&#220;", "U").replace("&#252;", "u")
-  }
-
-  private def composeXPathQueryById(query: String, idQueries: List[String], ids: List[String]): List[QueryByID] = {
-    val idQuery = getBetterQueryCandidate(query, idQueries)
-    val commonQuery = getCommonQuery(query, idQuery)
-    val queryIdAttribute = idQuery.replace(commonQuery, "")
-    val queryString = commonQuery.subSequence(0, commonQuery.toString.lastIndexOf("/")).toString
-    val queryAttribute = query.replace(queryString, "")
-    ids.map(id => {
-      val query = queryString + "[" + queryIdAttribute + "= \"" + id + "\"]" + queryAttribute
-      QueryByID(id, query)
-    })
-  }
-
-  private def composeJsonPathQueryById(query: String, idQueries: List[String], ids: List[String]): List[QueryByID] = {
-    val idQuery = getBetterQueryCandidate(query, idQueries)
-    val commonQuery = getCommonQuery(query, idQuery)
-    val queryIdAttribute = idQuery.replace(commonQuery, "")
-    val queryStringToReplace = commonQuery.subSequence(0, commonQuery.toString.lastIndexOf(".")).toString
-    val queryString = queryStringToReplace.replace("[*]", "")
-    val queryAttribute = query.replace(queryStringToReplace, "")
-    val queriesWithQuotes = ids.map(id => {
-      val query = queryString + "[?(@." + queryIdAttribute + "==" + id + ")]" + queryAttribute
-      QueryByID(id, query)
-    })
-    val queriesWithoutQuotes = ids.map(id => {
-      val query = queryString + "[?(@." + queryIdAttribute + "==\"" + id + "\")]" + queryAttribute
-      QueryByID(id, query)
-    })
-    queriesWithQuotes ::: queriesWithoutQuotes
-  }
-
-  private def getBetterQueryCandidate(query: String, idQueries: List[String]): String = {
-    idQueries.maxBy(idQuery => {
-      val chars = idQuery.getBytes.zip(query.getBytes)
-      chars.indexWhere {case (a, b) => a != b}
-    })
-  }
-
-  private def getCommonQuery(query: String, bestQueryCandidate: String): String = {
-    val chars = bestQueryCandidate.getBytes.zip(query.getBytes)
-    val index = chars.indexWhere {case (a, b) => a != b}
-    bestQueryCandidate.splitAt(index)._1
-  }
-
-  private def getQueriesFromAction(action: ExpOrVar): List[String] = action match {
-    case SourceQuery(_, expressionVar) => getQueriesFromVarResult(varTable(expressionVar))
-    case Union(leftUnion, rightUnion) => getQueriesFromAction(leftUnion) ::: getQueriesFromAction(rightUnion)
-    case StringOperation(left, right, _) => getQueriesFromAction(left) ::: getQueriesFromAction(right)
-    case Join(left, right, join) => getQueriesFromAction(left) ::: getQueriesFromAction(right) ::: getQueriesFromAction(join)
-    case variable: Var => getQueriesFromVarResult(varTable(variable))
-    case _ => Nil
-  }
-
-  private def getQueriesFromVarResult(varResult: VarResult): List[String] = varResult match {
-    case JsonPath(query) => List(query)
-    case XmlPath(query) => List(query)
-    case e: Exp => getQueriesFromAction(e)
-    case _ => Nil
   }
 
   override def doVisitDefault(): Any = Nil

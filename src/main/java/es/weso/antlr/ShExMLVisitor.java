@@ -55,23 +55,11 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitQuery(ShExMLParser.QueryContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#querySet}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitQuerySet(ShExMLParser.QuerySetContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#expression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitExpression(ShExMLParser.ExpressionContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#expressionSet}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExpressionSet(ShExMLParser.ExpressionSetContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#matcher}.
 	 * @param ctx the parse tree
@@ -97,23 +85,11 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStringOperation(ShExMLParser.StringOperationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#sourceQuery}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSourceQuery(ShExMLParser.SourceQueryContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#iteratorQuery}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitIteratorQuery(ShExMLParser.IteratorQueryContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#queryAlternative}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitQueryAlternative(ShExMLParser.QueryAlternativeContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#queryClause}.
 	 * @param ctx the parse tree
@@ -192,12 +168,6 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitVariable(ShExMLParser.VariableContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#variables}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitVariables(ShExMLParser.VariablesContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#queryParts}.
 	 * @param ctx the parse tree

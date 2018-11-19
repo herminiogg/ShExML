@@ -16,11 +16,9 @@ sealed trait DeclarationStatement extends AST
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
 case class Source(name: Var, filePath: URL) extends DeclarationStatement
 case class Query(name: Var, queryClause: QueryClause) extends DeclarationStatement
-case class Iterator(name: Var, queryClause: QueryClause) extends DeclarationStatement
-case class Field(name: Var, queryClause: QueryClause) extends DeclarationStatement
-case class QuerySet(name: Var, queryClause: List[QueryClause]) extends DeclarationStatement
+case class Iterator(name: Var, queryClause: QueryClause, fields: List[Field]) extends DeclarationStatement with VarResult
+case class Field(name: Var, queryClause: QueryClause) extends AST
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
-case class ExpressionSet(name: Var, variables: Variables, exp: Exp) extends DeclarationStatement
 case class Matcher(name: Var, replacedStrings: ReplacedStrings, replacement: String) extends DeclarationStatement with VarResult
 
 
@@ -36,13 +34,11 @@ case class FieldQuery(query: String) extends QueryClause
 sealed trait Exp extends ExpOrVar with VarResult
 sealed trait LeftUnion extends Exp
 sealed trait RightUnion extends Exp
-sealed trait AlternativeQuery extends LeftUnion with RightUnion
 
-case class SourceQuery(fileVar: Var, expressionVar: Var) extends AlternativeQuery
 case class Union(left: LeftUnion, right: RightUnion) extends RightUnion
-case class StringOperation(left: AlternativeQuery, right: AlternativeQuery, unionString: String) extends LeftUnion with RightUnion
-case class Join(leftUnion: AlternativeQuery, rightUnion: AlternativeQuery, joinClause: AlternativeQuery) extends Exp
-case class IteratorQuery(fileVar: Var, iteratorVar: Var, expressionVar: Var) extends AlternativeQuery
+case class StringOperation(left: IteratorQuery, right: IteratorQuery, unionString: String) extends LeftUnion with RightUnion
+case class Join(leftUnion: IteratorQuery, rightUnion: IteratorQuery, joinClause: IteratorQuery) extends Exp
+case class IteratorQuery(fileVar: Var, iteratorVar: Var, expressionVar: Var) extends LeftUnion with RightUnion
 
 
 sealed trait ExpOrVar extends AST
@@ -64,4 +60,3 @@ sealed trait VarResult extends AST
 
 case class URL(url: String) extends VarResult
 case class ReplacedStrings(strings: List[String]) extends AST
-case class Variables(variables: List[String]) extends AST

@@ -14,8 +14,10 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     case Source(name, value) => variableMap += ((name, value))
     case Query(name, value) => variableMap += ((name, value))
     case Expression(name, value) => variableMap += ((name, value))
-    case Iterator(name, value) => variableMap += ((name, value))
-    case Field(name, value) => variableMap += ((name, value))
+    case Iterator(name, value, fields) => {
+      variableMap += ((name, value))
+      fields.foreach(f => variableMap += ((Var(name.name + "." + f.name.name), f.queryClause)))
+    }
     case m: Matcher => variableMap += ((m.name, m))
     case s: Shape => variableMap += ((s.shapeName, s))
     case default => super.visit(default)

@@ -27,21 +27,18 @@ public class ShExMLParser extends Parser {
 		URL=31, STRINGOPERATOR=32, JSONPATH=33, XMLPATH=34, COMMENT=35, WS=36;
 	public static final int
 		RULE_shExML = 0, RULE_decl = 1, RULE_prefix = 2, RULE_source = 3, RULE_iterator = 4, 
-		RULE_field = 5, RULE_query = 6, RULE_querySet = 7, RULE_expression = 8, 
-		RULE_expressionSet = 9, RULE_matcher = 10, RULE_replacedStrings = 11, 
-		RULE_exp = 12, RULE_stringOperation = 13, RULE_sourceQuery = 14, RULE_iteratorQuery = 15, 
-		RULE_queryAlternative = 16, RULE_queryClause = 17, RULE_join = 18, RULE_union = 19, 
-		RULE_leftUnionOption = 20, RULE_rightUnionOption = 21, RULE_shape = 22, 
-		RULE_predicateObject = 23, RULE_objectElement = 24, RULE_shapeLink = 25, 
-		RULE_predicate = 26, RULE_tripleElement = 27, RULE_prefixVar = 28, RULE_variable = 29, 
-		RULE_variables = 30, RULE_queryParts = 31;
+		RULE_field = 5, RULE_query = 6, RULE_expression = 7, RULE_matcher = 8, 
+		RULE_replacedStrings = 9, RULE_exp = 10, RULE_stringOperation = 11, RULE_iteratorQuery = 12, 
+		RULE_queryClause = 13, RULE_join = 14, RULE_union = 15, RULE_leftUnionOption = 16, 
+		RULE_rightUnionOption = 17, RULE_shape = 18, RULE_predicateObject = 19, 
+		RULE_objectElement = 20, RULE_shapeLink = 21, RULE_predicate = 22, RULE_tripleElement = 23, 
+		RULE_prefixVar = 24, RULE_variable = 25, RULE_queryParts = 26;
 	public static final String[] ruleNames = {
-		"shExML", "decl", "prefix", "source", "iterator", "field", "query", "querySet", 
-		"expression", "expressionSet", "matcher", "replacedStrings", "exp", "stringOperation", 
-		"sourceQuery", "iteratorQuery", "queryAlternative", "queryClause", "join", 
-		"union", "leftUnionOption", "rightUnionOption", "shape", "predicateObject", 
-		"objectElement", "shapeLink", "predicate", "tripleElement", "prefixVar", 
-		"variable", "variables", "queryParts"
+		"shExML", "decl", "prefix", "source", "iterator", "field", "query", "expression", 
+		"matcher", "replacedStrings", "exp", "stringOperation", "iteratorQuery", 
+		"queryClause", "join", "union", "leftUnionOption", "rightUnionOption", 
+		"shape", "predicateObject", "objectElement", "shapeLink", "predicate", 
+		"tripleElement", "prefixVar", "variable", "queryParts"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
@@ -146,31 +143,31 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(67);
+			setState(57);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PREFIX) | (1L << SOURCE) | (1L << QUERY) | (1L << ITERATOR) | (1L << FIELD) | (1L << EXPRESSION) | (1L << MATCHER) | (1L << QUERY_SET) | (1L << EXPRESSION_SET))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PREFIX) | (1L << SOURCE) | (1L << QUERY) | (1L << ITERATOR) | (1L << EXPRESSION) | (1L << MATCHER))) != 0)) {
 				{
 				{
-				setState(64);
+				setState(54);
 				decl();
 				}
 				}
-				setState(69);
+				setState(59);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(73);
+			setState(63);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << LESS_SYMBOL) | (1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL))) != 0)) {
 				{
 				{
-				setState(70);
+				setState(60);
 				shape();
 				}
 				}
-				setState(75);
+				setState(65);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -197,23 +194,14 @@ public class ShExMLParser extends Parser {
 		public QueryContext query() {
 			return getRuleContext(QueryContext.class,0);
 		}
-		public QuerySetContext querySet() {
-			return getRuleContext(QuerySetContext.class,0);
-		}
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
-		}
-		public ExpressionSetContext expressionSet() {
-			return getRuleContext(ExpressionSetContext.class,0);
 		}
 		public MatcherContext matcher() {
 			return getRuleContext(MatcherContext.class,0);
 		}
 		public IteratorContext iterator() {
 			return getRuleContext(IteratorContext.class,0);
-		}
-		public FieldContext field() {
-			return getRuleContext(FieldContext.class,0);
 		}
 		public DeclContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -240,61 +228,43 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(85);
+			setState(72);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case SOURCE:
 				{
-				setState(76);
+				setState(66);
 				source();
 				}
 				break;
 			case PREFIX:
 				{
-				setState(77);
+				setState(67);
 				prefix();
 				}
 				break;
 			case QUERY:
 				{
-				setState(78);
+				setState(68);
 				query();
-				}
-				break;
-			case QUERY_SET:
-				{
-				setState(79);
-				querySet();
 				}
 				break;
 			case EXPRESSION:
 				{
-				setState(80);
+				setState(69);
 				expression();
-				}
-				break;
-			case EXPRESSION_SET:
-				{
-				setState(81);
-				expressionSet();
 				}
 				break;
 			case MATCHER:
 				{
-				setState(82);
+				setState(70);
 				matcher();
 				}
 				break;
 			case ITERATOR:
 				{
-				setState(83);
+				setState(71);
 				iterator();
-				}
-				break;
-			case FIELD:
-				{
-				setState(84);
-				field();
 				}
 				break;
 			default:
@@ -344,15 +314,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(87);
+			setState(74);
 			match(PREFIX);
-			setState(88);
+			setState(75);
 			variable();
-			setState(89);
+			setState(76);
 			match(LESS_SYMBOL);
-			setState(90);
+			setState(77);
 			match(URL);
-			setState(91);
+			setState(78);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -398,15 +368,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(93);
+			setState(80);
 			match(SOURCE);
-			setState(94);
+			setState(81);
 			variable();
-			setState(95);
+			setState(82);
 			match(LESS_SYMBOL);
-			setState(96);
+			setState(83);
 			match(URL);
-			setState(97);
+			setState(84);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -428,6 +398,12 @@ public class ShExMLParser extends Parser {
 		}
 		public QueryClauseContext queryClause() {
 			return getRuleContext(QueryClauseContext.class,0);
+		}
+		public List<FieldContext> field() {
+			return getRuleContexts(FieldContext.class);
+		}
+		public FieldContext field(int i) {
+			return getRuleContext(FieldContext.class,i);
 		}
 		public IteratorContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -451,19 +427,38 @@ public class ShExMLParser extends Parser {
 	public final IteratorContext iterator() throws RecognitionException {
 		IteratorContext _localctx = new IteratorContext(_ctx, getState());
 		enterRule(_localctx, 8, RULE_iterator);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(99);
+			setState(86);
 			match(ITERATOR);
-			setState(100);
+			setState(87);
 			variable();
-			setState(101);
+			setState(88);
 			match(LESS_SYMBOL);
-			setState(102);
+			setState(89);
 			queryClause();
-			setState(103);
+			setState(90);
 			match(GREATER_SYMBOL);
+			setState(91);
+			match(BRACE_LEFT);
+			setState(93); 
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			do {
+				{
+				{
+				setState(92);
+				field();
+				}
+				}
+				setState(95); 
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			} while ( _la==FIELD );
+			setState(97);
+			match(BRACE_RIGHT);
 			}
 		}
 		catch (RecognitionException re) {
@@ -510,15 +505,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(105);
+			setState(99);
 			match(FIELD);
-			setState(106);
+			setState(100);
 			variable();
-			setState(107);
+			setState(101);
 			match(LESS_SYMBOL);
-			setState(108);
+			setState(102);
 			queryParts();
-			setState(109);
+			setState(103);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -566,71 +561,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(111);
+			setState(105);
 			match(QUERY);
-			setState(112);
+			setState(106);
 			variable();
-			setState(113);
+			setState(107);
 			match(LESS_SYMBOL);
-			setState(114);
+			setState(108);
 			queryClause();
-			setState(115);
-			match(GREATER_SYMBOL);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class QuerySetContext extends ParserRuleContext {
-		public TerminalNode QUERY_SET() { return getToken(ShExMLParser.QUERY_SET, 0); }
-		public VariableContext variable() {
-			return getRuleContext(VariableContext.class,0);
-		}
-		public QueryClauseContext queryClause() {
-			return getRuleContext(QueryClauseContext.class,0);
-		}
-		public QuerySetContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_querySet; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterQuerySet(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitQuerySet(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitQuerySet(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final QuerySetContext querySet() throws RecognitionException {
-		QuerySetContext _localctx = new QuerySetContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_querySet);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(117);
-			match(QUERY_SET);
-			setState(118);
-			variable();
-			setState(119);
-			match(LESS_SYMBOL);
-			setState(120);
-			queryClause();
-			setState(121);
+			setState(109);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -674,84 +613,19 @@ public class ShExMLParser extends Parser {
 
 	public final ExpressionContext expression() throws RecognitionException {
 		ExpressionContext _localctx = new ExpressionContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_expression);
+		enterRule(_localctx, 14, RULE_expression);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(123);
+			setState(111);
 			match(EXPRESSION);
-			setState(124);
+			setState(112);
 			variable();
-			setState(125);
+			setState(113);
 			match(LESS_SYMBOL);
-			setState(126);
+			setState(114);
 			exp();
-			setState(127);
-			match(GREATER_SYMBOL);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class ExpressionSetContext extends ParserRuleContext {
-		public TerminalNode EXPRESSION_SET() { return getToken(ShExMLParser.EXPRESSION_SET, 0); }
-		public VariableContext variable() {
-			return getRuleContext(VariableContext.class,0);
-		}
-		public VariablesContext variables() {
-			return getRuleContext(VariablesContext.class,0);
-		}
-		public ExpContext exp() {
-			return getRuleContext(ExpContext.class,0);
-		}
-		public ExpressionSetContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_expressionSet; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterExpressionSet(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitExpressionSet(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitExpressionSet(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final ExpressionSetContext expressionSet() throws RecognitionException {
-		ExpressionSetContext _localctx = new ExpressionSetContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_expressionSet);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(129);
-			match(EXPRESSION_SET);
-			setState(130);
-			variable();
-			setState(131);
-			match(PAREN_LEFT);
-			setState(132);
-			variables();
-			setState(133);
-			match(PAREN_RIGHT);
-			setState(134);
-			match(LESS_SYMBOL);
-			setState(135);
-			exp();
-			setState(136);
+			setState(115);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -797,23 +671,23 @@ public class ShExMLParser extends Parser {
 
 	public final MatcherContext matcher() throws RecognitionException {
 		MatcherContext _localctx = new MatcherContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_matcher);
+		enterRule(_localctx, 16, RULE_matcher);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(138);
+			setState(117);
 			match(MATCHER);
-			setState(139);
+			setState(118);
 			variable();
-			setState(140);
+			setState(119);
 			match(LESS_SYMBOL);
-			setState(141);
+			setState(120);
 			replacedStrings();
-			setState(142);
+			setState(121);
 			match(AS);
-			setState(143);
+			setState(122);
 			match(STRING_OR_VAR);
-			setState(144);
+			setState(123);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -854,26 +728,26 @@ public class ShExMLParser extends Parser {
 
 	public final ReplacedStringsContext replacedStrings() throws RecognitionException {
 		ReplacedStringsContext _localctx = new ReplacedStringsContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_replacedStrings);
+		enterRule(_localctx, 18, RULE_replacedStrings);
 		try {
-			setState(150);
+			setState(129);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,4,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(146);
+				setState(125);
 				match(STRING_OR_VAR);
-				setState(147);
+				setState(126);
 				match(COMMA);
-				setState(148);
+				setState(127);
 				replacedStrings();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(149);
+				setState(128);
 				match(STRING_OR_VAR);
 				}
 				break;
@@ -891,9 +765,6 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class ExpContext extends ParserRuleContext {
-		public SourceQueryContext sourceQuery() {
-			return getRuleContext(SourceQueryContext.class,0);
-		}
 		public UnionContext union() {
 			return getRuleContext(UnionContext.class,0);
 		}
@@ -927,43 +798,36 @@ public class ShExMLParser extends Parser {
 
 	public final ExpContext exp() throws RecognitionException {
 		ExpContext _localctx = new ExpContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_exp);
+		enterRule(_localctx, 20, RULE_exp);
 		try {
-			setState(157);
+			setState(135);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,4,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,5,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(152);
-				sourceQuery();
+				setState(131);
+				union();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(153);
-				union();
+				setState(132);
+				join();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(154);
-				join();
+				setState(133);
+				stringOperation();
 				}
 				break;
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(155);
-				stringOperation();
-				}
-				break;
-			case 5:
-				enterOuterAlt(_localctx, 5);
-				{
-				setState(156);
+				setState(134);
 				iteratorQuery();
 				}
 				break;
@@ -981,11 +845,11 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class StringOperationContext extends ParserRuleContext {
-		public List<QueryAlternativeContext> queryAlternative() {
-			return getRuleContexts(QueryAlternativeContext.class);
+		public List<IteratorQueryContext> iteratorQuery() {
+			return getRuleContexts(IteratorQueryContext.class);
 		}
-		public QueryAlternativeContext queryAlternative(int i) {
-			return getRuleContext(QueryAlternativeContext.class,i);
+		public IteratorQueryContext iteratorQuery(int i) {
+			return getRuleContext(IteratorQueryContext.class,i);
 		}
 		public TerminalNode STRINGOPERATOR() { return getToken(ShExMLParser.STRINGOPERATOR, 0); }
 		public StringOperationContext(ParserRuleContext parent, int invokingState) {
@@ -1009,71 +873,20 @@ public class ShExMLParser extends Parser {
 
 	public final StringOperationContext stringOperation() throws RecognitionException {
 		StringOperationContext _localctx = new StringOperationContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_stringOperation);
+		enterRule(_localctx, 22, RULE_stringOperation);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(159);
-			queryAlternative();
-			setState(160);
+			setState(137);
+			iteratorQuery();
+			setState(138);
 			match(ADD);
-			setState(161);
+			setState(139);
 			match(STRINGOPERATOR);
-			setState(162);
+			setState(140);
 			match(ADD);
-			setState(163);
-			queryAlternative();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class SourceQueryContext extends ParserRuleContext {
-		public List<VariableContext> variable() {
-			return getRuleContexts(VariableContext.class);
-		}
-		public VariableContext variable(int i) {
-			return getRuleContext(VariableContext.class,i);
-		}
-		public SourceQueryContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_sourceQuery; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterSourceQuery(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitSourceQuery(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitSourceQuery(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final SourceQueryContext sourceQuery() throws RecognitionException {
-		SourceQueryContext _localctx = new SourceQueryContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_sourceQuery);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(165);
-			variable();
-			setState(166);
-			match(DOT);
-			setState(167);
-			variable();
+			setState(141);
+			iteratorQuery();
 			}
 		}
 		catch (RecognitionException re) {
@@ -1115,80 +928,20 @@ public class ShExMLParser extends Parser {
 
 	public final IteratorQueryContext iteratorQuery() throws RecognitionException {
 		IteratorQueryContext _localctx = new IteratorQueryContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_iteratorQuery);
+		enterRule(_localctx, 24, RULE_iteratorQuery);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(169);
+			setState(143);
 			variable();
-			setState(170);
+			setState(144);
 			match(DOT);
-			setState(171);
+			setState(145);
 			variable();
-			setState(172);
+			setState(146);
 			match(DOT);
-			setState(173);
+			setState(147);
 			variable();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class QueryAlternativeContext extends ParserRuleContext {
-		public SourceQueryContext sourceQuery() {
-			return getRuleContext(SourceQueryContext.class,0);
-		}
-		public IteratorQueryContext iteratorQuery() {
-			return getRuleContext(IteratorQueryContext.class,0);
-		}
-		public QueryAlternativeContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_queryAlternative; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterQueryAlternative(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitQueryAlternative(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitQueryAlternative(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final QueryAlternativeContext queryAlternative() throws RecognitionException {
-		QueryAlternativeContext _localctx = new QueryAlternativeContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_queryAlternative);
-		try {
-			setState(177);
-			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,5,_ctx) ) {
-			case 1:
-				enterOuterAlt(_localctx, 1);
-				{
-				setState(175);
-				sourceQuery();
-				}
-				break;
-			case 2:
-				enterOuterAlt(_localctx, 2);
-				{
-				setState(176);
-				iteratorQuery();
-				}
-				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -1226,12 +979,12 @@ public class ShExMLParser extends Parser {
 
 	public final QueryClauseContext queryClause() throws RecognitionException {
 		QueryClauseContext _localctx = new QueryClauseContext(_ctx, getState());
-		enterRule(_localctx, 34, RULE_queryClause);
+		enterRule(_localctx, 26, RULE_queryClause);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(179);
+			setState(149);
 			_la = _input.LA(1);
 			if ( !(_la==JSONPATH || _la==XMLPATH) ) {
 			_errHandler.recoverInline(this);
@@ -1255,11 +1008,11 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class JoinContext extends ParserRuleContext {
-		public List<QueryAlternativeContext> queryAlternative() {
-			return getRuleContexts(QueryAlternativeContext.class);
+		public List<IteratorQueryContext> iteratorQuery() {
+			return getRuleContexts(IteratorQueryContext.class);
 		}
-		public QueryAlternativeContext queryAlternative(int i) {
-			return getRuleContext(QueryAlternativeContext.class,i);
+		public IteratorQueryContext iteratorQuery(int i) {
+			return getRuleContext(IteratorQueryContext.class,i);
 		}
 		public TerminalNode UNION() { return getToken(ShExMLParser.UNION, 0); }
 		public TerminalNode JOIN() { return getToken(ShExMLParser.JOIN, 0); }
@@ -1284,20 +1037,20 @@ public class ShExMLParser extends Parser {
 
 	public final JoinContext join() throws RecognitionException {
 		JoinContext _localctx = new JoinContext(_ctx, getState());
-		enterRule(_localctx, 36, RULE_join);
+		enterRule(_localctx, 28, RULE_join);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(181);
-			queryAlternative();
-			setState(182);
+			setState(151);
+			iteratorQuery();
+			setState(152);
 			match(UNION);
-			setState(183);
-			queryAlternative();
-			setState(184);
+			setState(153);
+			iteratorQuery();
+			setState(154);
 			match(JOIN);
-			setState(185);
-			queryAlternative();
+			setState(155);
+			iteratorQuery();
 			}
 		}
 		catch (RecognitionException re) {
@@ -1340,15 +1093,15 @@ public class ShExMLParser extends Parser {
 
 	public final UnionContext union() throws RecognitionException {
 		UnionContext _localctx = new UnionContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_union);
+		enterRule(_localctx, 30, RULE_union);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(187);
+			setState(157);
 			leftUnionOption();
-			setState(188);
+			setState(158);
 			match(UNION);
-			setState(189);
+			setState(159);
 			rightUnionOption();
 			}
 		}
@@ -1364,8 +1117,8 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class LeftUnionOptionContext extends ParserRuleContext {
-		public QueryAlternativeContext queryAlternative() {
-			return getRuleContext(QueryAlternativeContext.class,0);
+		public IteratorQueryContext iteratorQuery() {
+			return getRuleContext(IteratorQueryContext.class,0);
 		}
 		public StringOperationContext stringOperation() {
 			return getRuleContext(StringOperationContext.class,0);
@@ -1391,22 +1144,22 @@ public class ShExMLParser extends Parser {
 
 	public final LeftUnionOptionContext leftUnionOption() throws RecognitionException {
 		LeftUnionOptionContext _localctx = new LeftUnionOptionContext(_ctx, getState());
-		enterRule(_localctx, 40, RULE_leftUnionOption);
+		enterRule(_localctx, 32, RULE_leftUnionOption);
 		try {
-			setState(193);
+			setState(163);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,6,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(191);
-				queryAlternative();
+				setState(161);
+				iteratorQuery();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(192);
+				setState(162);
 				stringOperation();
 				}
 				break;
@@ -1424,8 +1177,8 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class RightUnionOptionContext extends ParserRuleContext {
-		public QueryAlternativeContext queryAlternative() {
-			return getRuleContext(QueryAlternativeContext.class,0);
+		public IteratorQueryContext iteratorQuery() {
+			return getRuleContext(IteratorQueryContext.class,0);
 		}
 		public UnionContext union() {
 			return getRuleContext(UnionContext.class,0);
@@ -1454,29 +1207,29 @@ public class ShExMLParser extends Parser {
 
 	public final RightUnionOptionContext rightUnionOption() throws RecognitionException {
 		RightUnionOptionContext _localctx = new RightUnionOptionContext(_ctx, getState());
-		enterRule(_localctx, 42, RULE_rightUnionOption);
+		enterRule(_localctx, 34, RULE_rightUnionOption);
 		try {
-			setState(198);
+			setState(168);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,7,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(195);
-				queryAlternative();
+				setState(165);
+				iteratorQuery();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(196);
+				setState(166);
 				union();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(197);
+				setState(167);
 				stringOperation();
 				}
 				break;
@@ -1533,67 +1286,67 @@ public class ShExMLParser extends Parser {
 
 	public final ShapeContext shape() throws RecognitionException {
 		ShapeContext _localctx = new ShapeContext(_ctx, getState());
-		enterRule(_localctx, 44, RULE_shape);
+		enterRule(_localctx, 36, RULE_shape);
 		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(200);
+			setState(170);
 			tripleElement();
-			setState(201);
+			setState(171);
 			prefixVar();
-			setState(202);
+			setState(172);
 			match(BRACKET_LEFT);
-			setState(205);
+			setState(175);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
 			case 1:
 				{
-				setState(203);
+				setState(173);
 				exp();
 				}
 				break;
 			case 2:
 				{
-				setState(204);
+				setState(174);
 				variable();
 				}
 				break;
 			}
-			setState(207);
+			setState(177);
 			match(BRACKET_RIGHT);
-			setState(208);
+			setState(178);
 			match(BRACE_LEFT);
-			setState(214);
+			setState(184);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,9,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(209);
+					setState(179);
 					predicateObject();
-					setState(210);
+					setState(180);
 					match(SEMICOLON);
 					}
 					} 
 				}
-				setState(216);
+				setState(186);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,9,_ctx);
 			}
-			setState(218);
+			setState(188);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL))) != 0)) {
 				{
-				setState(217);
+				setState(187);
 				predicateObject();
 				}
 			}
 
-			setState(220);
+			setState(190);
 			match(BRACE_RIGHT);
 			}
 		}
@@ -1639,13 +1392,13 @@ public class ShExMLParser extends Parser {
 
 	public final PredicateObjectContext predicateObject() throws RecognitionException {
 		PredicateObjectContext _localctx = new PredicateObjectContext(_ctx, getState());
-		enterRule(_localctx, 46, RULE_predicateObject);
+		enterRule(_localctx, 38, RULE_predicateObject);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(222);
+			setState(192);
 			predicate();
-			setState(225);
+			setState(195);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case BRACKET_LEFT:
@@ -1653,13 +1406,13 @@ public class ShExMLParser extends Parser {
 			case URI_VAR:
 			case URL:
 				{
-				setState(223);
+				setState(193);
 				objectElement();
 				}
 				break;
 			case AT:
 				{
-				setState(224);
+				setState(194);
 				shapeLink();
 				}
 				break;
@@ -1714,52 +1467,52 @@ public class ShExMLParser extends Parser {
 
 	public final ObjectElementContext objectElement() throws RecognitionException {
 		ObjectElementContext _localctx = new ObjectElementContext(_ctx, getState());
-		enterRule(_localctx, 48, RULE_objectElement);
+		enterRule(_localctx, 40, RULE_objectElement);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(228);
+			setState(198);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL))) != 0)) {
 				{
-				setState(227);
+				setState(197);
 				prefixVar();
 				}
 			}
 
-			setState(230);
+			setState(200);
 			match(BRACKET_LEFT);
-			setState(233);
+			setState(203);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
 			case 1:
 				{
-				setState(231);
+				setState(201);
 				exp();
 				}
 				break;
 			case 2:
 				{
-				setState(232);
+				setState(202);
 				variable();
 				}
 				break;
 			}
-			setState(237);
+			setState(207);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==MATCHING) {
 				{
-				setState(235);
+				setState(205);
 				match(MATCHING);
-				setState(236);
+				setState(206);
 				variable();
 				}
 			}
 
-			setState(239);
+			setState(209);
 			match(BRACKET_RIGHT);
 			}
 		}
@@ -1799,13 +1552,13 @@ public class ShExMLParser extends Parser {
 
 	public final ShapeLinkContext shapeLink() throws RecognitionException {
 		ShapeLinkContext _localctx = new ShapeLinkContext(_ctx, getState());
-		enterRule(_localctx, 50, RULE_shapeLink);
+		enterRule(_localctx, 42, RULE_shapeLink);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(241);
+			setState(211);
 			match(AT);
-			setState(242);
+			setState(212);
 			tripleElement();
 			}
 		}
@@ -1848,13 +1601,13 @@ public class ShExMLParser extends Parser {
 
 	public final PredicateContext predicate() throws RecognitionException {
 		PredicateContext _localctx = new PredicateContext(_ctx, getState());
-		enterRule(_localctx, 52, RULE_predicate);
+		enterRule(_localctx, 44, RULE_predicate);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(244);
+			setState(214);
 			prefixVar();
-			setState(245);
+			setState(215);
 			variable();
 			}
 		}
@@ -1897,9 +1650,9 @@ public class ShExMLParser extends Parser {
 
 	public final TripleElementContext tripleElement() throws RecognitionException {
 		TripleElementContext _localctx = new TripleElementContext(_ctx, getState());
-		enterRule(_localctx, 54, RULE_tripleElement);
+		enterRule(_localctx, 46, RULE_tripleElement);
 		try {
-			setState(252);
+			setState(222);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case STRING_OR_VAR:
@@ -1907,18 +1660,18 @@ public class ShExMLParser extends Parser {
 			case URL:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(247);
+				setState(217);
 				predicate();
 				}
 				break;
 			case LESS_SYMBOL:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(248);
+				setState(218);
 				match(LESS_SYMBOL);
-				setState(249);
+				setState(219);
 				variable();
-				setState(250);
+				setState(220);
 				match(GREATER_SYMBOL);
 				}
 				break;
@@ -1963,23 +1716,23 @@ public class ShExMLParser extends Parser {
 
 	public final PrefixVarContext prefixVar() throws RecognitionException {
 		PrefixVarContext _localctx = new PrefixVarContext(_ctx, getState());
-		enterRule(_localctx, 56, RULE_prefixVar);
+		enterRule(_localctx, 48, RULE_prefixVar);
 		try {
-			setState(256);
+			setState(226);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case STRING_OR_VAR:
 			case URI_VAR:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(254);
+				setState(224);
 				variable();
 				}
 				break;
 			case URL:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(255);
+				setState(225);
 				match(URL);
 				}
 				break;
@@ -2022,12 +1775,12 @@ public class ShExMLParser extends Parser {
 
 	public final VariableContext variable() throws RecognitionException {
 		VariableContext _localctx = new VariableContext(_ctx, getState());
-		enterRule(_localctx, 58, RULE_variable);
+		enterRule(_localctx, 50, RULE_variable);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(258);
+			setState(228);
 			_la = _input.LA(1);
 			if ( !(_la==STRING_OR_VAR || _la==URI_VAR) ) {
 			_errHandler.recoverInline(this);
@@ -2037,70 +1790,6 @@ public class ShExMLParser extends Parser {
 				_errHandler.reportMatch(this);
 				consume();
 			}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class VariablesContext extends ParserRuleContext {
-		public VariableContext variable() {
-			return getRuleContext(VariableContext.class,0);
-		}
-		public VariablesContext variables() {
-			return getRuleContext(VariablesContext.class,0);
-		}
-		public VariablesContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_variables; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterVariables(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitVariables(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitVariables(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final VariablesContext variables() throws RecognitionException {
-		VariablesContext _localctx = new VariablesContext(_ctx, getState());
-		enterRule(_localctx, 60, RULE_variables);
-		try {
-			setState(265);
-			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
-			case 1:
-				enterOuterAlt(_localctx, 1);
-				{
-				setState(260);
-				variable();
-				}
-				break;
-			case 2:
-				enterOuterAlt(_localctx, 2);
-				{
-				setState(261);
-				variable();
-				setState(262);
-				match(COMMA);
-				setState(263);
-				variables();
-				}
-				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -2140,45 +1829,45 @@ public class ShExMLParser extends Parser {
 
 	public final QueryPartsContext queryParts() throws RecognitionException {
 		QueryPartsContext _localctx = new QueryPartsContext(_ctx, getState());
-		enterRule(_localctx, 62, RULE_queryParts);
+		enterRule(_localctx, 52, RULE_queryParts);
 		int _la;
 		try {
-			setState(277);
+			setState(240);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,20,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,19,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(268);
+				setState(231);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==AT) {
 					{
-					setState(267);
+					setState(230);
 					match(AT);
 					}
 				}
 
-				setState(270);
+				setState(233);
 				match(STRING_OR_VAR);
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(272);
+				setState(235);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==AT) {
 					{
-					setState(271);
+					setState(234);
 					match(AT);
 					}
 				}
 
-				setState(274);
+				setState(237);
 				match(STRING_OR_VAR);
-				setState(275);
+				setState(238);
 				_la = _input.LA(1);
 				if ( !(_la==T__0 || _la==DOT) ) {
 				_errHandler.recoverInline(this);
@@ -2188,7 +1877,7 @@ public class ShExMLParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(276);
+				setState(239);
 				queryParts();
 				}
 				break;
@@ -2206,97 +1895,84 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3&\u011a\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3&\u00f5\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
-		"\4\32\t\32\4\33\t\33\4\34\t\34\4\35\t\35\4\36\t\36\4\37\t\37\4 \t \4!"+
-		"\t!\3\2\7\2D\n\2\f\2\16\2G\13\2\3\2\7\2J\n\2\f\2\16\2M\13\2\3\3\3\3\3"+
-		"\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3X\n\3\3\4\3\4\3\4\3\4\3\4\3\4\3\5\3\5\3"+
-		"\5\3\5\3\5\3\5\3\6\3\6\3\6\3\6\3\6\3\6\3\7\3\7\3\7\3\7\3\7\3\7\3\b\3\b"+
-		"\3\b\3\b\3\b\3\b\3\t\3\t\3\t\3\t\3\t\3\t\3\n\3\n\3\n\3\n\3\n\3\n\3\13"+
-		"\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3"+
-		"\f\3\r\3\r\3\r\3\r\5\r\u0099\n\r\3\16\3\16\3\16\3\16\3\16\5\16\u00a0\n"+
-		"\16\3\17\3\17\3\17\3\17\3\17\3\17\3\20\3\20\3\20\3\20\3\21\3\21\3\21\3"+
-		"\21\3\21\3\21\3\22\3\22\5\22\u00b4\n\22\3\23\3\23\3\24\3\24\3\24\3\24"+
-		"\3\24\3\24\3\25\3\25\3\25\3\25\3\26\3\26\5\26\u00c4\n\26\3\27\3\27\3\27"+
-		"\5\27\u00c9\n\27\3\30\3\30\3\30\3\30\3\30\5\30\u00d0\n\30\3\30\3\30\3"+
-		"\30\3\30\3\30\7\30\u00d7\n\30\f\30\16\30\u00da\13\30\3\30\5\30\u00dd\n"+
-		"\30\3\30\3\30\3\31\3\31\3\31\5\31\u00e4\n\31\3\32\5\32\u00e7\n\32\3\32"+
-		"\3\32\3\32\5\32\u00ec\n\32\3\32\3\32\5\32\u00f0\n\32\3\32\3\32\3\33\3"+
-		"\33\3\33\3\34\3\34\3\34\3\35\3\35\3\35\3\35\3\35\5\35\u00ff\n\35\3\36"+
-		"\3\36\5\36\u0103\n\36\3\37\3\37\3 \3 \3 \3 \3 \5 \u010c\n \3!\5!\u010f"+
-		"\n!\3!\3!\5!\u0113\n!\3!\3!\3!\5!\u0118\n!\3!\2\2\"\2\4\6\b\n\f\16\20"+
-		"\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@\2\5\3\2#$\3\2\37 \4\2"+
-		"\3\3\32\32\2\u0119\2E\3\2\2\2\4W\3\2\2\2\6Y\3\2\2\2\b_\3\2\2\2\ne\3\2"+
-		"\2\2\fk\3\2\2\2\16q\3\2\2\2\20w\3\2\2\2\22}\3\2\2\2\24\u0083\3\2\2\2\26"+
-		"\u008c\3\2\2\2\30\u0098\3\2\2\2\32\u009f\3\2\2\2\34\u00a1\3\2\2\2\36\u00a7"+
-		"\3\2\2\2 \u00ab\3\2\2\2\"\u00b3\3\2\2\2$\u00b5\3\2\2\2&\u00b7\3\2\2\2"+
-		"(\u00bd\3\2\2\2*\u00c3\3\2\2\2,\u00c8\3\2\2\2.\u00ca\3\2\2\2\60\u00e0"+
-		"\3\2\2\2\62\u00e6\3\2\2\2\64\u00f3\3\2\2\2\66\u00f6\3\2\2\28\u00fe\3\2"+
-		"\2\2:\u0102\3\2\2\2<\u0104\3\2\2\2>\u010b\3\2\2\2@\u0117\3\2\2\2BD\5\4"+
-		"\3\2CB\3\2\2\2DG\3\2\2\2EC\3\2\2\2EF\3\2\2\2FK\3\2\2\2GE\3\2\2\2HJ\5."+
-		"\30\2IH\3\2\2\2JM\3\2\2\2KI\3\2\2\2KL\3\2\2\2L\3\3\2\2\2MK\3\2\2\2NX\5"+
-		"\b\5\2OX\5\6\4\2PX\5\16\b\2QX\5\20\t\2RX\5\22\n\2SX\5\24\13\2TX\5\26\f"+
-		"\2UX\5\n\6\2VX\5\f\7\2WN\3\2\2\2WO\3\2\2\2WP\3\2\2\2WQ\3\2\2\2WR\3\2\2"+
-		"\2WS\3\2\2\2WT\3\2\2\2WU\3\2\2\2WV\3\2\2\2X\5\3\2\2\2YZ\7\4\2\2Z[\5<\37"+
-		"\2[\\\7\21\2\2\\]\7!\2\2]^\7\22\2\2^\7\3\2\2\2_`\7\5\2\2`a\5<\37\2ab\7"+
-		"\21\2\2bc\7!\2\2cd\7\22\2\2d\t\3\2\2\2ef\7\7\2\2fg\5<\37\2gh\7\21\2\2"+
-		"hi\5$\23\2ij\7\22\2\2j\13\3\2\2\2kl\7\b\2\2lm\5<\37\2mn\7\21\2\2no\5@"+
-		"!\2op\7\22\2\2p\r\3\2\2\2qr\7\6\2\2rs\5<\37\2st\7\21\2\2tu\5$\23\2uv\7"+
-		"\22\2\2v\17\3\2\2\2wx\7\17\2\2xy\5<\37\2yz\7\21\2\2z{\5$\23\2{|\7\22\2"+
-		"\2|\21\3\2\2\2}~\7\t\2\2~\177\5<\37\2\177\u0080\7\21\2\2\u0080\u0081\5"+
-		"\32\16\2\u0081\u0082\7\22\2\2\u0082\23\3\2\2\2\u0083\u0084\7\20\2\2\u0084"+
-		"\u0085\5<\37\2\u0085\u0086\7\25\2\2\u0086\u0087\5> \2\u0087\u0088\7\26"+
-		"\2\2\u0088\u0089\7\21\2\2\u0089\u008a\5\32\16\2\u008a\u008b\7\22\2\2\u008b"+
-		"\25\3\2\2\2\u008c\u008d\7\f\2\2\u008d\u008e\5<\37\2\u008e\u008f\7\21\2"+
-		"\2\u008f\u0090\5\30\r\2\u0090\u0091\7\r\2\2\u0091\u0092\7\37\2\2\u0092"+
-		"\u0093\7\22\2\2\u0093\27\3\2\2\2\u0094\u0095\7\37\2\2\u0095\u0096\7\35"+
-		"\2\2\u0096\u0099\5\30\r\2\u0097\u0099\7\37\2\2\u0098\u0094\3\2\2\2\u0098"+
-		"\u0097\3\2\2\2\u0099\31\3\2\2\2\u009a\u00a0\5\36\20\2\u009b\u00a0\5(\25"+
-		"\2\u009c\u00a0\5&\24\2\u009d\u00a0\5\34\17\2\u009e\u00a0\5 \21\2\u009f"+
-		"\u009a\3\2\2\2\u009f\u009b\3\2\2\2\u009f\u009c\3\2\2\2\u009f\u009d\3\2"+
-		"\2\2\u009f\u009e\3\2\2\2\u00a0\33\3\2\2\2\u00a1\u00a2\5\"\22\2\u00a2\u00a3"+
-		"\7\34\2\2\u00a3\u00a4\7\"\2\2\u00a4\u00a5\7\34\2\2\u00a5\u00a6\5\"\22"+
-		"\2\u00a6\35\3\2\2\2\u00a7\u00a8\5<\37\2\u00a8\u00a9\7\32\2\2\u00a9\u00aa"+
-		"\5<\37\2\u00aa\37\3\2\2\2\u00ab\u00ac\5<\37\2\u00ac\u00ad\7\32\2\2\u00ad"+
-		"\u00ae\5<\37\2\u00ae\u00af\7\32\2\2\u00af\u00b0\5<\37\2\u00b0!\3\2\2\2"+
-		"\u00b1\u00b4\5\36\20\2\u00b2\u00b4\5 \21\2\u00b3\u00b1\3\2\2\2\u00b3\u00b2"+
-		"\3\2\2\2\u00b4#\3\2\2\2\u00b5\u00b6\t\2\2\2\u00b6%\3\2\2\2\u00b7\u00b8"+
-		"\5\"\22\2\u00b8\u00b9\7\n\2\2\u00b9\u00ba\5\"\22\2\u00ba\u00bb\7\13\2"+
-		"\2\u00bb\u00bc\5\"\22\2\u00bc\'\3\2\2\2\u00bd\u00be\5*\26\2\u00be\u00bf"+
-		"\7\n\2\2\u00bf\u00c0\5,\27\2\u00c0)\3\2\2\2\u00c1\u00c4\5\"\22\2\u00c2"+
-		"\u00c4\5\34\17\2\u00c3\u00c1\3\2\2\2\u00c3\u00c2\3\2\2\2\u00c4+\3\2\2"+
-		"\2\u00c5\u00c9\5\"\22\2\u00c6\u00c9\5(\25\2\u00c7\u00c9\5\34\17\2\u00c8"+
-		"\u00c5\3\2\2\2\u00c8\u00c6\3\2\2\2\u00c8\u00c7\3\2\2\2\u00c9-\3\2\2\2"+
-		"\u00ca\u00cb\58\35\2\u00cb\u00cc\5:\36\2\u00cc\u00cf\7\23\2\2\u00cd\u00d0"+
-		"\5\32\16\2\u00ce\u00d0\5<\37\2\u00cf\u00cd\3\2\2\2\u00cf\u00ce\3\2\2\2"+
-		"\u00d0\u00d1\3\2\2\2\u00d1\u00d2\7\24\2\2\u00d2\u00d8\7\27\2\2\u00d3\u00d4"+
-		"\5\60\31\2\u00d4\u00d5\7\31\2\2\u00d5\u00d7\3\2\2\2\u00d6\u00d3\3\2\2"+
-		"\2\u00d7\u00da\3\2\2\2\u00d8\u00d6\3\2\2\2\u00d8\u00d9\3\2\2\2\u00d9\u00dc"+
-		"\3\2\2\2\u00da\u00d8\3\2\2\2\u00db\u00dd\5\60\31\2\u00dc\u00db\3\2\2\2"+
-		"\u00dc\u00dd\3\2\2\2\u00dd\u00de\3\2\2\2\u00de\u00df\7\30\2\2\u00df/\3"+
-		"\2\2\2\u00e0\u00e3\5\66\34\2\u00e1\u00e4\5\62\32\2\u00e2\u00e4\5\64\33"+
-		"\2\u00e3\u00e1\3\2\2\2\u00e3\u00e2\3\2\2\2\u00e4\61\3\2\2\2\u00e5\u00e7"+
-		"\5:\36\2\u00e6\u00e5\3\2\2\2\u00e6\u00e7\3\2\2\2\u00e7\u00e8\3\2\2\2\u00e8"+
-		"\u00eb\7\23\2\2\u00e9\u00ec\5\32\16\2\u00ea\u00ec\5<\37\2\u00eb\u00e9"+
-		"\3\2\2\2\u00eb\u00ea\3\2\2\2\u00ec\u00ef\3\2\2\2\u00ed\u00ee\7\16\2\2"+
-		"\u00ee\u00f0\5<\37\2\u00ef\u00ed\3\2\2\2\u00ef\u00f0\3\2\2\2\u00f0\u00f1"+
-		"\3\2\2\2\u00f1\u00f2\7\24\2\2\u00f2\63\3\2\2\2\u00f3\u00f4\7\33\2\2\u00f4"+
-		"\u00f5\58\35\2\u00f5\65\3\2\2\2\u00f6\u00f7\5:\36\2\u00f7\u00f8\5<\37"+
-		"\2\u00f8\67\3\2\2\2\u00f9\u00ff\5\66\34\2\u00fa\u00fb\7\21\2\2\u00fb\u00fc"+
-		"\5<\37\2\u00fc\u00fd\7\22\2\2\u00fd\u00ff\3\2\2\2\u00fe\u00f9\3\2\2\2"+
-		"\u00fe\u00fa\3\2\2\2\u00ff9\3\2\2\2\u0100\u0103\5<\37\2\u0101\u0103\7"+
-		"!\2\2\u0102\u0100\3\2\2\2\u0102\u0101\3\2\2\2\u0103;\3\2\2\2\u0104\u0105"+
-		"\t\3\2\2\u0105=\3\2\2\2\u0106\u010c\5<\37\2\u0107\u0108\5<\37\2\u0108"+
-		"\u0109\7\35\2\2\u0109\u010a\5> \2\u010a\u010c\3\2\2\2\u010b\u0106\3\2"+
-		"\2\2\u010b\u0107\3\2\2\2\u010c?\3\2\2\2\u010d\u010f\7\33\2\2\u010e\u010d"+
-		"\3\2\2\2\u010e\u010f\3\2\2\2\u010f\u0110\3\2\2\2\u0110\u0118\7\37\2\2"+
-		"\u0111\u0113\7\33\2\2\u0112\u0111\3\2\2\2\u0112\u0113\3\2\2\2\u0113\u0114"+
-		"\3\2\2\2\u0114\u0115\7\37\2\2\u0115\u0116\t\4\2\2\u0116\u0118\5@!\2\u0117"+
-		"\u010e\3\2\2\2\u0117\u0112\3\2\2\2\u0118A\3\2\2\2\27EKW\u0098\u009f\u00b3"+
-		"\u00c3\u00c8\u00cf\u00d8\u00dc\u00e3\u00e6\u00eb\u00ef\u00fe\u0102\u010b"+
-		"\u010e\u0112\u0117";
+		"\4\32\t\32\4\33\t\33\4\34\t\34\3\2\7\2:\n\2\f\2\16\2=\13\2\3\2\7\2@\n"+
+		"\2\f\2\16\2C\13\2\3\3\3\3\3\3\3\3\3\3\3\3\5\3K\n\3\3\4\3\4\3\4\3\4\3\4"+
+		"\3\4\3\5\3\5\3\5\3\5\3\5\3\5\3\6\3\6\3\6\3\6\3\6\3\6\3\6\6\6`\n\6\r\6"+
+		"\16\6a\3\6\3\6\3\7\3\7\3\7\3\7\3\7\3\7\3\b\3\b\3\b\3\b\3\b\3\b\3\t\3\t"+
+		"\3\t\3\t\3\t\3\t\3\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n\3\13\3\13\3\13\3\13\5"+
+		"\13\u0084\n\13\3\f\3\f\3\f\3\f\5\f\u008a\n\f\3\r\3\r\3\r\3\r\3\r\3\r\3"+
+		"\16\3\16\3\16\3\16\3\16\3\16\3\17\3\17\3\20\3\20\3\20\3\20\3\20\3\20\3"+
+		"\21\3\21\3\21\3\21\3\22\3\22\5\22\u00a6\n\22\3\23\3\23\3\23\5\23\u00ab"+
+		"\n\23\3\24\3\24\3\24\3\24\3\24\5\24\u00b2\n\24\3\24\3\24\3\24\3\24\3\24"+
+		"\7\24\u00b9\n\24\f\24\16\24\u00bc\13\24\3\24\5\24\u00bf\n\24\3\24\3\24"+
+		"\3\25\3\25\3\25\5\25\u00c6\n\25\3\26\5\26\u00c9\n\26\3\26\3\26\3\26\5"+
+		"\26\u00ce\n\26\3\26\3\26\5\26\u00d2\n\26\3\26\3\26\3\27\3\27\3\27\3\30"+
+		"\3\30\3\30\3\31\3\31\3\31\3\31\3\31\5\31\u00e1\n\31\3\32\3\32\5\32\u00e5"+
+		"\n\32\3\33\3\33\3\34\5\34\u00ea\n\34\3\34\3\34\5\34\u00ee\n\34\3\34\3"+
+		"\34\3\34\5\34\u00f3\n\34\3\34\2\2\35\2\4\6\b\n\f\16\20\22\24\26\30\32"+
+		"\34\36 \"$&(*,.\60\62\64\66\2\5\3\2#$\3\2\37 \4\2\3\3\32\32\2\u00f4\2"+
+		";\3\2\2\2\4J\3\2\2\2\6L\3\2\2\2\bR\3\2\2\2\nX\3\2\2\2\fe\3\2\2\2\16k\3"+
+		"\2\2\2\20q\3\2\2\2\22w\3\2\2\2\24\u0083\3\2\2\2\26\u0089\3\2\2\2\30\u008b"+
+		"\3\2\2\2\32\u0091\3\2\2\2\34\u0097\3\2\2\2\36\u0099\3\2\2\2 \u009f\3\2"+
+		"\2\2\"\u00a5\3\2\2\2$\u00aa\3\2\2\2&\u00ac\3\2\2\2(\u00c2\3\2\2\2*\u00c8"+
+		"\3\2\2\2,\u00d5\3\2\2\2.\u00d8\3\2\2\2\60\u00e0\3\2\2\2\62\u00e4\3\2\2"+
+		"\2\64\u00e6\3\2\2\2\66\u00f2\3\2\2\28:\5\4\3\298\3\2\2\2:=\3\2\2\2;9\3"+
+		"\2\2\2;<\3\2\2\2<A\3\2\2\2=;\3\2\2\2>@\5&\24\2?>\3\2\2\2@C\3\2\2\2A?\3"+
+		"\2\2\2AB\3\2\2\2B\3\3\2\2\2CA\3\2\2\2DK\5\b\5\2EK\5\6\4\2FK\5\16\b\2G"+
+		"K\5\20\t\2HK\5\22\n\2IK\5\n\6\2JD\3\2\2\2JE\3\2\2\2JF\3\2\2\2JG\3\2\2"+
+		"\2JH\3\2\2\2JI\3\2\2\2K\5\3\2\2\2LM\7\4\2\2MN\5\64\33\2NO\7\21\2\2OP\7"+
+		"!\2\2PQ\7\22\2\2Q\7\3\2\2\2RS\7\5\2\2ST\5\64\33\2TU\7\21\2\2UV\7!\2\2"+
+		"VW\7\22\2\2W\t\3\2\2\2XY\7\7\2\2YZ\5\64\33\2Z[\7\21\2\2[\\\5\34\17\2\\"+
+		"]\7\22\2\2]_\7\27\2\2^`\5\f\7\2_^\3\2\2\2`a\3\2\2\2a_\3\2\2\2ab\3\2\2"+
+		"\2bc\3\2\2\2cd\7\30\2\2d\13\3\2\2\2ef\7\b\2\2fg\5\64\33\2gh\7\21\2\2h"+
+		"i\5\66\34\2ij\7\22\2\2j\r\3\2\2\2kl\7\6\2\2lm\5\64\33\2mn\7\21\2\2no\5"+
+		"\34\17\2op\7\22\2\2p\17\3\2\2\2qr\7\t\2\2rs\5\64\33\2st\7\21\2\2tu\5\26"+
+		"\f\2uv\7\22\2\2v\21\3\2\2\2wx\7\f\2\2xy\5\64\33\2yz\7\21\2\2z{\5\24\13"+
+		"\2{|\7\r\2\2|}\7\37\2\2}~\7\22\2\2~\23\3\2\2\2\177\u0080\7\37\2\2\u0080"+
+		"\u0081\7\35\2\2\u0081\u0084\5\24\13\2\u0082\u0084\7\37\2\2\u0083\177\3"+
+		"\2\2\2\u0083\u0082\3\2\2\2\u0084\25\3\2\2\2\u0085\u008a\5 \21\2\u0086"+
+		"\u008a\5\36\20\2\u0087\u008a\5\30\r\2\u0088\u008a\5\32\16\2\u0089\u0085"+
+		"\3\2\2\2\u0089\u0086\3\2\2\2\u0089\u0087\3\2\2\2\u0089\u0088\3\2\2\2\u008a"+
+		"\27\3\2\2\2\u008b\u008c\5\32\16\2\u008c\u008d\7\34\2\2\u008d\u008e\7\""+
+		"\2\2\u008e\u008f\7\34\2\2\u008f\u0090\5\32\16\2\u0090\31\3\2\2\2\u0091"+
+		"\u0092\5\64\33\2\u0092\u0093\7\32\2\2\u0093\u0094\5\64\33\2\u0094\u0095"+
+		"\7\32\2\2\u0095\u0096\5\64\33\2\u0096\33\3\2\2\2\u0097\u0098\t\2\2\2\u0098"+
+		"\35\3\2\2\2\u0099\u009a\5\32\16\2\u009a\u009b\7\n\2\2\u009b\u009c\5\32"+
+		"\16\2\u009c\u009d\7\13\2\2\u009d\u009e\5\32\16\2\u009e\37\3\2\2\2\u009f"+
+		"\u00a0\5\"\22\2\u00a0\u00a1\7\n\2\2\u00a1\u00a2\5$\23\2\u00a2!\3\2\2\2"+
+		"\u00a3\u00a6\5\32\16\2\u00a4\u00a6\5\30\r\2\u00a5\u00a3\3\2\2\2\u00a5"+
+		"\u00a4\3\2\2\2\u00a6#\3\2\2\2\u00a7\u00ab\5\32\16\2\u00a8\u00ab\5 \21"+
+		"\2\u00a9\u00ab\5\30\r\2\u00aa\u00a7\3\2\2\2\u00aa\u00a8\3\2\2\2\u00aa"+
+		"\u00a9\3\2\2\2\u00ab%\3\2\2\2\u00ac\u00ad\5\60\31\2\u00ad\u00ae\5\62\32"+
+		"\2\u00ae\u00b1\7\23\2\2\u00af\u00b2\5\26\f\2\u00b0\u00b2\5\64\33\2\u00b1"+
+		"\u00af\3\2\2\2\u00b1\u00b0\3\2\2\2\u00b2\u00b3\3\2\2\2\u00b3\u00b4\7\24"+
+		"\2\2\u00b4\u00ba\7\27\2\2\u00b5\u00b6\5(\25\2\u00b6\u00b7\7\31\2\2\u00b7"+
+		"\u00b9\3\2\2\2\u00b8\u00b5\3\2\2\2\u00b9\u00bc\3\2\2\2\u00ba\u00b8\3\2"+
+		"\2\2\u00ba\u00bb\3\2\2\2\u00bb\u00be\3\2\2\2\u00bc\u00ba\3\2\2\2\u00bd"+
+		"\u00bf\5(\25\2\u00be\u00bd\3\2\2\2\u00be\u00bf\3\2\2\2\u00bf\u00c0\3\2"+
+		"\2\2\u00c0\u00c1\7\30\2\2\u00c1\'\3\2\2\2\u00c2\u00c5\5.\30\2\u00c3\u00c6"+
+		"\5*\26\2\u00c4\u00c6\5,\27\2\u00c5\u00c3\3\2\2\2\u00c5\u00c4\3\2\2\2\u00c6"+
+		")\3\2\2\2\u00c7\u00c9\5\62\32\2\u00c8\u00c7\3\2\2\2\u00c8\u00c9\3\2\2"+
+		"\2\u00c9\u00ca\3\2\2\2\u00ca\u00cd\7\23\2\2\u00cb\u00ce\5\26\f\2\u00cc"+
+		"\u00ce\5\64\33\2\u00cd\u00cb\3\2\2\2\u00cd\u00cc\3\2\2\2\u00ce\u00d1\3"+
+		"\2\2\2\u00cf\u00d0\7\16\2\2\u00d0\u00d2\5\64\33\2\u00d1\u00cf\3\2\2\2"+
+		"\u00d1\u00d2\3\2\2\2\u00d2\u00d3\3\2\2\2\u00d3\u00d4\7\24\2\2\u00d4+\3"+
+		"\2\2\2\u00d5\u00d6\7\33\2\2\u00d6\u00d7\5\60\31\2\u00d7-\3\2\2\2\u00d8"+
+		"\u00d9\5\62\32\2\u00d9\u00da\5\64\33\2\u00da/\3\2\2\2\u00db\u00e1\5.\30"+
+		"\2\u00dc\u00dd\7\21\2\2\u00dd\u00de\5\64\33\2\u00de\u00df\7\22\2\2\u00df"+
+		"\u00e1\3\2\2\2\u00e0\u00db\3\2\2\2\u00e0\u00dc\3\2\2\2\u00e1\61\3\2\2"+
+		"\2\u00e2\u00e5\5\64\33\2\u00e3\u00e5\7!\2\2\u00e4\u00e2\3\2\2\2\u00e4"+
+		"\u00e3\3\2\2\2\u00e5\63\3\2\2\2\u00e6\u00e7\t\3\2\2\u00e7\65\3\2\2\2\u00e8"+
+		"\u00ea\7\33\2\2\u00e9\u00e8\3\2\2\2\u00e9\u00ea\3\2\2\2\u00ea\u00eb\3"+
+		"\2\2\2\u00eb\u00f3\7\37\2\2\u00ec\u00ee\7\33\2\2\u00ed\u00ec\3\2\2\2\u00ed"+
+		"\u00ee\3\2\2\2\u00ee\u00ef\3\2\2\2\u00ef\u00f0\7\37\2\2\u00f0\u00f1\t"+
+		"\4\2\2\u00f1\u00f3\5\66\34\2\u00f2\u00e9\3\2\2\2\u00f2\u00ed\3\2\2\2\u00f3"+
+		"\67\3\2\2\2\26;AJa\u0083\u0089\u00a5\u00aa\u00b1\u00ba\u00be\u00c5\u00c8"+
+		"\u00cd\u00d1\u00e0\u00e4\u00e9\u00ed\u00f2";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

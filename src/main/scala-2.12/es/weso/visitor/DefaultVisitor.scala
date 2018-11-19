@@ -24,11 +24,7 @@ abstract class DefaultVisitor[A, B] {
 
     case Query(_, queryClause) => doVisit(queryClause, optionalArgument)
 
-    case QuerySet(_, queryClauses) => queryClauses.map(doVisit(_, optionalArgument)).head
-
     case Expression(_, exp) => doVisit(exp, optionalArgument)
-
-    case ExpressionSet(_, _, exp) => doVisit(exp, optionalArgument)
 
     case Union(left, right) => {
       doVisit(left, optionalArgument)

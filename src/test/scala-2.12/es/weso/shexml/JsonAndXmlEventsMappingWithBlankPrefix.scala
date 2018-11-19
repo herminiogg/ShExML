@@ -10,17 +10,19 @@ class JsonAndXmlEventsMappingWithBlankPrefix extends FunSuite with Matchers with
       |PREFIX : <http://ex.com/>
       |SOURCE performances_json <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.json>
       |SOURCE events_xml <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.xml>
-      |ITERATOR performances_iterator <jsonpath: $.Performances[*]>
-      |ITERATOR events_iterator <xpath: /Events/Exhibition>
-      |FIELD performances_ids <Perf_ID>
-      |FIELD events_ids <@id>
-      |FIELD venues_ids <Venue.Venue_ID>
-      |FIELD venues_names <Venue>
-      |FIELD venues_names_json <Venue.Name>
-      |FIELD lat_json <Location.lat>
-      |FIELD lat_xml <Location/lat>
-      |FIELD long_json <Location.long>
-      |FIELD long_xml <Location/long>
+      |ITERATOR performances_iterator <jsonpath: $.Performances[*]> {
+      |   FIELD performances_ids <Perf_ID>
+      |   FIELD venues_ids <Venue.Venue_ID>
+      |   FIELD venues_names_json <Venue.Name>
+      |   FIELD lat_json <Location.lat>
+      |   FIELD long_json <Location.long>
+      |}
+      |ITERATOR events_iterator <xpath: /Events/Exhibition> {
+      |   FIELD events_ids <@id>
+      |   FIELD venues_names <Venue>
+      |   FIELD lat_xml <Location/lat>
+      |   FIELD long_xml <Location/long>
+      |}
       |EXPRESSION performances_union <performances_json.performances_iterator.performances_ids UNION events_xml.events_iterator.events_ids>
       |EXPRESSION venues_union <performances_json.performances_iterator.venues_ids UNION events_xml.events_iterator.venues_names JOIN performances_json.performances_iterator.venues_names_json>
       |EXPRESSION location_union <performances_json.performances_iterator.lat_json + "-" + performances_json.performances_iterator.long_json UNION

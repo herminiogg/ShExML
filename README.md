@@ -7,22 +7,27 @@ shape is the main foundation to define the transformations.
 ## Example
 ```
 PREFIX : <http://example.com/>
-SOURCE films_xml <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-SOURCE films_json <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
-ITERATOR film_xml <xpath: //film>
-ITERATOR film_json <jsonpath: $.films[*]>
-FIELD film_id_xml <@id>
-FIELD film_id_json <id>
-FIELD film_name <name>
-FIELD film_year <year>
-FIELD film_country <country>
-FIELD film_director <director>
-FIELD film_director_xml <directors/director>
-EXPRESSION film_ids <films_xml.film_xml.film_id_xml UNION films_json.film_json.film_id_json>
-EXPRESSION film_names <films_xml.film_xml.film_name UNION films_json.film_json.film_name>
-EXPRESSION film_years <films_xml.film_xml.film_year UNION films_json.film_json.film_year>
-EXPRESSION film_countries <films_xml.film_xml.film_country UNION films_json.film_json.film_country>
-EXPRESSION film_directors <films_xml.film_xml.film_director_xml UNION films_json.film_json.film_director>
+SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
+SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
+ITERATOR film_xml <xpath: //film> {
+    FIELD id <@id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <directors/director>
+}
+ITERATOR film_json <jsonpath: $.films[*]> {
+    FIELD id <id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <director>
+}
+EXPRESSION film_ids <films_xml_file.film_xml.id UNION films_json_file.film_json.id>
+EXPRESSION film_names <films_xml_file.film_xml.name UNION films_json_file.film_json.name>
+EXPRESSION film_years <films_xml_file.film_xml.year UNION films_json_file.film_json.year>
+EXPRESSION film_countries <films_xml_file.film_xml.country UNION films_json_file.film_json.country>
+EXPRESSION film_directors <films_xml_file.film_xml.directors UNION films_json_file.film_json.directors>
 
 :Films :[film_ids] {
     :name [film_names] ;

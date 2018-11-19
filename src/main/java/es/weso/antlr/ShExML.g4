@@ -5,27 +5,23 @@ package es.weso.antlr;
 }
 
 shExML: decl* shape* ;
-decl: (source | prefix | query | querySet | expression | expressionSet | matcher | iterator | field) ;
+decl: (source | prefix | query | expression | matcher | iterator) ;
 prefix: PREFIX variable '<' URL '>' ;
 source: SOURCE variable '<' URL '>' ;
-iterator: ITERATOR variable '<' queryClause '>' ;
+iterator: ITERATOR variable '<' queryClause '>' '{' field+ '}' ;
 field: FIELD variable '<' queryParts '>' ;
 query: QUERY variable '<' queryClause '>' ;
-querySet: QUERY_SET variable '<' queryClause '>' ;
 expression: EXPRESSION variable '<' exp '>' ;
-expressionSet: EXPRESSION_SET variable '(' variables ')' '<' exp '>' ;
 matcher: MATCHER variable '<' replacedStrings AS STRING_OR_VAR '>' ;
 replacedStrings: STRING_OR_VAR ',' replacedStrings | STRING_OR_VAR ;
-exp: sourceQuery | union | join | stringOperation | iteratorQuery ;
-stringOperation: queryAlternative '+' STRINGOPERATOR '+' queryAlternative ;
-sourceQuery: variable '.' variable ;
+exp: union | join | stringOperation | iteratorQuery ;
+stringOperation: iteratorQuery '+' STRINGOPERATOR '+' iteratorQuery ;
 iteratorQuery: variable '.' variable '.' variable ;
-queryAlternative: sourceQuery | iteratorQuery ;
 queryClause: JSONPATH | XMLPATH ;
-join: queryAlternative UNION queryAlternative JOIN queryAlternative ;
+join: iteratorQuery UNION iteratorQuery JOIN iteratorQuery ;
 union: leftUnionOption UNION rightUnionOption ;
-leftUnionOption: queryAlternative | stringOperation ;
-rightUnionOption: queryAlternative | union | stringOperation ;
+leftUnionOption: iteratorQuery | stringOperation ;
+rightUnionOption: iteratorQuery | union | stringOperation ;
 shape: tripleElement prefixVar '[' (exp | variable) ']' '{' (predicateObject ';')* predicateObject? '}' ;
 predicateObject: predicate (objectElement | shapeLink) ;
 objectElement: prefixVar? '[' (exp | variable) (MATCHING variable)? ']' ;
@@ -34,7 +30,6 @@ predicate: prefixVar variable ;
 tripleElement: predicate | '<' variable '>' ;
 prefixVar: variable | URL ;
 variable: STRING_OR_VAR | URI_VAR ;
-variables: variable | variable ',' variables ;
 queryParts: '@'? STRING_OR_VAR | '@'? STRING_OR_VAR ('/' | '.') queryParts ;
 
 

@@ -16,8 +16,6 @@ libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.
 
 libraryDependencies += "com.nrinaudo" %% "kantan.xpath" % "0.3.2"
 
-libraryDependencies += "org.apache.commons" % "commons-text" % "1.5"
-
 libraryDependencies += "org.apache.jena" % "apache-jena-libs" % "3.6.0" pomOnly()
 
 libraryDependencies += "org.scalatest" % "scalatest_2.12" % "3.0.4" % "test"

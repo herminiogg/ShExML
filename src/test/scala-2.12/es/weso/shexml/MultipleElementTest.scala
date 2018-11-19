@@ -8,22 +8,27 @@ class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreato
   private val example =
     """
       |PREFIX : <http://example.com/>
-      |SOURCE films_xml_source <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-      |SOURCE films_json_source <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
-      |ITERATOR films_xml <xpath: //film>
-      |ITERATOR films_json <jsonpath: $.films[*]>
-      |FIELD film_ids_xml <@id>
-      |FIELD film_ids_json <id>
-      |FIELD film_names_field <name>
-      |FIELD film_years_field <year>
-      |FIELD film_countries_field <country>
-      |FIELD film_directors_xml <directors/director>
-      |FIELD film_directors_json <director>
-      |EXPRESSION film_ids <films_xml_source.films_xml.film_ids_xml UNION films_json_source.films_json.film_ids_json>
-      |EXPRESSION film_names <films_xml_source.films_xml.film_names_field UNION films_json_source.films_json.film_names_field>
-      |EXPRESSION film_years <films_xml_source.films_xml.film_years_field UNION films_json_source.films_json.film_years_field>
-      |EXPRESSION film_countries <films_xml_source.films_xml.film_countries_field UNION films_json_source.films_json.film_countries_field>
-      |EXPRESSION film_directors <films_xml_source.films_xml.film_directors_xml UNION films_json_source.films_json.film_directors_json>
+      |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
+      |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
+      |ITERATOR film_xml <xpath: //film> {
+      |    FIELD id <@id>
+      |    FIELD name <name>
+      |    FIELD year <year>
+      |    FIELD country <country>
+      |    FIELD directors <directors/director>
+      |}
+      |ITERATOR film_json <jsonpath: $.films[*]> {
+      |    FIELD id <id>
+      |    FIELD name <name>
+      |    FIELD year <year>
+      |    FIELD country <country>
+      |    FIELD directors <director>
+      |}
+      |EXPRESSION film_ids <films_xml_file.film_xml.id UNION films_json_file.film_json.id>
+      |EXPRESSION film_names <films_xml_file.film_xml.name UNION films_json_file.film_json.name>
+      |EXPRESSION film_years <films_xml_file.film_xml.year UNION films_json_file.film_json.year>
+      |EXPRESSION film_countries <films_xml_file.film_xml.country UNION films_json_file.film_json.country>
+      |EXPRESSION film_directors <films_xml_file.film_xml.directors UNION films_json_file.film_json.directors>
       |
       |:Films :[film_ids] {
       |    :name [film_names] ;

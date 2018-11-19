@@ -24,11 +24,7 @@ abstract class DefaultUnitVisitor {
 
     case Query(_, queryClause) => doVisit(queryClause)
 
-    case QuerySet(_, queryClauses) => queryClauses.foreach(doVisit)
-
     case Expression(_, exp) => doVisit(exp)
-
-    case ExpressionSet(_, _, exp) => doVisit(exp)
 
     case Union(left, right) => {
       doVisit(left)
