@@ -13,21 +13,25 @@ class JsonAndXmlEventsMapping extends FunSuite with Matchers with RDFStatementCr
       |PREFIX ex: <http://ex.com/>
       |SOURCE performances_json <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.json>
       |SOURCE events_xml <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.xml>
-      |QUERY performances <$.Performances[*].Perf_ID>
-      |QUERY events </Events/Exhibition/@id>
-      |QUERY venues_ids <$.Performances[*].Venue.Venue_ID>
-      |QUERY venues_names </Events/Exhibition/Venue>
-      |QUERY venues_names_json <$.Performance.Name>
-      |QUERY lat_json <$.Performances[*].Location.lat>
-      |QUERY lat_xml </Events/Exhibition/Location/lat>
-      |QUERY long_json <$.Performances[*].Location.long>
-      |QUERY long_xml </Events/Exhibition/Location/long>
-      |EXPRESSION performances_union <$performances_json.performances UNION $events_xml.events>
-      |EXPRESSION venues_union <$performances_json.venues_ids UNION $events_xml.venues_names>
-      |EXPRESSION location_union <$performances_json.lat_json + "-" + $performances_json.long_json UNION
-      |                             $events_xml.lat_xml + "-" + $events_xml.long_xml>
-      |EXPRESSION lat_union <$performances_json.lat_json UNION $events_xml.lat_xml>
-      |EXPRESSION long_union <$performances_json.long_json UNION $events_xml.long_xml>
+      |ITERATOR performances_iterator <jsonpath: $.Performances[*]> {
+      |   FIELD performances_ids <Perf_ID>
+      |   FIELD venues_ids <Venue.Venue_ID>
+      |   FIELD venues_names_json <Name>
+      |   FIELD lat_json <Location.lat>
+      |   FIELD long_json <Location.long>
+      |}
+      |ITERATOR events_iterator <xpath: /Events/Exhibition> {
+      |   FIELD events_ids <@id>
+      |   FIELD venues_names <Venue>
+      |   FIELD lat_xml <Location/lat>
+      |   FIELD long_xml <Location/long>
+      |}
+      |EXPRESSION performances_union <performances_json.performances_iterator.performances_ids UNION events_xml.events_iterator.events_ids>
+      |EXPRESSION venues_union <performances_json.performances_iterator.venues_ids UNION events_xml.events_iterator.venues_names>
+      |EXPRESSION location_union <performances_json.performances_iterator.lat_json + "-" + performances_json.performances_iterator.long_json UNION
+      |                             events_xml.events_iterator.lat_xml + "-" + events_xml.events_iterator.long_xml>
+      |EXPRESSION lat_union <performances_json.performances_iterator.lat_json UNION events_xml.events_iterator.lat_xml>
+      |EXPRESSION long_union <performances_json.performances_iterator.long_json UNION events_xml.events_iterator.long_xml>
       |
       |ex:Performance ex:[performances_union] {
       |  ex:venue ex:[venues_union] ;

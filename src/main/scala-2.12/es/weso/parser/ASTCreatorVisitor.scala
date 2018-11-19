@@ -33,7 +33,7 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
   }
 
   override def visitSource(ctx: SourceContext): AST = {
-    val url = URL(ctx.fileSource().getText)
+    val url = URL(ctx.URL().getText)
     val name = createVar(ctx.variable())
     Source(name, url)
   }
@@ -44,22 +44,15 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
     Query(name, queryClause)
   }
 
+  override def visitQueryClause(ctx: QueryClauseContext): AST = {
+    if(ctx.JSONPATH() != null) JsonPath(ctx.JSONPATH().getText.replace("jsonpath:", ""))
+    else XmlPath(ctx.XMLPATH().getText.replace("xpath:", ""))
+  }
+
   override def visitExpression(ctx: ExpressionContext): AST = {
     val exp = visit(ctx.exp()).asInstanceOf[Exp]
     val name = createVar(ctx.variable())
     Expression(name, exp)
-  }
-
-  override def visitQueryClause(ctx: QueryClauseContext): AST = {
-    val jsonPath = ctx.JSONPATH()
-    val xmlPath = ctx.XMLPATH()
-    if(jsonPath != null) JsonPath(jsonPath.getText) else XmlPath(xmlPath.getText)
-  }
-
-  override def visitSourceQuery(ctx: SourceQueryContext): AST = {
-    val fileVar = createVar(ctx.variable(0))
-    val expressionVar = createVar(ctx.variable(1))
-    SourceQuery(fileVar, expressionVar)
   }
 
   override def visitMatcher(ctx: MatcherContext): AST = {
@@ -86,17 +79,39 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
   }
 
   override def visitStringOperation(ctx: StringOperationContext): AST = {
-    val left = visit(ctx.sourceQuery(0)).asInstanceOf[SourceQuery]
-    val right = visit(ctx.sourceQuery(1)).asInstanceOf[SourceQuery]
+    val left = visit(ctx.iteratorQuery(0)).asInstanceOf[IteratorQuery]
+    val right = visit(ctx.iteratorQuery(1)).asInstanceOf[IteratorQuery]
     val stringOperator = ctx.STRINGOPERATOR().getText.replace("\"", "")
     StringOperation(left, right, stringOperator)
   }
 
   override def visitJoin(ctx: JoinContext): AST = {
-    val leftUnion = visit(ctx.sourceQuery(0)).asInstanceOf[SourceQuery]
-    val rightUnion = visit(ctx.sourceQuery(1)).asInstanceOf[SourceQuery]
-    val joinClause = visit(ctx.sourceQuery(2)).asInstanceOf[SourceQuery]
+    val leftUnion = visit(ctx.iteratorQuery(0)).asInstanceOf[IteratorQuery]
+    val rightUnion = visit(ctx.iteratorQuery(1)).asInstanceOf[IteratorQuery]
+    val joinClause = visit(ctx.iteratorQuery(2)).asInstanceOf[IteratorQuery]
     Join(leftUnion, rightUnion, joinClause)
+  }
+
+  override def visitIterator(ctx: IteratorContext): AST = {
+    val query = visit(ctx.queryClause()).asInstanceOf[QueryClause]
+    val variable = createVar(ctx.variable())
+    val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
+    Iterator(variable, query, fields.toList)
+  }
+
+  override def visitField(ctx: FieldContext): AST = {
+    val fieldQuery = visit(ctx.queryParts()).asInstanceOf[FieldQuery]
+    val variable = createVar(ctx.variable())
+    Field(variable, fieldQuery)
+  }
+
+  override def visitQueryParts(ctx: QueryPartsContext): AST = FieldQuery(ctx.getText)
+
+  override def visitIteratorQuery(ctx: IteratorQueryContext): AST = {
+    val fileVar = createVar(ctx.variable(0))
+    val iteratorVar = createVar(ctx.variable(1))
+    val fieldVar = createVar(ctx.variable(2))
+    IteratorQuery(fileVar, iteratorVar, fieldVar)
   }
 
   override def visitShape(ctx: ShapeContext): AST = {
@@ -139,6 +154,14 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
 
   def createShapeVar(tripleElementContext: TripleElementContext): ShapeVar = {
     ShapeVar(tripleElementContext.getText)
+  }
+
+  def getDeclarationContent(content: String): String = content.replaceAll("<>", "")
+
+  def createQuery(query: String): QueryClause = {
+    if(query.startsWith("$")) JsonPath(query)
+    else if(query.startsWith("/")) XmlPath(query)
+    else throw new Exception("Impossible to parse query: " + query)
   }
 
 }

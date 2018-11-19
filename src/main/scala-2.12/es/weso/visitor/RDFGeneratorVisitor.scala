@@ -1,21 +1,20 @@
 package es.weso.visitor
+import java.util
 import com.fasterxml.jackson.databind.ObjectMapper
 import es.weso.ast._
 import es.weso.helper.SourceHelper
 import kantan.xpath.XPathCompiler
-
 import scala.collection.mutable
 import kantan.xpath.implicits._
 import org.apache.jena.datatypes.RDFDatatype
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.rdf.model.{Model, ResourceFactory, Statement}
-
 import scala.util.Try
 
 /**
   * Created by herminio on 26/12/17.
   */
-class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any] {
+class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any, Any] {
 
   private val prefixTable = mutable.HashMap[String, String]()
 
@@ -32,31 +31,32 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case Shape(shapeName, shapePrefix, action, predicateObjects) => {
-      val actions = doVisit(action, optionalArgument).asInstanceOf[List[String]]
-      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument)).asInstanceOf[List[List[String]]]
-      val zipped = predicateObjectsList.map((_, actions))
-      zipped.foreach {
-        case (p, a) => {
-          if(a != null && p!= null && a.length <= p.length) {
-            for (i <- a.indices) {
-              val predicateObject = p(i).split(" ", 2)
-              val action = normaliseURI(a(i))
-              if(predicateObject(1).contains("http://") || predicateObject(1).contains("https://"))
-                output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
-              else
-                output.add(createStatementWithLiteral(prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1)))
-            }
+      val actions = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument)).asInstanceOf[List[List[Result]]]
+      for(a <- actions) {
+        val finalPredicateObjectsList = predicateObjectsList.flatten.filter(_.id == a.id)
+        for(result <- finalPredicateObjectsList) {
+          val predicateObjects = result.results.map(_.toString.split(" ", 2))
+          val action = normaliseURI(a.results.head)
+          for(predicateObject <- predicateObjects) {
+            if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://"))
+              output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
+            else
+              output.add(createStatementWithLiteral(prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1)))
           }
         }
       }
-      actions.map(prefixTable(shapePrefix) + _)
+      actions.map(r => Result(r.id, r.results.map(prefixTable(shapePrefix) + _)))
     }
 
     case PredicateObject(predicate, objectOrShapeLink) => {
       val predicateResult = doVisit(predicate, optionalArgument)
-      val objectResult = doVisit(objectOrShapeLink, optionalArgument)
+      val objectResult = doVisit(objectOrShapeLink, optionalArgument).asInstanceOf[List[Result]]
       if(predicateResult != null && objectResult != null)
-        objectResult.asInstanceOf[List[String]].map(predicateResult.toString + " " + _)
+        objectResult.map(result => {
+          val results = result.results.map(predicateResult.toString + " " + _)
+          Result(result.id, results)
+        })
       else Nil
     }
 
@@ -70,35 +70,60 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
       }
-      matchedResultList.asInstanceOf[List[_]].map(_.toString).map(prefixTable.getOrElse(prefix, "") + _)
+      matchedResultList.asInstanceOf[List[Result]].map(result => {
+        val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
+        Result(result.id, newResults)
+      })
     }
 
     case Union(left, right) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[_]].map(_.toString)
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[_]].map(_.toString)
+      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[Result]]
+      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[Result]]
       leftList.union(rightList)
     }
 
     case Join(left, right, join) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[_]].map(_.toString)
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[_]].map(_.toString)
-      val joinList = doVisit(join, optionalArgument).asInstanceOf[List[_]].map(_.toString)
-      val joinUnionList = for (i <- rightList.indices) yield {
-        val index = joinList.indexOf(rightList(i))
-        if(index >= 0) leftList(index) else rightList(i)
+      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[Result]]
+      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[Result]]
+      val joinList = doVisit(join, optionalArgument).asInstanceOf[List[Result]]
+      val joinUnionList = for(r <- rightList) yield {
+        val join = joinList.filter(j => j.results.nonEmpty && j.results == r.results)
+        if(join.nonEmpty)
+          Result(r.id, leftList.filter(l => l.id == join.head.id && l.results.nonEmpty).head.results)
+        else r
       }
       leftList.union(joinUnionList)
     }
 
-    case SourceQuery(fileVar, expressionVar) => {
-      val file = doVisit(fileVar, optionalArgument).asInstanceOf[String]
-      doVisit(expressionVar, file)
+    case StringOperation(left, right, unionString) => {
+      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[Result]]
+      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[Result]]
+      for ((l, r) <- leftList zip rightList) yield {
+        val results = for (i <- l.results) yield {
+          for (j <- r.results) yield {
+            i + unionString + j
+          }
+        }
+        Result(l.id, results.flatten)
+      }
     }
 
-    case StringOperation(left, right, unionString) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[_]].map(_.toString)
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[_]].map(_.toString)
-      for ((l, r) <- leftList zip rightList) yield l + unionString + r
+    case IteratorQuery(fileVar, iteratorVar, expressionVar) => {
+      val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
+      val fileContent = doVisit(fileVar, optionalArgument).asInstanceOf[String]
+      val fileMap = Map("fileContent" -> fileContent)
+      val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
+      val iteratorQuery = doVisit(iteratorVar, middleArguments).asInstanceOf[Result]
+      val finalArguments = middleArguments.++(Map("iteratorQuery" -> iteratorQuery))
+      val fieldVar = Var(iteratorVar.name + "." + expressionVar.name)
+      val queries = iteratorQuery.results.indices.map(i => {
+        val queryClause = varTable(iteratorVar) match {
+          case JsonPath(query) => JsonPath(query.replace("*", i.toString) + "." + varTable(fieldVar).asInstanceOf[FieldQuery].query)
+          case XmlPath(query) => XmlPath(query + "[" + (i + 1) + "]/" + varTable(fieldVar).asInstanceOf[FieldQuery].query)
+        }
+        (i, queryClause)
+      })
+      queries.map(t => doVisit(t._2, finalArguments.+("index" -> t._1)).asInstanceOf[Result]).toList
     }
 
     case v: Var => {
@@ -110,27 +135,43 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case JsonPath(query) => {
-      val fileContent = optionalArgument.asInstanceOf[String]
+      val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
+      val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
+      val index = arguments.getOrElse("index", "")
+      val fileContent = arguments.getOrElse("fileContent", null).asInstanceOf[String]
+      val id = (iteratorQuery + fileContent + index).hashCode.toString
       val jsonContent = new ObjectMapper().readValue(fileContent, classOf[Object])
       val result = io.gatling.jsonpath.JsonPath.query(query, jsonContent)
       result match {
-        case Left(l) => throw new Exception(l.reason)
-        case Right(r) => r.toList
+        case Left(_) => Nil
+        case Right(r) => {
+          val finalList = r.toList.flatMap({
+            case l: util.ArrayList[_] => l.toArray.map(_.toString)
+            case default => List(default.toString)
+          })
+          Result(id, finalList)
+        }
       }
     }
 
     case XmlPath(query) => {
-      val fileContent = optionalArgument.asInstanceOf[String]
+      val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
+      val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
+      val index = arguments.getOrElse("index", "")
+      val fileContent = arguments.getOrElse("fileContent", null).asInstanceOf[String]
+      val id = (iteratorQuery + fileContent + index).hashCode.toString
       val compilationResult = XPathCompiler.builtIn.compile(query)
       compilationResult.toOption match {
-        case Some(xPathQuery) => fileContent.evalXPath[List[String]](xPathQuery).getOrElse(Nil)
-        case None => throw new Exception("Bad xPath query")
+        case Some(value) => Result(id, fileContent.evalXPath[List[String]](value).getOrElse(Nil))
+        case None => throw new Exception("Bad iterator query: " + query)
       }
     }
 
     case Matcher(_, replacedStrings, replacement) => {
-      val listToMatch = optionalArgument.asInstanceOf[List[_]].map(_.toString)
-      listToMatch.map(s => if(replacedStrings.strings.contains(s)) replacement else s)
+      val listToMatch = optionalArgument.asInstanceOf[List[Result]]
+      listToMatch.map(r => Result(r.id, r.results.map(s => {
+        if(replacedStrings.strings.contains(s)) replacement else s
+      })))
     }
 
     case ShapeLink(shapeVar) => {
@@ -175,4 +216,9 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       .replace("&#220;", "U").replace("&#252;", "u")
   }
 
+  override def doVisitDefault(): Any = Nil
+
 }
+
+case class Result(id: String, results: List[String])
+case class QueryByID(id: String, query: String)

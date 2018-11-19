@@ -50,6 +50,26 @@ public interface ShExMLListener extends ParseTreeListener {
 	 */
 	void exitSource(ShExMLParser.SourceContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#iterator}.
+	 * @param ctx the parse tree
+	 */
+	void enterIterator(ShExMLParser.IteratorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#iterator}.
+	 * @param ctx the parse tree
+	 */
+	void exitIterator(ShExMLParser.IteratorContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#field}.
+	 * @param ctx the parse tree
+	 */
+	void enterField(ShExMLParser.FieldContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#field}.
+	 * @param ctx the parse tree
+	 */
+	void exitField(ShExMLParser.FieldContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#query}.
 	 * @param ctx the parse tree
 	 */
@@ -110,15 +130,25 @@ public interface ShExMLListener extends ParseTreeListener {
 	 */
 	void exitStringOperation(ShExMLParser.StringOperationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ShExMLParser#sourceQuery}.
+	 * Enter a parse tree produced by {@link ShExMLParser#iteratorQuery}.
 	 * @param ctx the parse tree
 	 */
-	void enterSourceQuery(ShExMLParser.SourceQueryContext ctx);
+	void enterIteratorQuery(ShExMLParser.IteratorQueryContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ShExMLParser#sourceQuery}.
+	 * Exit a parse tree produced by {@link ShExMLParser#iteratorQuery}.
 	 * @param ctx the parse tree
 	 */
-	void exitSourceQuery(ShExMLParser.SourceQueryContext ctx);
+	void exitIteratorQuery(ShExMLParser.IteratorQueryContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#queryClause}.
+	 * @param ctx the parse tree
+	 */
+	void enterQueryClause(ShExMLParser.QueryClauseContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#queryClause}.
+	 * @param ctx the parse tree
+	 */
+	void exitQueryClause(ShExMLParser.QueryClauseContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#join}.
 	 * @param ctx the parse tree
@@ -210,26 +240,6 @@ public interface ShExMLListener extends ParseTreeListener {
 	 */
 	void exitPredicate(ShExMLParser.PredicateContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ShExMLParser#fileSource}.
-	 * @param ctx the parse tree
-	 */
-	void enterFileSource(ShExMLParser.FileSourceContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ShExMLParser#fileSource}.
-	 * @param ctx the parse tree
-	 */
-	void exitFileSource(ShExMLParser.FileSourceContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link ShExMLParser#queryClause}.
-	 * @param ctx the parse tree
-	 */
-	void enterQueryClause(ShExMLParser.QueryClauseContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ShExMLParser#queryClause}.
-	 * @param ctx the parse tree
-	 */
-	void exitQueryClause(ShExMLParser.QueryClauseContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#tripleElement}.
 	 * @param ctx the parse tree
 	 */
@@ -259,4 +269,14 @@ public interface ShExMLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitVariable(ShExMLParser.VariableContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#queryParts}.
+	 * @param ctx the parse tree
+	 */
+	void enterQueryParts(ShExMLParser.QueryPartsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#queryParts}.
+	 * @param ctx the parse tree
+	 */
+	void exitQueryParts(ShExMLParser.QueryPartsContext ctx);
 }
