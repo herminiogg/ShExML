@@ -8,7 +8,7 @@ shExML: decl* shape* ;
 decl: (source | prefix | query | expression | matcher | iterator) ;
 prefix: PREFIX variable '<' URL '>' ;
 source: SOURCE variable '<' URL '>' ;
-iterator: ITERATOR variable '<' queryClause '>' '{' field+ '}' ;
+iterator: ITERATOR variable '<' queryClause '>' '{' field+ iterator* '}' ;
 field: FIELD variable '<' queryParts '>' ;
 query: QUERY variable '<' queryClause '>' ;
 expression: EXPRESSION variable '<' exp '>' ;
@@ -16,7 +16,8 @@ matcher: MATCHER variable '<' replacedStrings AS STRING_OR_VAR '>' ;
 replacedStrings: STRING_OR_VAR ',' replacedStrings | STRING_OR_VAR ;
 exp: union | join | stringOperation | iteratorQuery ;
 stringOperation: iteratorQuery '+' STRINGOPERATOR '+' iteratorQuery ;
-iteratorQuery: variable '.' variable '.' variable ;
+iteratorQuery: variable '.' variable '.' composedVariable ;
+composedVariable: variable | variable '.' composedVariable ;
 queryClause: JSONPATH | XMLPATH ;
 join: iteratorQuery UNION iteratorQuery JOIN iteratorQuery ;
 union: leftUnionOption UNION rightUnionOption ;
@@ -30,7 +31,7 @@ predicate: prefixVar variable ;
 tripleElement: predicate | '<' variable '>' ;
 prefixVar: variable | URL ;
 variable: STRING_OR_VAR | URI_VAR ;
-queryParts: '@'? STRING_OR_VAR | '@'? STRING_OR_VAR ('/' | '.') queryParts ;
+queryParts: ('@' | '..' | '^' )? STRING_OR_VAR | ('@' | '..' | '^')? STRING_OR_VAR? ('/' | '.' | '^') queryParts ;
 
 
 PREFIX: 'PREFIX' ;
@@ -72,4 +73,4 @@ WS: [ \t\n\r] -> skip ;
 fragment LETTER: [a-zA-Záéíóú] ;
 fragment DIGIT: [0-9] ;
 fragment ALLOWED_CHARACTERS: '[' | ']' | '*' | '_' | '/' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
-        | '?' | '=' | '&' | '#' | '$' ;
+        | '?' | '=' | '&' | '#' | '$' | ':' ;

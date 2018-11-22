@@ -1,0 +1,64 @@
+{
+    "films": [
+        {
+            "id": 3,
+            "name": "Inception",
+            "year": "2010",
+            "country": "USA",
+            "crew": {
+                "director": "Christopher Nolan",
+                "screenwritter": "Christopher Nolan",
+                "music": "Hans Zimmer",
+                "cinematographer": "Wally Pfister"
+            },
+            "cast": [
+                {
+                    "name": "Leonardo DiCaprio",
+                    "role": "Cobb"
+                },
+                {
+                    "name": "Joseph Gordon-Levitt",
+                    "role": "Arthur"
+                },
+                {
+                    "name": "Ellen Page",
+                    "role": "Ariadne"
+                },
+                {
+                    "name": "Tom Hardy",
+                    "role": "Eames"
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "name": "The Prestige",
+            "year": "2006",
+            "country": "USA",
+            "crew": {
+                "director": "Christopher Nolan",
+                "screenwritter": ["Christopher Nolan", "Jonathan Nolan"],
+                "music": "David Julyan",
+                "cinematographer": "Wally Pfister"
+            },
+            "cast": [
+                {
+                    "name": "Hugh Jackman",
+                    "role": "Robert Angier"
+                },
+                {
+                    "name": "Christian Bale",
+                    "role": "Alfred Borden"
+                },
+                {
+                    "name": "Michael Caine",
+                    "role": "Cutter"
+                },
+                {
+                    "name": "Piper Perabo",
+                    "role": "Julia McCullough"
+                }
+            ]
+        }
+    ]
+}

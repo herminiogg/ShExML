@@ -45,7 +45,8 @@ class MappingLauncher {
 
   private def createVarTable(ast: AST): mutable.HashMap[Variable, VarResult] = {
     val varTable = mutable.HashMap[Variable, VarResult]()
-    new VarTableBuilderVisitor(varTable).visit(ast)
+    val optionalArgument = Map("variable" -> "", "query" -> "")
+    new VarTableBuilderVisitor(varTable).visit(ast, optionalArgument)
     varTable
   }
 

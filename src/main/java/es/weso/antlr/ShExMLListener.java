@@ -140,6 +140,16 @@ public interface ShExMLListener extends ParseTreeListener {
 	 */
 	void exitIteratorQuery(ShExMLParser.IteratorQueryContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#composedVariable}.
+	 * @param ctx the parse tree
+	 */
+	void enterComposedVariable(ShExMLParser.ComposedVariableContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#composedVariable}.
+	 * @param ctx the parse tree
+	 */
+	void exitComposedVariable(ShExMLParser.ComposedVariableContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#queryClause}.
 	 * @param ctx the parse tree
 	 */

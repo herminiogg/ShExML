@@ -174,6 +174,18 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterComposedVariable(ShExMLParser.ComposedVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComposedVariable(ShExMLParser.ComposedVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterQueryClause(ShExMLParser.QueryClauseContext ctx) { }
 	/**
 	 * {@inheritDoc}

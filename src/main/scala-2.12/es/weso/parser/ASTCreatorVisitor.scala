@@ -96,7 +96,8 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
     val query = visit(ctx.queryClause()).asInstanceOf[QueryClause]
     val variable = createVar(ctx.variable())
     val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
-    Iterator(variable, query, fields.toList)
+    val iterators = ctx.iterator().listIterator().asScala.map(visit(_).asInstanceOf[Iterator])
+    Iterator(variable, query, fields.toList, iterators.toList)
   }
 
   override def visitField(ctx: FieldContext): AST = {
@@ -110,8 +111,17 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
   override def visitIteratorQuery(ctx: IteratorQueryContext): AST = {
     val fileVar = createVar(ctx.variable(0))
     val iteratorVar = createVar(ctx.variable(1))
-    val fieldVar = createVar(ctx.variable(2))
-    IteratorQuery(fileVar, iteratorVar, fieldVar)
+    val varOrIteratorQuery = visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
+    IteratorQuery(fileVar, iteratorVar, varOrIteratorQuery)
+  }
+
+  override def visitComposedVariable(ctx: ComposedVariableContext): AST = {
+    val variable = createVar(ctx.variable())
+    //val fileVar = Var(ctx.getParent.start.getText.split(".")(0))
+    val otherVariables = if(ctx.composedVariable() != null)
+      visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
+    else null
+    if(otherVariables != null) IteratorQuery(null, variable, otherVariables) else variable
   }
 
   override def visitShape(ctx: ShapeContext): AST = {
