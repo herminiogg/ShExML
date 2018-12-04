@@ -1,4 +1,4 @@
-// Generated from ShExML.g4 by ANTLR 4.7.1
+// Generated from ShExMLParser.g4 by ANTLR 4.7.1
 
 package es.weso.antlr;
 
@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  * @param <T> The return type of the visit operation. Use {@link Void} for
  * operations with no return type.
  */
-public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
+public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#shExML}.
 	 * @param ctx the parse tree
@@ -174,10 +174,4 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitVariable(ShExMLParser.VariableContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#queryParts}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitQueryParts(ShExMLParser.QueryPartsContext ctx);
 }

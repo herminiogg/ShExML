@@ -1,6 +1,6 @@
 package es.weso.parser
 
-import es.weso.antlr.ShExMLBaseVisitor
+import es.weso.antlr.ShExMLParserBaseVisitor
 import es.weso.antlr.ShExMLParser._
 import es.weso.ast._
 import es.weso.ast.URL
@@ -13,7 +13,7 @@ import scala.util.Try
 /**
   * Created by herminio on 20/12/17.
   */
-class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
+class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitShExML(ctx: ShExMLContext): AST = {
     val declarations = ctx.decl().asScala.map(visit(_).asInstanceOf[Declaration]).toList
@@ -101,12 +101,10 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
   }
 
   override def visitField(ctx: FieldContext): AST = {
-    val fieldQuery = visit(ctx.queryParts()).asInstanceOf[FieldQuery]
+    val fieldQuery = FieldQuery(ctx.QUERY_PART().getText)
     val variable = createVar(ctx.variable())
     Field(variable, fieldQuery)
   }
-
-  override def visitQueryParts(ctx: QueryPartsContext): AST = FieldQuery(ctx.getText)
 
   override def visitIteratorQuery(ctx: IteratorQueryContext): AST = {
     val fileVar = createVar(ctx.variable(0))

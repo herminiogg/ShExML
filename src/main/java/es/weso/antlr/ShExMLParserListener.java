@@ -1,4 +1,4 @@
-// Generated from ShExML.g4 by ANTLR 4.7.1
+// Generated from ShExMLParser.g4 by ANTLR 4.7.1
 
 package es.weso.antlr;
 
@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  * This interface defines a complete listener for a parse tree produced by
  * {@link ShExMLParser}.
  */
-public interface ShExMLListener extends ParseTreeListener {
+public interface ShExMLParserListener extends ParseTreeListener {
 	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#shExML}.
 	 * @param ctx the parse tree
@@ -279,14 +279,4 @@ public interface ShExMLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitVariable(ShExMLParser.VariableContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link ShExMLParser#queryParts}.
-	 * @param ctx the parse tree
-	 */
-	void enterQueryParts(ShExMLParser.QueryPartsContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ShExMLParser#queryParts}.
-	 * @param ctx the parse tree
-	 */
-	void exitQueryParts(ShExMLParser.QueryPartsContext ctx);
 }
