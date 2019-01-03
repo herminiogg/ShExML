@@ -12,12 +12,12 @@ ITERATOR film_xml <xpath: //film> {
     FIELD screenwritters <crew//screenwritter>
     FIELD music <crew/music>
     FIELD photography <crew/photography>
-    ITERATOR actors <xpath: /cast/actor> {
+    ITERATOR actors <cast/actor> {
         FIELD name <name>
         FIELD role <role>
         FIELD film <../../@id>
     }
-    ITERATOR actresses <xpath: /cast/actress> {
+    ITERATOR actresses <cast/actress> {
         FIELD name <name>
         FIELD role <role>
         FIELD film <../../@id>
@@ -32,7 +32,7 @@ ITERATOR film_json <jsonpath: $.films[*]> {
     FIELD screenwritters <crew.screenwritter>
     FIELD music <crew.music>
     FIELD photography <crew.cinematography>
-    ITERATOR actors <jsonpath: .cast[*]> {
+    ITERATOR actors <cast[*]> {
         FIELD name <name>
         FIELD role <role>
     }

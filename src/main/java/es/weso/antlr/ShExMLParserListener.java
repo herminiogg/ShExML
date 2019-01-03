@@ -60,6 +60,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitIterator(ShExMLParser.IteratorContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#nestedIterator}.
+	 * @param ctx the parse tree
+	 */
+	void enterNestedIterator(ShExMLParser.NestedIteratorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#nestedIterator}.
+	 * @param ctx the parse tree
+	 */
+	void exitNestedIterator(ShExMLParser.NestedIteratorContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#field}.
 	 * @param ctx the parse tree
 	 */

@@ -16,7 +16,8 @@ sealed trait DeclarationStatement extends AST
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
 case class Source(name: Var, filePath: URL) extends DeclarationStatement
 case class Query(name: Var, queryClause: QueryClause) extends DeclarationStatement
-case class Iterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[Iterator]) extends DeclarationStatement with VarResult
+case class Iterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
+case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class Field(name: Var, queryClause: QueryClause) extends AST
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
 case class Matcher(name: Var, replacedStrings: ReplacedStrings, replacement: String) extends DeclarationStatement with VarResult
@@ -38,7 +39,7 @@ sealed trait RightUnion extends Exp
 case class Union(left: LeftUnion, right: RightUnion) extends RightUnion
 case class StringOperation(left: IteratorQuery, right: IteratorQuery, unionString: String) extends LeftUnion with RightUnion
 case class Join(leftUnion: IteratorQuery, rightUnion: IteratorQuery, joinClause: IteratorQuery) extends Exp
-case class IteratorQuery(fileVar: Var, iteratorVar: Var, composedVar: VarOrIteratorQuery) extends LeftUnion with RightUnion with VarOrIteratorQuery
+case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery) extends LeftUnion with RightUnion with VarOrIteratorQuery
 
 sealed trait VarOrIteratorQuery extends AST
 sealed trait ExpOrVar extends AST
@@ -57,6 +58,12 @@ case class ObjectElement(prefix: String, action: ExpOrVar, matcher: Option[Var])
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 
 sealed trait VarResult extends AST
+sealed trait Iterators extends AST {
+  def name: Var
+  def queryClause: QueryClause
+  def fields: List[Field]
+  def iterators: List[NestedIterator]
+}
 
 case class URL(url: String) extends VarResult
 case class ReplacedStrings(strings: List[String]) extends AST

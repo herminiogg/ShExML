@@ -14,15 +14,8 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     case Source(name, value) => variableMap += ((name, value))
     case Query(name, value) => variableMap += ((name, value))
     case Expression(name, value) => variableMap += ((name, value))
-    case Iterator(name, value, fields, iterators) => {
-      val iteratorName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable") + "." + name.name
-      variableMap += ((Var(iteratorName), value))
-      val newOptionalArgument = Map(
-        "variable" -> iteratorName
-      )
-      fields.foreach(doVisit(_, newOptionalArgument))
-      iterators.foreach(doVisit(_, newOptionalArgument))
-    }
+    case Iterator(name, value, fields, iterators) => registerIterator(name, value, fields, iterators, optionalArgument)
+    case NestedIterator(name, value, fields, iterators) => registerIterator(name, value, fields, iterators, optionalArgument)
     case Field(name, value) => {
       val fieldName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable") + "." + name.name
       variableMap += ((Var(fieldName), value))
@@ -30,6 +23,16 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     case m: Matcher => variableMap += ((m.name, m))
     case s: Shape => variableMap += ((s.shapeName, s))
     case default => super.visit(default, optionalArgument)
+  }
+
+  def registerIterator(name: Var, value: QueryClause, fields: List[Field], iterators: List[NestedIterator], optionalArgument: Map[String, String]) {
+    val iteratorName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable") + "." + name.name
+    variableMap += ((Var(iteratorName), value))
+    val newOptionalArgument = Map(
+      "variable" -> iteratorName
+    )
+    fields.foreach(doVisit(_, newOptionalArgument))
+    iterators.foreach(doVisit(_, newOptionalArgument))
   }
 
   override def doVisitDefault(): Unit = ???

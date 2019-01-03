@@ -108,46 +108,24 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       }
     }
 
-    case IteratorQuery(fileVar, iteratorVar, expressionVar) => {
+    case i: IteratorQuery => {
       val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
-      val fileContent = doVisit(fileVar, optionalArgument).asInstanceOf[String]
+      val fileContent = doVisit(i.firstVar, optionalArgument).asInstanceOf[String]
       val fileMap = Map("fileContent" -> fileContent)
       val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
-      val iteratorQuery =
-        if(middleArguments.isDefinedAt("nestedIterator")) doVisitIteratorQuery(middleArguments("nestedIterator").asInstanceOf[QueryClause], varTable(iteratorVar).asInstanceOf[QueryClause], middleArguments)
-        else doVisit(iteratorVar, middleArguments).asInstanceOf[Result]
-      val finalArguments = middleArguments.++(Map("iteratorQuery" -> iteratorQuery))
-      expressionVar match {
-        case Var(name) => {
-          val fieldVar = Var(iteratorVar.name + "." + name)
-          val nestedIteratorQuery = middleArguments.get("nestedIterator")
-            .map(_.asInstanceOf[QueryClause].query + varTable(iteratorVar).asInstanceOf[QueryClause].query)
-          val queries = iteratorQuery.results.indices.map(i => {
-            val queryClause = varTable(iteratorVar) match {
-              case JsonPath(query) => JsonPath(nestedIteratorQuery.getOrElse(query).replace("*", i.toString) + "." + varTable(fieldVar).asInstanceOf[FieldQuery].query)
-              case XmlPath(query) => XmlPath(nestedIteratorQuery.getOrElse(query) + "[" + (i + 1) + "]/" + varTable(fieldVar).asInstanceOf[FieldQuery].query)
-            }
-            (i, queryClause)
-          })
-          queries.map(t => doVisit(t._2, finalArguments.+("index" -> t._1)).asInstanceOf[Result]).toList
-        }
-        case i: IteratorQuery => {
-          val nestedIteratorVar = Var(iteratorVar.name + "." + i.iteratorVar.name)
-          val queries = iteratorQuery.results.indices.map(i => {
-            val queryClause = varTable(iteratorVar) match {
-              case JsonPath(query) => JsonPath(query.replace("*", i.toString))
-              case XmlPath(query) => XmlPath(query + "[" + (i + 1) + "]")
-            }
-            (i, queryClause)
-          })
-          queries.flatMap(t => {
-            val query = t._2
-            val rootId = List((iteratorQuery + fileContent + t._1).hashCode.toString)
-            val rootIds = middleArguments.getOrElse("rootIds", Nil).asInstanceOf[List[String]].:::(rootId)
-            val nestedOptionalArguments = finalArguments.+("index" -> t._1, "nestedIterator" -> query, "rootIds" -> rootIds)
-            doVisit(IteratorQuery(fileVar, nestedIteratorVar, i.composedVar), nestedOptionalArguments).asInstanceOf[List[Result]]
-          }).toList
-        }
+      val varList = iteratorQueryToList(i)
+      if(varList.size == 2) {
+        throw new Exception("To be implemented") //to be implemented
+      } else if(varList.size >= 3) {
+        val iteratorVars = varList.slice(1, varList.size)
+        val query = generateFinalQuery(iteratorVars, "", null)
+        val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
+        val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContent)
+        queries.map(q => doVisit(q.query, middleArguments.+(
+          "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
+          .filter(_.results.nonEmpty)
+      } else {
+        throw new Exception("Bad number of vars")
       }
     }
 
@@ -248,9 +226,86 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case XmlPath(query) => doVisit(XmlPath(query + currentIterator.query), optionalArgument).asInstanceOf[Result]
   }
 
+  private def iteratorQueryToList(i: IteratorQuery): List[Var] = i.composedVar match {
+    case v: Var => List(i.firstVar, v)
+    case c: IteratorQuery => List(i.firstVar) ::: iteratorQueryToList(c)
+  }
+
+  private def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], fileContent: String): List[QueryWithIndex] = iteratorQueries.flatMap({
+    case r: Result => r.results.indices.map(i => query match {
+      case XmlPath(xpathQuery) => {
+        val composedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
+        val rootId = (r.results(i) + fileContent + i.toString).hashCode.toString
+        QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.results(i))
+      }
+      case JsonPath(jsonpathQuery) => {
+        val composedQuery = JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
+        val rootId = (r.results(i) + fileContent + i.toString).hashCode.toString
+        QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.results(i))
+      }
+    }).toList
+    case r: ResultWithNested => r.results.indices.flatMap(i => query match {
+      case XmlPath(xpathQuery) => {
+        val indicedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
+        val rootId = (r.results(i) + fileContent + i.toString).hashCode.toString
+        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
+      }
+      case JsonPath(jsonpathQuery) => {
+        val indicedQuery = JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
+        val rootId = (r.results(i) + fileContent + i.toString).hashCode.toString
+        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
+      }
+    }).toList
+  })
+
+  private def generateFinalQuery(varList: List[Var], context: String, rootQuery: QueryClause): QueryClause = varList match {
+    case x :: Nil => varTable(Var(context + x.name)).asInstanceOf[QueryClause]
+    case x :: xs => varTable(Var(context + x.name)).asInstanceOf[QueryClause] match {
+      case j: JsonPath => JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
+      case xp: XmlPath => XmlPath(xp.query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
+      case FieldQuery(query) => rootQuery match {
+        case j: JsonPath => JsonPath(query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
+        case xp: XmlPath => XmlPath(query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
+      }
+    }
+  }
+
+  private def doIteratorQueries(varList: List[Var], varContext: String, precedentQueries: List[String], arguments: Any, rootQuery: QueryClause): List[Resultable] = varList match {
+    case x :: Nil => precedentQueries.map(q => varTable(Var(varContext + x.name)) match {
+      case JsonPath(query) => doVisit(JsonPath(q + query), arguments).asInstanceOf[Result]
+      case XmlPath(query) => doVisit(XmlPath(q + query), arguments).asInstanceOf[Result]
+      case FieldQuery(query) => rootQuery match {
+        case JsonPath(_) => doVisit(JsonPath(q + query), arguments).asInstanceOf[Result]
+        case XmlPath(_) => doVisit(XmlPath(q + query), arguments).asInstanceOf[Result]
+      }
+    })
+    case x :: xs => {
+      val queries = precedentQueries.map(q => varTable(Var(varContext + x.name)) match {
+        case JsonPath(query) => JsonPath(q + query)
+        case XmlPath(query) => XmlPath(q + query + "[*]")
+      })
+      val results = queries.map(doVisit(_, arguments).asInstanceOf[Result])
+      val newQueries = for(q <- queries) yield {
+        for(r <- results) yield {
+          r.results.indices.map(i => q match {
+            case JsonPath(_) => q.query.replaceFirst("[*]", i.toString) + "."
+            case XmlPath(_) => q.query.replaceFirst("[*]", (i + 1).toString) + "/"
+          })
+        }
+      }.flatten
+      results.map(r => ResultWithNested(r.id, r.rootIds, r.results,
+        doIteratorQueries(xs, x.name + ".", newQueries.flatten, arguments, queries.head)))
+    }
+  }
+
   override def doVisitDefault(): Any = Nil
 
 }
 
-case class Result(id: String, rootIds: List[String], results: List[String])
+sealed trait Resultable {
+  def results: List[String]
+}
+case class Result(id: String, rootIds: List[String], results: List[String]) extends Resultable
+case class ResultWithNested(id: String, rootIds: List[String], results: List[String], nestedResults: List[Resultable]) extends Resultable
 case class QueryByID(id: String, query: String)
+case class QueryWithIndex(index: String, rootIds: List[String], query: QueryClause, iteratorQuery: String)

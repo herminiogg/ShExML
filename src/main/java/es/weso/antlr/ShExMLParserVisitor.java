@@ -43,6 +43,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitIterator(ShExMLParser.IteratorContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#nestedIterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNestedIterator(ShExMLParser.NestedIteratorContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#field}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

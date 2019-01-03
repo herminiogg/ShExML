@@ -96,8 +96,16 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val query = visit(ctx.queryClause()).asInstanceOf[QueryClause]
     val variable = createVar(ctx.variable())
     val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
-    val iterators = ctx.iterator().listIterator().asScala.map(visit(_).asInstanceOf[Iterator])
+    val iterators = ctx.nestedIterator().listIterator().asScala.map(visit(_).asInstanceOf[NestedIterator])
     Iterator(variable, query, fields.toList, iterators.toList)
+  }
+
+  override def visitNestedIterator(ctx: NestedIteratorContext): AST = {
+    val query = FieldQuery(ctx.QUERY_PART().getText)
+    val variable = createVar(ctx.variable())
+    val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
+    val iterators = ctx.nestedIterator().listIterator().asScala.map(visit(_).asInstanceOf[NestedIterator])
+    NestedIterator(variable, query, fields.toList, iterators.toList)
   }
 
   override def visitField(ctx: FieldContext): AST = {
@@ -107,10 +115,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitIteratorQuery(ctx: IteratorQueryContext): AST = {
-    val fileVar = createVar(ctx.variable(0))
-    val iteratorVar = createVar(ctx.variable(1))
+    val firstVar = createVar(ctx.variable())
     val varOrIteratorQuery = visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
-    IteratorQuery(fileVar, iteratorVar, varOrIteratorQuery)
+    IteratorQuery(firstVar, varOrIteratorQuery)
   }
 
   override def visitComposedVariable(ctx: ComposedVariableContext): AST = {
@@ -119,7 +126,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val otherVariables = if(ctx.composedVariable() != null)
       visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
     else null
-    if(otherVariables != null) IteratorQuery(null, variable, otherVariables) else variable
+    if(otherVariables != null) IteratorQuery(variable, otherVariables) else variable
   }
 
   override def visitShape(ctx: ShapeContext): AST = {

@@ -10,7 +10,8 @@ shExML: decl* shape* ;
 decl: (source | prefix | query | expression | matcher | iterator) ;
 prefix: PREFIX variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
 source: SOURCE variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
-iterator: ITERATOR variable LESS_SYMBOL_QUERY queryClause GREATER_SYMBOL_QUERY '{' field+ iterator* '}' ;
+iterator: ITERATOR variable LESS_SYMBOL_QUERY queryClause GREATER_SYMBOL_QUERY '{' field+ nestedIterator* '}' ;
+nestedIterator: ITERATOR variable LESS_SYMBOL_QUERY QUERY_PART GREATER_SYMBOL_QUERY '{' field+ nestedIterator* '}' ;
 field: FIELD variable LESS_SYMBOL_QUERY QUERY_PART GREATER_SYMBOL_QUERY ;
 query: QUERY variable LESS_SYMBOL_QUERY queryClause GREATER_SYMBOL_QUERY ;
 expression: EXPRESSION variable LESS_SYMBOL exp GREATER_SYMBOL ;
@@ -18,7 +19,7 @@ matcher: MATCHER variable LESS_SYMBOL replacedStrings AS STRING_OR_VAR GREATER_S
 replacedStrings: STRING_OR_VAR ',' replacedStrings | STRING_OR_VAR ;
 exp: union | join | stringOperation | iteratorQuery ;
 stringOperation: iteratorQuery '+' STRINGOPERATOR '+' iteratorQuery ;
-iteratorQuery: variable '.' variable '.' composedVariable ;
+iteratorQuery: variable '.' composedVariable ;
 composedVariable: variable | variable '.' composedVariable ;
 queryClause: JSONPATH | XMLPATH ;
 join: iteratorQuery UNION iteratorQuery JOIN iteratorQuery ;
