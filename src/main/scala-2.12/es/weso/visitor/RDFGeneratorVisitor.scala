@@ -17,6 +17,7 @@ import scala.util.Try
 class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any, Any] {
 
   private val prefixTable = mutable.HashMap[String, String]()
+  private val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
@@ -77,9 +78,21 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case Union(left, right) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[Result]]
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[Result]]
-      leftList.union(rightList)
+      val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
+      val leftList = doVisit(left, optionalArgument)
+      val rightList = doVisit(right, optionalArgument)
+      leftList match {
+        case ml: Map[String, List[Result]] => rightList match {
+          case mr: Map[String, List[Result]] => ml.keySet.union(mr.keySet).foreach(k => {
+            val leftResult = mr.getOrElse(k, Nil)
+            val rightResult = ml.getOrElse(k, Nil)
+            val value = expName + k -> leftResult.union(rightResult)
+            iteratorsCombinations += value
+          })
+          case _ => throw new Exception("Impossible to combine an iterator with a non iterator expression")
+        }
+        case l: List[Result] => l.union(rightList.asInstanceOf[List[Result]])
+      }
     }
 
     case Join(left, right, join) => {
@@ -110,27 +123,36 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
     case i: IteratorQuery => {
       val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
-      val fileContent = doVisit(i.firstVar, optionalArgument).asInstanceOf[String]
+      val fileContent = doVisit(i.firstVar, optionalArgument).toString
       val fileMap = Map("fileContent" -> fileContent)
       val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
       val varList = iteratorQueryToList(i)
-      if(varList.size == 2) {
-        throw new Exception("To be implemented") //to be implemented
+      if(varTable(varList.head).isInstanceOf[URL] && varList.size == 2) {
+        val iteratorName = varList.tail.head.name
+        varTable.keys.filter {
+          case Var(name) => name.contains(iteratorName)
+          case _ => false
+        }.map {
+          case v: Var => v.name.replace(iteratorName, "") -> {
+            val vars = v.name.split("[.]").map(Var).toList
+            if(vars.size > 1)
+              doIteratorQuery(vars, middleArguments, fileContent)
+            else Nil
+          }
+        }.toMap
+      } else if(varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
+        iteratorsCombinations(varList.map(_.name).mkString("."))
       } else if(varList.size >= 3) {
-        val iteratorVars = varList.slice(1, varList.size)
-        val query = generateFinalQuery(iteratorVars, "", null)
-        val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
-        val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContent)
-        queries.map(q => doVisit(q.query, middleArguments.+(
-          "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
-          .filter(_.results.nonEmpty)
+        doIteratorQuery(varList.slice(1, varList.size), middleArguments, fileContent)
       } else {
         throw new Exception("Bad number of vars")
       }
     }
 
     case v: Var => {
-      doVisit(varTable(v), optionalArgument)
+      val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
+      val finalArguments = if(arguments == null) Map("varName" -> v.name) else arguments.+("varName" -> v.name)
+      doVisit(varTable(v), finalArguments)
     }
 
     case sv: ShapeVar => {
@@ -296,6 +318,15 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       results.map(r => ResultWithNested(r.id, r.rootIds, r.results,
         doIteratorQueries(xs, x.name + ".", newQueries.flatten, arguments, queries.head)))
     }
+  }
+
+  private def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContent: String): List[Result] = {
+    val query = generateFinalQuery(iteratorVars, "", null)
+    val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
+    val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContent)
+    queries.map(q => doVisit(q.query, middleArguments.+(
+      "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
+      .filter(_.results.nonEmpty)
   }
 
   override def doVisitDefault(): Any = Nil
