@@ -96,28 +96,43 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case Join(left, right, join) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[Result]]
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[Result]]
-      val joinList = doVisit(join, optionalArgument).asInstanceOf[List[Result]]
-      val joinUnionList = for(r <- rightList) yield {
-        val join = joinList.filter(j => j.results.nonEmpty && j.results == r.results)
-        if(join.nonEmpty)
-          Result(r.id, r.rootIds, leftList.filter(l => l.id == join.head.id && l.results.nonEmpty).head.results)
-        else r
+      val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
+      val leftList = doVisit(left, optionalArgument)
+      val rightList = doVisit(right, optionalArgument)
+      val joinList = doVisit(join, optionalArgument)
+      leftList match {
+        case ml: Map[String, List[Result]] => rightList match {
+          case mr: Map[String, List[Result]] => joinList match {
+            case mj: Map[String, List[Result]] => ml.keySet.union(mr.keySet).union(mj.keySet).foreach(k => {
+              val leftResult = mr.getOrElse(k, Nil)
+              val rightResult = ml.getOrElse(k, Nil)
+              val joinResult = mj.getOrElse(k, Nil)
+              val value = expName + k -> getJoinResults(leftResult, rightResult, joinResult)
+              iteratorsCombinations += value
+            })
+            case _ => throw new Exception("Cannot join iterator with non iterator expression. Join clause is not an iterator expression")
+          }
+          case _ => throw new Exception("Cannot join iterator with non iterator expression. Right clause is not an iterator expression")
+        }
+        case left: List[Result] => getJoinResults(left, rightList.asInstanceOf[List[Result]], joinList.asInstanceOf[List[Result]])
       }
-      leftList.union(joinUnionList)
     }
 
     case StringOperation(left, right, unionString) => {
-      val leftList = doVisit(left, optionalArgument).asInstanceOf[List[Result]]
-      val rightList = doVisit(right, optionalArgument).asInstanceOf[List[Result]]
-      for ((l, r) <- leftList zip rightList) yield {
-        val results = for (i <- l.results) yield {
-          for (j <- r.results) yield {
-            i + unionString + j
-          }
+      val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
+      val leftList = doVisit(left, optionalArgument)
+      val rightList = doVisit(right, optionalArgument)
+      leftList match {
+        case ml: Map[String, List[Result]] => rightList match {
+          case mr: Map[String, List[Result]] => ml.keySet.union(mr.keySet).foreach(k => {
+            val leftResult = mr.getOrElse(k, Nil)
+            val rightResult = ml.getOrElse(k, Nil)
+            val value = expName + k -> getStringOperationResults(leftResult, rightResult, unionString)
+            iteratorsCombinations += value
+          })
+          case _ => throw new Exception("Cannot make string operation with left clause being an iterator expression and right clause a non iterator expression")
         }
-        Result(l.id, l.rootIds, results.flatten)
+        case left: List[Result] => getStringOperationResults(left, rightList.asInstanceOf[List[Result]], unionString)
       }
     }
 
@@ -150,8 +165,12 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case v: Var => {
-      val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
-      val finalArguments = if(arguments == null) Map("varName" -> v.name) else arguments.+("varName" -> v.name)
+      val finalArguments =
+        if(optionalArgument == null) Map("varName" -> v.name)
+        else optionalArgument match {
+          case m: Map[String, Any] => m.+("varName" -> v.name)
+          case _ => optionalArgument
+        }
       doVisit(varTable(v), finalArguments)
     }
 
@@ -327,6 +346,27 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     queries.map(q => doVisit(q.query, middleArguments.+(
       "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
       .filter(_.results.nonEmpty)
+  }
+
+  private def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {
+    for ((l, r) <- left zip right) yield {
+      val results = for (i <- l.results) yield {
+        for (j <- r.results) yield {
+          i + unionString + j
+        }
+      }
+      Result(l.id, l.rootIds, results.flatten)
+    }
+  }
+
+  private def getJoinResults(left: List[Result], right: List[Result], join: List[Result]): List[Result] = {
+    val joinUnionList = for(r <- right.asInstanceOf[List[Result]]) yield {
+      val filteredJoin = join.asInstanceOf[List[Result]].filter(j => j.results.nonEmpty && j.results == r.results)
+      if(filteredJoin.nonEmpty)
+        Result(r.id, r.rootIds, left.filter(l => l.id == filteredJoin.head.id && l.results.nonEmpty).head.results)
+      else r
+    }
+    left.union(joinUnionList)
   }
 
   override def doVisitDefault(): Any = Nil

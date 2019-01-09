@@ -48,9 +48,15 @@ EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
     schema:musicBy dbr:[films.music] ;
     :cinematographer dbr:[films.photography] ;
     schema:actor @:Actor ;
+    schema:actor @:Actress ;
 }
 
 :Actor dbr:[films.actors.name] {
     :name [films.actors.name] ;
     :appear_on :[films.actors.film] ;
+}
+
+:Actress dbr:[films.actresses.name] {
+    :name [films.actresses.name] ;
+    :appear_on :[films.actresses.film] ;
 }
