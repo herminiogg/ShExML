@@ -23,17 +23,13 @@ ITERATOR film_json <jsonpath: $.films[*]> {
     FIELD country <country>
     FIELD directors <director>
 }
-EXPRESSION film_ids <films_xml_file.film_xml.id UNION films_json_file.film_json.id>
-EXPRESSION film_names <films_xml_file.film_xml.name UNION films_json_file.film_json.name>
-EXPRESSION film_years <films_xml_file.film_xml.year UNION films_json_file.film_json.year>
-EXPRESSION film_countries <films_xml_file.film_xml.country UNION films_json_file.film_json.country>
-EXPRESSION film_directors <films_xml_file.film_xml.directors UNION films_json_file.film_json.directors>
+EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
 
-:Films :[film_ids] {
-    :name [film_names] ;
-    :year [film_years] ;
-    :country [film_countries] ;
-    :director [film_directors] ;
+:Films :[films.id] {
+    :name [films.name] ;
+    :year [films.year] ;
+    :country [films.country] ;
+    :director [films.directors] ;
 }
 ```
 This example shows how to map and merge two files (in JSON and XML) with different films. In the first part, the
@@ -66,12 +62,12 @@ ITERATOR film_xml <xpath: //film> {
     FIELD screenwritters <crew//screenwritter>
     FIELD music <crew/music>
     FIELD photography <crew/photography>
-    ITERATOR actors <xpath: /cast/actor> {
+    ITERATOR actors <cast/actor> {
         FIELD name <name>
         FIELD role <role>
         FIELD film <../../@id>
     }
-    ITERATOR actresses <xpath: /cast/actress> {
+    ITERATOR actresses <cast/actress> {
         FIELD name <name>
         FIELD role <role>
         FIELD film <../../@id>
@@ -86,39 +82,33 @@ ITERATOR film_json <jsonpath: $.films[*]> {
     FIELD screenwritters <crew.screenwritter>
     FIELD music <crew.music>
     FIELD photography <crew.cinematography>
-    ITERATOR actors <jsonpath: .cast[*]> {
+    ITERATOR actors <cast[*]> {
         FIELD name <name>
         FIELD role <role>
     }
 }
-EXPRESSION film_ids <films_xml_file.film_xml.id UNION films_json_file.film_json.id>
-EXPRESSION film_names <films_xml_file.film_xml.name UNION films_json_file.film_json.name>
-EXPRESSION film_years <films_xml_file.film_xml.year UNION films_json_file.film_json.year>
-EXPRESSION film_countries <films_xml_file.film_xml.country UNION films_json_file.film_json.country>
-EXPRESSION film_directors <films_xml_file.film_xml.directors UNION films_json_file.film_json.directors>
-EXPRESSION film_screenwritter <films_xml_file.film_xml.screenwritters UNION films_json_file.film_json.screenwritters>
-EXPRESSION film_music <films_xml_file.film_xml.music UNION films_json_file.film_json.music>
-EXPRESSION film_photography <films_xml_file.film_xml.photography UNION films_json_file.film_json.photography>
-EXPRESSION actor_name <films_xml_file.film_xml.actors.name UNION films_xml_file.film_xml.actresses.name UNION
-                    films_json_file.film_json.actors.name>
-EXPRESSION actor_role <films_xml_file.film_xml.actors.role UNION films_xml_file.film_xml.actresses.role UNION
-                    films_json_file.film_json.actors.role>
-EXPRESSION actor_appears_on <films_xml_file.film_xml.actors.film UNION films_xml_file.film_xml.actresses.film>
+EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
 
-:Films :[film_ids] {
-    schema:name [film_names] ;
-    :year dbr:[film_years] ;
-    schema:countryOfOrigin dbr:[film_countries] ;
-    schema:director dbr:[film_directors] ;
-    :screenwritter dbr:[film_screenwritter] ;
-    schema:musicBy dbr:[film_music] ;
-    :cinematographer dbr:[film_photography] ;
+:Films :[films.id] {
+    schema:name [films.name] ;
+    :year dbr:[films.year] ;
+    schema:countryOfOrigin dbr:[films.country] ;
+    schema:director dbr:[films.directors] ;
+    :screenwritter dbr:[films.screenwritters] ;
+    schema:musicBy dbr:[films.music] ;
+    :cinematographer dbr:[films.photography] ;
     schema:actor @:Actor ;
+    schema:actor @:Actress ;
 }
 
-:Actor dbr:[actor_name] {
-    :name [actor_name] ;
-    :appear_on :[actor_appears_on] ;
+:Actor dbr:[films.actors.name] {
+    :name [films.actors.name] ;
+    :appear_on :[films.actors.film] ;
+}
+
+:Actress dbr:[films.actresses.name] {
+    :name [films.actresses.name] ;
+    :appear_on :[films.actresses.film] ;
 }
 ```
 This example shows how iterators can be nested to cover more complicated data structures and how different shapes
