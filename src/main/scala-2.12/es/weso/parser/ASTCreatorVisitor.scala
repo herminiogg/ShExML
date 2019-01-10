@@ -1,6 +1,6 @@
 package es.weso.parser
 
-import es.weso.antlr.ShExMLBaseVisitor
+import es.weso.antlr.ShExMLParserBaseVisitor
 import es.weso.antlr.ShExMLParser._
 import es.weso.ast._
 import es.weso.ast.URL
@@ -13,7 +13,7 @@ import scala.util.Try
 /**
   * Created by herminio on 20/12/17.
   */
-class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
+class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitShExML(ctx: ShExMLContext): AST = {
     val declarations = ctx.decl().asScala.map(visit(_).asInstanceOf[Declaration]).toList
@@ -96,22 +96,37 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
     val query = visit(ctx.queryClause()).asInstanceOf[QueryClause]
     val variable = createVar(ctx.variable())
     val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
-    Iterator(variable, query, fields.toList)
+    val iterators = ctx.nestedIterator().listIterator().asScala.map(visit(_).asInstanceOf[NestedIterator])
+    Iterator(variable, query, fields.toList, iterators.toList)
+  }
+
+  override def visitNestedIterator(ctx: NestedIteratorContext): AST = {
+    val query = FieldQuery(ctx.QUERY_PART().getText)
+    val variable = createVar(ctx.variable())
+    val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
+    val iterators = ctx.nestedIterator().listIterator().asScala.map(visit(_).asInstanceOf[NestedIterator])
+    NestedIterator(variable, query, fields.toList, iterators.toList)
   }
 
   override def visitField(ctx: FieldContext): AST = {
-    val fieldQuery = visit(ctx.queryParts()).asInstanceOf[FieldQuery]
+    val fieldQuery = FieldQuery(ctx.QUERY_PART().getText)
     val variable = createVar(ctx.variable())
     Field(variable, fieldQuery)
   }
 
-  override def visitQueryParts(ctx: QueryPartsContext): AST = FieldQuery(ctx.getText)
-
   override def visitIteratorQuery(ctx: IteratorQueryContext): AST = {
-    val fileVar = createVar(ctx.variable(0))
-    val iteratorVar = createVar(ctx.variable(1))
-    val fieldVar = createVar(ctx.variable(2))
-    IteratorQuery(fileVar, iteratorVar, fieldVar)
+    val firstVar = createVar(ctx.variable())
+    val varOrIteratorQuery = visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
+    IteratorQuery(firstVar, varOrIteratorQuery)
+  }
+
+  override def visitComposedVariable(ctx: ComposedVariableContext): AST = {
+    val variable = createVar(ctx.variable())
+    //val fileVar = Var(ctx.getParent.start.getText.split(".")(0))
+    val otherVariables = if(ctx.composedVariable() != null)
+      visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
+    else null
+    if(otherVariables != null) IteratorQuery(variable, otherVariables) else variable
   }
 
   override def visitShape(ctx: ShapeContext): AST = {
@@ -138,8 +153,8 @@ class ASTCreatorVisitor extends ShExMLBaseVisitor[AST] {
 
   override def visitObjectElement(ctx: ObjectElementContext): AST = {
     val prefix = if(ctx.prefixVar() != null) ctx.prefixVar().getText else ""
-    val expOrVar = if(ctx.variable() != null) createVar(ctx.variable(0)) else visit(ctx.exp()).asInstanceOf[ExpOrVar]
-    val matcherVar = Option(ctx.variable(1)).map(createVar)
+    val expOrVar = if(ctx.variable().size() == 2 || (ctx.variable().size() == 1 && ctx.exp() == null)) createVar(ctx.variable(0)) else visit(ctx.exp()).asInstanceOf[ExpOrVar]
+    val matcherVar = if(ctx.variable(1) == null && ctx.exp() != null) Option(ctx.variable(0)).map(createVar) else Option(ctx.variable(1)).map(createVar)
     ObjectElement(prefix, expOrVar, matcherVar)
   }
 

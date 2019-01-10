@@ -1,0 +1,77 @@
+<films>
+    <film id="1">
+        <name>Dunkirk</name>
+        <year>2017</year>
+        <country>USA</country>
+        <crew>
+            <directors>
+                <director>Christopher Nolan</director>
+            </directors>
+            <screenplay>
+                <screenwritter>Christopher Nolan</screenwritter>
+            </screenplay>
+            <music>Hans Zimmer</music>
+            <photography>Hoyte van Hoytema</photography>
+        </crew>
+        <cast>
+            <actor>
+                <name>Fionn Whitehead</name>
+                <role>Tommy</role>
+            </actor>
+            <actor>
+                <name>Damien Bonnard</name>
+                <role>French soldier</role>
+            </actor>
+            <actor>
+                <name>Aneurin Barnard</name>
+                <role>Gibson</role>
+            </actor>
+            <actor>
+                <name>Lee Armstrong</name>
+                <role>Grenadier</role>
+            </actor>
+            <actor>
+                <name>James Bloor</name>
+                <role>Irate Soldier</role>
+            </actor>
+        </cast>
+    </film>
+    <film id="2">
+        <name>Interstellar</name>
+        <year>2014</year>
+        <country>USA</country>
+        <crew>
+            <directors>
+                <director>Christopher Nolan</director>
+            </directors>
+            <screenplay>
+                <screenwritter>Christopher Nolan</screenwritter>
+                <screenwritter>Jonathan Nolan</screenwritter>
+            </screenplay>
+            <music>Hans Zimmer</music>
+            <photography>Hoyte van Hoytema</photography>
+        </crew>
+        <cast>
+            <actress>
+                <name>Ellen Burstyn</name>
+                <role>Murph (Older)</role>
+            </actress>
+            <actor>
+                <name>Matthew McConaughey</name>
+                <role>Cooper</role>
+            </actor>
+            <actress>
+                <name>Mackenzie Foy</name>
+                <role>Murph (10 Yrs.)</role>
+            </actress>
+            <actor>
+                <name>John Lithgow</name>
+                <role>Donald</role>
+            </actor>
+            <actor>
+                <name>Timothée Chalamet</name>
+                <role>Tom (15 Yrs.)</role>
+            </actor>
+        </cast>
+    </film>
+</films>

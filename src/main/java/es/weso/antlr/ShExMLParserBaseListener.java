@@ -1,4 +1,4 @@
-// Generated from ShExML.g4 by ANTLR 4.7.1
+// Generated from ShExMLParser.g4 by ANTLR 4.7.1
 
 package es.weso.antlr;
 
@@ -8,11 +8,11 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
- * This class provides an empty implementation of {@link ShExMLListener},
+ * This class provides an empty implementation of {@link ShExMLParserListener},
  * which can be extended to create a listener which only needs to handle a subset
  * of the available methods.
  */
-public class ShExMLBaseListener implements ShExMLListener {
+public class ShExMLParserBaseListener implements ShExMLParserListener {
 	/**
 	 * {@inheritDoc}
 	 *
@@ -73,6 +73,18 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIterator(ShExMLParser.IteratorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterNestedIterator(ShExMLParser.NestedIteratorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitNestedIterator(ShExMLParser.NestedIteratorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -169,6 +181,18 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIteratorQuery(ShExMLParser.IteratorQueryContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterComposedVariable(ShExMLParser.ComposedVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComposedVariable(ShExMLParser.ComposedVariableContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -325,18 +349,6 @@ public class ShExMLBaseListener implements ShExMLListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitVariable(ShExMLParser.VariableContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterQueryParts(ShExMLParser.QueryPartsContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitQueryParts(ShExMLParser.QueryPartsContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
