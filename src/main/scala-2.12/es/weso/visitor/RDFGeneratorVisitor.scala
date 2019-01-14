@@ -137,6 +137,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case i: IteratorQuery => {
+      val expName = Option(optionalArgument).map(_.asInstanceOf[Map[String, Any]].getOrElse("varName", "")).getOrElse("")
       val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
       val fileContent = doVisit(i.firstVar, optionalArgument).toString
       val fileMap = Map("fileContent" -> fileContent)
@@ -144,7 +145,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val varList = iteratorQueryToList(i)
       if(varTable(varList.head).isInstanceOf[URL] && varList.size == 2) {
         val iteratorName = varList.tail.head.name
-        varTable.keys.filter {
+        val values = varTable.keys.filter {
           case Var(name) => name.contains(iteratorName)
           case _ => false
         }.map {
@@ -155,6 +156,10 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
             else Nil
           }
         }.toMap
+        values.foreach {
+          case (k, v) => iteratorsCombinations += expName + k -> v
+        }
+        values
       } else if(varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
         iteratorsCombinations(varList.map(_.name).mkString("."))
       } else if(varList.size >= 3) {

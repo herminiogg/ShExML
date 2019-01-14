@@ -1,8 +1,8 @@
 PREFIX : <http://example.com/>
 PREFIX dbr: <http://dbpedia.org/resource/>
 PREFIX schema: <http://schema.org/>
-SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/enhancement-%237/src/test/resources/filmsExpanded.xml>
-SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/enhancement-%237/src/test/resources/filmsExpanded.json>
+SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/develop/src/test/resources/filmsExpanded.xml>
+SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/develop/src/test/resources/filmsExpanded.json>
 ITERATOR film_xml <xpath: //film> {
     FIELD id <@id>
     FIELD name <name>
