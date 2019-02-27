@@ -16,7 +16,7 @@ import scala.util.Try
   */
 class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any, Any] {
 
-  private val prefixTable = mutable.HashMap[String, String]()
+  private val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
   private val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
@@ -35,7 +35,8 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val actions = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument)).asInstanceOf[List[List[Result]]]
       for(a <- actions) {
-        val finalPredicateObjectsList = predicateObjectsList.flatten.filter(i => i.rootIds.contains(a.id) || i.id == a.id)
+        val finalPredicateObjectsList = predicateObjectsList.flatten.filter(i => i.rootIds.contains(a.id) ||
+          i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
@@ -223,6 +224,11 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       listToMatch.map(r => Result(r.id, r.rootIds, r.results.map(s => {
         if(replacedStrings.strings.contains(s)) replacement else s
       })))
+    }
+
+    case LiteralObject(prefix, value) => {
+      val prefixValue = prefixTable(prefix.name)
+      List(Result("", Nil, List(prefixValue + value)))
     }
 
     case ShapeLink(shapeVar) => {

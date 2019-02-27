@@ -48,6 +48,8 @@ sealed trait Variable extends ExpOrVar
 case class Var(name: String) extends Variable with VarOrIteratorQuery
 case class ShapeVar(name: String) extends Variable
 
+case class LiteralObject(prefix: Var, value: String) extends ObjectOrShapeLink
+
 case class PredicateObject(predicate: Predicate, objectOrShapeLink: ObjectOrShapeLink) extends AST
 case class Predicate(prefix: String, extension: String) extends AST
 
