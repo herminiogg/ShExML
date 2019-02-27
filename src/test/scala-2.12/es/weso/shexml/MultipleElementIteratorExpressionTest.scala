@@ -3,7 +3,7 @@ package es.weso.shexml
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.scalatest.{FunSuite, Matchers}
 
-class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreator {
+class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with RDFStatementCreator {
 
   private val example =
     """
@@ -24,17 +24,14 @@ class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreato
       |    FIELD country <country>
       |    FIELD directors <director>
       |}
-      |EXPRESSION film_ids <films_xml_file.film_xml.id UNION films_json_file.film_json.id>
-      |EXPRESSION film_names <films_xml_file.film_xml.name UNION films_json_file.film_json.name>
-      |EXPRESSION film_years <films_xml_file.film_xml.year UNION films_json_file.film_json.year>
-      |EXPRESSION film_countries <films_xml_file.film_xml.country UNION films_json_file.film_json.country>
-      |EXPRESSION film_directors <films_xml_file.film_xml.directors UNION films_json_file.film_json.directors>
+      |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
       |
-      |:Films :[film_ids] {
-      |    :name [film_names] ;
-      |    :year [film_years] ;
-      |    :country [film_countries] ;
-      |    :director [film_directors] ;
+      |:Films :[films.id] {
+      |    :type :Film ;
+      |    :name [films.name] ;
+      |    :year [films.year] ;
+      |    :country [films.country] ;
+      |    :director [films.directors] ;
       |}
     """.stripMargin
 
@@ -43,6 +40,7 @@ class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreato
   private val prefix = "http://example.com/"
 
   test("Shape 1 is translated correctly") {
+    assert(output.contains(createStatement(prefix, "1", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDinteger)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "country", "USA", XSDDatatype.XSDstring)))
@@ -50,6 +48,7 @@ class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreato
   }
 
   test("Shape 2 is translated correctly") {
+    assert(output.contains(createStatement(prefix, "2", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "name", "Interstellar", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDinteger)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "country", "USA", XSDDatatype.XSDstring)))
@@ -58,6 +57,7 @@ class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreato
   }
 
   test("Shape 3 is translated correctly") {
+    assert(output.contains(createStatement(prefix, "3", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "name", "Inception", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDinteger)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "country", "USA", XSDDatatype.XSDstring)))
@@ -65,6 +65,7 @@ class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreato
   }
 
   test("Shape 4 is translated correctly") {
+    assert(output.contains(createStatement(prefix, "4", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "name", "The Prestige", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDinteger)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "country", "USA", XSDDatatype.XSDstring)))

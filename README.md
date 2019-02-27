@@ -7,34 +7,34 @@ shape is the main foundation to define the transformations.
 ## Example
 ```
 PREFIX : <http://example.com/>
-SOURCE films_xml <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-SOURCE films_json <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
-QUERY film_ids_xml <//film/@id>
-QUERY film_names_xml <//film/name>
-QUERY film_years_xml <//film/year>
-QUERY film_countries_xml <//film/country>
-QUERY film_directors_xml <//film/director>
-QUERY film_ids_json <$.films[*].id>
-QUERY film_names_json <$.films[*].name>
-QUERY film_years_json <$.films[*].year>
-QUERY film_countries_json <$.films[*].country>
-QUERY film_directors_json <$.films[*].director>
-EXPRESSION film_ids <$films_xml.film_ids_xml UNION $films_json.film_ids_json>
-EXPRESSION film_names <$films_xml.film_names_xml UNION $films_json.film_names_json>
-EXPRESSION film_years <$films_xml.film_years_xml UNION $films_json.film_years_json>
-EXPRESSION film_countries <$films_xml.film_countries_xml UNION $films_json.film_countries_json>
-EXPRESSION film_directors <$films_xml.film_directors_xml UNION $films_json.film_directors_json>
+SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
+SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
+ITERATOR film_xml <xpath: //film> {
+    FIELD id <@id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <directors/director>
+}
+ITERATOR film_json <jsonpath: $.films[*]> {
+    FIELD id <id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <director>
+}
+EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
 
-:Films :[film_ids] {
-    :name [film_names] ;
-    :year [film_years] ;
-    :country [film_countries] ;
-    :director [film_directors] ;
+:Films :[films.id] {
+    :name [films.name] ;
+    :year [films.year] ;
+    :country [films.country] ;
+    :director [films.directors] ;
 }
 ```
 This example shows how to map and merge two files (in JSON and XML) with different films. In the first part, the
 declarations, we can define some 'variables' that can be used inside the shapes. Prefixes used in the resulting RDF,
-sources to the files, queries to be applied over the files and expressions to merge and transform the queries results.
+sources to the files, iterators and fields (queries) to be applied over the files and expressions to merge and transform the queries results.
 Then, the shapes are defined as in ShEx but using the previously defined expressions or composing them inside the
 square brackets.
 
@@ -46,3 +46,70 @@ To run this example clone this project and run the following command:
 You can design your own files and run them using the same command but changing films.shexml for the path or the URL to
 your target file.
 
+## Complex example
+```
+PREFIX : <http://example.com/>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX schema: <http://schema.org/>
+SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/enhancement-%237/src/test/resources/filmsExpanded.xml>
+SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/enhancement-%237/src/test/resources/filmsExpanded.json>
+ITERATOR film_xml <xpath: //film> {
+    FIELD id <@id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <crew/directors/director>
+    FIELD screenwritters <crew//screenwritter>
+    FIELD music <crew/music>
+    FIELD photography <crew/photography>
+    ITERATOR actors <cast/actor> {
+        FIELD name <name>
+        FIELD role <role>
+        FIELD film <../../@id>
+    }
+    ITERATOR actresses <cast/actress> {
+        FIELD name <name>
+        FIELD role <role>
+        FIELD film <../../@id>
+    }
+}
+ITERATOR film_json <jsonpath: $.films[*]> {
+    FIELD id <id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <crew.director>
+    FIELD screenwritters <crew.screenwritter>
+    FIELD music <crew.music>
+    FIELD photography <crew.cinematography>
+    ITERATOR actors <cast[*]> {
+        FIELD name <name>
+        FIELD role <role>
+    }
+}
+EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
+
+:Films :[films.id] {
+    schema:name [films.name] ;
+    :year dbr:[films.year] ;
+    schema:countryOfOrigin dbr:[films.country] ;
+    schema:director dbr:[films.directors] ;
+    :screenwritter dbr:[films.screenwritters] ;
+    schema:musicBy dbr:[films.music] ;
+    :cinematographer dbr:[films.photography] ;
+    schema:actor @:Actor ;
+    schema:actor @:Actress ;
+}
+
+:Actor dbr:[films.actors.name] {
+    :name [films.actors.name] ;
+    :appear_on :[films.actors.film] ;
+}
+
+:Actress dbr:[films.actresses.name] {
+    :name [films.actresses.name] ;
+    :appear_on :[films.actresses.film] ;
+}
+```
+This example shows how iterators can be nested to cover more complicated data structures and how different shapes
+can be used and linked.

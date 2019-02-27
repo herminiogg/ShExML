@@ -1,4 +1,4 @@
-// Generated from ShExML.g4 by ANTLR 4.7.1
+// Generated from ShExMLParser.g4 by ANTLR 4.7.1
 
 package es.weso.antlr;
 
@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  * @param <T> The return type of the visit operation. Use {@link Void} for
  * operations with no return type.
  */
-public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
+public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#shExML}.
 	 * @param ctx the parse tree
@@ -36,6 +36,24 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitSource(ShExMLParser.SourceContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#iterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIterator(ShExMLParser.IteratorContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#nestedIterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNestedIterator(ShExMLParser.NestedIteratorContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#field}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitField(ShExMLParser.FieldContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#query}.
 	 * @param ctx the parse tree
@@ -73,11 +91,23 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStringOperation(ShExMLParser.StringOperationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#sourceQuery}.
+	 * Visit a parse tree produced by {@link ShExMLParser#iteratorQuery}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSourceQuery(ShExMLParser.SourceQueryContext ctx);
+	T visitIteratorQuery(ShExMLParser.IteratorQueryContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#composedVariable}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComposedVariable(ShExMLParser.ComposedVariableContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#queryClause}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitQueryClause(ShExMLParser.QueryClauseContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#join}.
 	 * @param ctx the parse tree
@@ -133,17 +163,11 @@ public interface ShExMLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPredicate(ShExMLParser.PredicateContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#fileSource}.
+	 * Visit a parse tree produced by {@link ShExMLParser#literalValue}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFileSource(ShExMLParser.FileSourceContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#queryClause}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitQueryClause(ShExMLParser.QueryClauseContext ctx);
+	T visitLiteralValue(ShExMLParser.LiteralValueContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#tripleElement}.
 	 * @param ctx the parse tree

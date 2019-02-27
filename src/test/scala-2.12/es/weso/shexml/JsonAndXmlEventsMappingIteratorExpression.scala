@@ -6,44 +6,41 @@ import org.scalatest.{FunSuite, Matchers}
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMappingWithJoin extends FunSuite with Matchers with RDFStatementCreator {
+class JsonAndXmlEventsMappingIteratorExpression extends FunSuite with Matchers with RDFStatementCreator {
 
-  val example =
+  private val example =
     """
       |PREFIX ex: <http://ex.com/>
       |SOURCE performances_json <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.json>
       |SOURCE events_xml <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.xml>
       |ITERATOR performances_iterator <jsonpath: $.Performances[*]> {
-      |   FIELD performances_ids <Perf_ID>
-      |   FIELD venues_ids <Venue.Venue_ID>
+      |   FIELD ids <Perf_ID>
+      |   FIELD venues_names <Venue.Venue_ID>
       |   FIELD venues_names_json <Venue.Name>
-      |   FIELD lat_json <Location.lat>
-      |   FIELD long_json <Location.long>
+      |   FIELD lat <Location.lat>
+      |   FIELD long <Location.long>
       |}
       |ITERATOR events_iterator <xpath: /Events/Exhibition> {
-      |   FIELD events_ids <@id>
+      |   FIELD ids <@id>
       |   FIELD venues_names <Venue>
-      |   FIELD lat_xml <Location/lat>
-      |   FIELD long_xml <Location/long>
+      |   FIELD lat <Location/lat>
+      |   FIELD long <Location/long>
       |}
-      |EXPRESSION performances_union <performances_json.performances_iterator.performances_ids UNION events_xml.events_iterator.events_ids>
-      |EXPRESSION venues_union <performances_json.performances_iterator.venues_ids UNION events_xml.events_iterator.venues_names JOIN performances_json.performances_iterator.venues_names_json>
-      |EXPRESSION location_union <performances_json.performances_iterator.lat_json + "-" + performances_json.performances_iterator.long_json UNION
-      |                             events_xml.events_iterator.lat_xml + "-" + events_xml.events_iterator.long_xml>
-      |EXPRESSION lat_union <performances_json.performances_iterator.lat_json UNION events_xml.events_iterator.lat_xml>
-      |EXPRESSION long_union <performances_json.performances_iterator.long_json UNION events_xml.events_iterator.long_xml>
       |
-      |ex:Performance ex:[performances_union] {
-      |  ex:venue ex:[venues_union] ;
+      |EXPRESSION performances <performances_json.performances_iterator UNION events_xml.events_iterator>
+      |EXPRESSION location_union <performances_json.performances_iterator.lat + "-" + performances_json.performances_iterator.long UNION
+      |                             events_xml.events_iterator.lat + "-" + events_xml.events_iterator.long>
+      |
+      |ex:Performance ex:[performances.ids] {
+      |  ex:venue ex:[performances.venues_names] ;
       |  ex:location @ex:Location ;
       |}
       |
       |ex:Location ex:[location_union] {
-      |  ex:lat [lat_union] ;
-      |  ex:long [long_union] ;
+      |  ex:lat [performances.lat] ;
+      |  ex:long [performances.long] ;
       |}
     """.stripMargin
-
   private val mappingLauncher = new MappingLauncher()
   private val output = mappingLauncher.launchMapping(example)
   private val prefix = "http://ex.com/"
@@ -58,7 +55,7 @@ class JsonAndXmlEventsMappingWithJoin extends FunSuite with Matchers with RDFSta
   }
 
   test("Venue is translated correctly") {
-    assert(output.contains(createStatement(prefix, "398", "venue", "78")))
+    assert(output.contains(createStatement(prefix, "398", "venue", "STAM")))
     assert(output.contains(createStatement(prefix, "567", "venue", "78")))
     assert(output.contains(createStatement(prefix, "444", "venue", "STOM")))
     assert(output.contains(createStatement(prefix, "989", "venue", "68")))

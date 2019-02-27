@@ -1,25 +1,65 @@
 PREFIX : <http://example.com/>
-SOURCE films_xml <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-SOURCE films_json <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
-QUERY film_ids_xml <//film/@id>
-QUERY film_names_xml <//film/name>
-QUERY film_years_xml <//film/year>
-QUERY film_countries_xml <//film/country>
-QUERY film_directors_xml <//film/directors/director[*]>
-QUERY film_ids_json <$.films[*].id>
-QUERY film_names_json <$.films[*].name>
-QUERY film_years_json <$.films[*].year>
-QUERY film_countries_json <$.films[*].country>
-QUERY film_directors_json <$.films[*].director>
-EXPRESSION film_ids <$films_xml.film_ids_xml UNION $films_json.film_ids_json>
-EXPRESSION film_names <$films_xml.film_names_xml UNION $films_json.film_names_json>
-EXPRESSION film_years <$films_xml.film_years_xml UNION $films_json.film_years_json>
-EXPRESSION film_countries <$films_xml.film_countries_xml UNION $films_json.film_countries_json>
-EXPRESSION film_directors <$films_xml.film_directors_xml UNION $films_json.film_directors_json>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX schema: <http://schema.org/>
+SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/develop/src/test/resources/filmsExpanded.xml>
+SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/develop/src/test/resources/filmsExpanded.json>
+ITERATOR film_xml <xpath: //film> {
+    FIELD id <@id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <crew/directors/director>
+    FIELD screenwritters <crew//screenwritter>
+    FIELD music <crew/music>
+    FIELD photography <crew/photography>
+    ITERATOR actors <cast/actor> {
+        FIELD name <name>
+        FIELD role <role>
+        FIELD film <../../@id>
+    }
+    ITERATOR actresses <cast/actress> {
+        FIELD name <name>
+        FIELD role <role>
+        FIELD film <../../@id>
+    }
+}
+ITERATOR film_json <jsonpath: $.films[*]> {
+    FIELD id <id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <crew.director>
+    FIELD screenwritters <crew.screenwritter>
+    FIELD music <crew.music>
+    FIELD photography <crew.cinematography>
+    ITERATOR actors <cast[*]> {
+        FIELD name <name>
+        FIELD role <role>
+    }
+}
+EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
 
-:Films :[film_ids] {
-    :name [film_names] ;
-    :year [film_years] ;
-    :country [film_countries] ;
-    :director [film_directors] ;
+:Films :[films.id] {
+    a :Film ;
+    schema:name [films.name] ;
+    :year dbr:[films.year] ;
+    schema:countryOfOrigin dbr:[films.country] ;
+    schema:director dbr:[films.directors] ;
+    :screenwritter dbr:[films.screenwritters] ;
+    schema:musicBy dbr:[films.music] ;
+    :cinematographer dbr:[films.photography] ;
+    schema:actor @:Actor ;
+    schema:actor @:Actress ;
+}
+
+:Actor dbr:[films.actors.name] {
+    a :Actor ;
+    :name [films.actors.name] ;
+    :appear_on :[films.actors.film] ;
+}
+
+:Actress dbr:[films.actresses.name] {
+    a :Actor ;
+    :name [films.actresses.name] ;
+    :appear_on :[films.actresses.film] ;
 }

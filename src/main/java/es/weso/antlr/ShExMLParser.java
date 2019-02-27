@@ -1,4 +1,4 @@
-// Generated from ShExML.g4 by ANTLR 4.7.1
+// Generated from ShExMLParser.g4 by ANTLR 4.7.1
 
 package es.weso.antlr;
 
@@ -19,38 +19,46 @@ public class ShExMLParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, PREFIX=2, SOURCE=3, QUERY=4, EXPRESSION=5, UNION=6, JOIN=7, MATCHER=8, 
-		AS=9, MATCHING=10, LESS_SYMBOL=11, GREATER_SYMBOL=12, DOLLAR=13, BRACKET_LEFT=14, 
-		BRACKET_RIGHT=15, BRACE_LEFT=16, BRACE_RIGHT=17, SEMICOLON=18, DOT=19, 
-		AT=20, ADD=21, QUOTE=22, STRING_OR_VAR=23, URI_VAR=24, JSONPATH=25, XMLPATH=26, 
-		URL=27, STRINGOPERATOR=28, COMMENT=29, WS=30;
+		PREFIX=1, SOURCE=2, QUERY=3, ITERATOR=4, FIELD=5, EXPRESSION=6, UNION=7, 
+		JOIN=8, MATCHER=9, AS=10, MATCHING=11, QUERY_SET=12, EXPRESSION_SET=13, 
+		LESS_SYMBOL=14, GREATER_SYMBOL=15, BRACKET_LEFT=16, BRACKET_RIGHT=17, 
+		PAREN_LEFT=18, PAREN_RIGHT=19, BRACE_LEFT=20, BRACE_RIGHT=21, SEMICOLON=22, 
+		DOT=23, AT=24, ADD=25, COMMA=26, QUOTE=27, A=28, STRING_OR_VAR=29, URI_VAR=30, 
+		STRINGOPERATOR=31, COMMENT=32, WS=33, URL=34, JSONPATH=35, XMLPATH=36, 
+		QUERY_PART=37, GREATER_SYMBOL_QUERY=38, WS_QUERY=39, LESS_SYMBOL_QUERY=40, 
+		STRING_OR_VAR_QUERY=41, URI_VAR_QUERY=42, WS_DECLARATION=43;
 	public static final int
-		RULE_shExML = 0, RULE_decl = 1, RULE_prefix = 2, RULE_source = 3, RULE_query = 4, 
-		RULE_expression = 5, RULE_matcher = 6, RULE_replacedStrings = 7, RULE_exp = 8, 
-		RULE_stringOperation = 9, RULE_sourceQuery = 10, RULE_join = 11, RULE_union = 12, 
-		RULE_leftUnionOption = 13, RULE_rightUnionOption = 14, RULE_shape = 15, 
-		RULE_predicateObject = 16, RULE_objectElement = 17, RULE_shapeLink = 18, 
-		RULE_predicate = 19, RULE_fileSource = 20, RULE_queryClause = 21, RULE_tripleElement = 22, 
-		RULE_prefixVar = 23, RULE_variable = 24;
+		RULE_shExML = 0, RULE_decl = 1, RULE_prefix = 2, RULE_source = 3, RULE_iterator = 4, 
+		RULE_nestedIterator = 5, RULE_field = 6, RULE_query = 7, RULE_expression = 8, 
+		RULE_matcher = 9, RULE_replacedStrings = 10, RULE_exp = 11, RULE_stringOperation = 12, 
+		RULE_iteratorQuery = 13, RULE_composedVariable = 14, RULE_queryClause = 15, 
+		RULE_join = 16, RULE_union = 17, RULE_leftUnionOption = 18, RULE_rightUnionOption = 19, 
+		RULE_shape = 20, RULE_predicateObject = 21, RULE_objectElement = 22, RULE_shapeLink = 23, 
+		RULE_predicate = 24, RULE_literalValue = 25, RULE_tripleElement = 26, 
+		RULE_prefixVar = 27, RULE_variable = 28;
 	public static final String[] ruleNames = {
-		"shExML", "decl", "prefix", "source", "query", "expression", "matcher", 
-		"replacedStrings", "exp", "stringOperation", "sourceQuery", "join", "union", 
-		"leftUnionOption", "rightUnionOption", "shape", "predicateObject", "objectElement", 
-		"shapeLink", "predicate", "fileSource", "queryClause", "tripleElement", 
-		"prefixVar", "variable"
+		"shExML", "decl", "prefix", "source", "iterator", "nestedIterator", "field", 
+		"query", "expression", "matcher", "replacedStrings", "exp", "stringOperation", 
+		"iteratorQuery", "composedVariable", "queryClause", "join", "union", "leftUnionOption", 
+		"rightUnionOption", "shape", "predicateObject", "objectElement", "shapeLink", 
+		"predicate", "literalValue", "tripleElement", "prefixVar", "variable"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
-		null, "','", "'PREFIX'", "'SOURCE'", "'QUERY'", "'EXPRESSION'", "'UNION'", 
-		"'JOIN'", "'MATCHER'", "'AS'", "'MATCHING'", "'<'", "'>'", "'$'", "'['", 
-		"']'", "'{'", "'}'", "';'", "'.'", "'@'", "'+'", "'\"'"
+		null, "'PREFIX'", "'SOURCE'", "'QUERY'", "'ITERATOR'", "'FIELD'", "'EXPRESSION'", 
+		"'UNION'", "'JOIN'", "'MATCHER'", "'AS'", "'MATCHING'", "'QUERY_SET'", 
+		"'EXPRESSION_SET'", null, null, "'['", "']'", "'('", "')'", "'{'", "'}'", 
+		"';'", "'.'", "'@'", "'+'", "','", "'\"'", "'a'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, null, "PREFIX", "SOURCE", "QUERY", "EXPRESSION", "UNION", "JOIN", 
-		"MATCHER", "AS", "MATCHING", "LESS_SYMBOL", "GREATER_SYMBOL", "DOLLAR", 
-		"BRACKET_LEFT", "BRACKET_RIGHT", "BRACE_LEFT", "BRACE_RIGHT", "SEMICOLON", 
-		"DOT", "AT", "ADD", "QUOTE", "STRING_OR_VAR", "URI_VAR", "JSONPATH", "XMLPATH", 
-		"URL", "STRINGOPERATOR", "COMMENT", "WS"
+		null, "PREFIX", "SOURCE", "QUERY", "ITERATOR", "FIELD", "EXPRESSION", 
+		"UNION", "JOIN", "MATCHER", "AS", "MATCHING", "QUERY_SET", "EXPRESSION_SET", 
+		"LESS_SYMBOL", "GREATER_SYMBOL", "BRACKET_LEFT", "BRACKET_RIGHT", "PAREN_LEFT", 
+		"PAREN_RIGHT", "BRACE_LEFT", "BRACE_RIGHT", "SEMICOLON", "DOT", "AT", 
+		"ADD", "COMMA", "QUOTE", "A", "STRING_OR_VAR", "URI_VAR", "STRINGOPERATOR", 
+		"COMMENT", "WS", "URL", "JSONPATH", "XMLPATH", "QUERY_PART", "GREATER_SYMBOL_QUERY", 
+		"WS_QUERY", "LESS_SYMBOL_QUERY", "STRING_OR_VAR_QUERY", "URI_VAR_QUERY", 
+		"WS_DECLARATION"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -86,7 +94,7 @@ public class ShExMLParser extends Parser {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "ShExML.g4"; }
+	public String getGrammarFileName() { return "ShExMLParser.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -120,15 +128,15 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_shExML; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterShExML(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterShExML(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitShExML(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitShExML(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitShExML(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitShExML(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -140,31 +148,31 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(53);
+			setState(61);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PREFIX) | (1L << SOURCE) | (1L << QUERY) | (1L << EXPRESSION) | (1L << MATCHER))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PREFIX) | (1L << SOURCE) | (1L << QUERY) | (1L << ITERATOR) | (1L << EXPRESSION) | (1L << MATCHER))) != 0)) {
 				{
 				{
-				setState(50);
+				setState(58);
 				decl();
 				}
 				}
-				setState(55);
+				setState(63);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(59);
+			setState(67);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << LESS_SYMBOL) | (1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << LESS_SYMBOL) | (1L << A) | (1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY))) != 0)) {
 				{
 				{
-				setState(56);
+				setState(64);
 				shape();
 				}
 				}
-				setState(61);
+				setState(69);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -197,21 +205,24 @@ public class ShExMLParser extends Parser {
 		public MatcherContext matcher() {
 			return getRuleContext(MatcherContext.class,0);
 		}
+		public IteratorContext iterator() {
+			return getRuleContext(IteratorContext.class,0);
+		}
 		public DeclContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_decl; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterDecl(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterDecl(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitDecl(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitDecl(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitDecl(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitDecl(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -222,37 +233,43 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(67);
+			setState(76);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case SOURCE:
 				{
-				setState(62);
+				setState(70);
 				source();
 				}
 				break;
 			case PREFIX:
 				{
-				setState(63);
+				setState(71);
 				prefix();
 				}
 				break;
 			case QUERY:
 				{
-				setState(64);
+				setState(72);
 				query();
 				}
 				break;
 			case EXPRESSION:
 				{
-				setState(65);
+				setState(73);
 				expression();
 				}
 				break;
 			case MATCHER:
 				{
-				setState(66);
+				setState(74);
 				matcher();
+				}
+				break;
+			case ITERATOR:
+				{
+				setState(75);
+				iterator();
 				}
 				break;
 			default:
@@ -276,22 +293,24 @@ public class ShExMLParser extends Parser {
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
+		public TerminalNode LESS_SYMBOL_QUERY() { return getToken(ShExMLParser.LESS_SYMBOL_QUERY, 0); }
 		public TerminalNode URL() { return getToken(ShExMLParser.URL, 0); }
+		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
 		public PrefixContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_prefix; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterPrefix(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterPrefix(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitPrefix(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitPrefix(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitPrefix(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitPrefix(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -302,16 +321,16 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(69);
+			setState(78);
 			match(PREFIX);
-			setState(70);
+			setState(79);
 			variable();
-			setState(71);
-			match(LESS_SYMBOL);
-			setState(72);
+			setState(80);
+			match(LESS_SYMBOL_QUERY);
+			setState(81);
 			match(URL);
-			setState(73);
-			match(GREATER_SYMBOL);
+			setState(82);
+			match(GREATER_SYMBOL_QUERY);
 			}
 		}
 		catch (RecognitionException re) {
@@ -330,24 +349,24 @@ public class ShExMLParser extends Parser {
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
-		public FileSourceContext fileSource() {
-			return getRuleContext(FileSourceContext.class,0);
-		}
+		public TerminalNode LESS_SYMBOL_QUERY() { return getToken(ShExMLParser.LESS_SYMBOL_QUERY, 0); }
+		public TerminalNode URL() { return getToken(ShExMLParser.URL, 0); }
+		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
 		public SourceContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_source; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterSource(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterSource(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitSource(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitSource(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitSource(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitSource(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -358,16 +377,276 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(75);
+			setState(84);
 			match(SOURCE);
-			setState(76);
+			setState(85);
 			variable();
-			setState(77);
-			match(LESS_SYMBOL);
-			setState(78);
-			fileSource();
-			setState(79);
-			match(GREATER_SYMBOL);
+			setState(86);
+			match(LESS_SYMBOL_QUERY);
+			setState(87);
+			match(URL);
+			setState(88);
+			match(GREATER_SYMBOL_QUERY);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class IteratorContext extends ParserRuleContext {
+		public TerminalNode ITERATOR() { return getToken(ShExMLParser.ITERATOR, 0); }
+		public VariableContext variable() {
+			return getRuleContext(VariableContext.class,0);
+		}
+		public TerminalNode LESS_SYMBOL_QUERY() { return getToken(ShExMLParser.LESS_SYMBOL_QUERY, 0); }
+		public QueryClauseContext queryClause() {
+			return getRuleContext(QueryClauseContext.class,0);
+		}
+		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
+		public List<FieldContext> field() {
+			return getRuleContexts(FieldContext.class);
+		}
+		public FieldContext field(int i) {
+			return getRuleContext(FieldContext.class,i);
+		}
+		public List<NestedIteratorContext> nestedIterator() {
+			return getRuleContexts(NestedIteratorContext.class);
+		}
+		public NestedIteratorContext nestedIterator(int i) {
+			return getRuleContext(NestedIteratorContext.class,i);
+		}
+		public IteratorContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_iterator; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterIterator(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitIterator(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitIterator(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final IteratorContext iterator() throws RecognitionException {
+		IteratorContext _localctx = new IteratorContext(_ctx, getState());
+		enterRule(_localctx, 8, RULE_iterator);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(90);
+			match(ITERATOR);
+			setState(91);
+			variable();
+			setState(92);
+			match(LESS_SYMBOL_QUERY);
+			setState(93);
+			queryClause();
+			setState(94);
+			match(GREATER_SYMBOL_QUERY);
+			setState(95);
+			match(BRACE_LEFT);
+			setState(97); 
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			do {
+				{
+				{
+				setState(96);
+				field();
+				}
+				}
+				setState(99); 
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			} while ( _la==FIELD );
+			setState(104);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==ITERATOR) {
+				{
+				{
+				setState(101);
+				nestedIterator();
+				}
+				}
+				setState(106);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			setState(107);
+			match(BRACE_RIGHT);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class NestedIteratorContext extends ParserRuleContext {
+		public TerminalNode ITERATOR() { return getToken(ShExMLParser.ITERATOR, 0); }
+		public VariableContext variable() {
+			return getRuleContext(VariableContext.class,0);
+		}
+		public TerminalNode LESS_SYMBOL_QUERY() { return getToken(ShExMLParser.LESS_SYMBOL_QUERY, 0); }
+		public TerminalNode QUERY_PART() { return getToken(ShExMLParser.QUERY_PART, 0); }
+		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
+		public List<FieldContext> field() {
+			return getRuleContexts(FieldContext.class);
+		}
+		public FieldContext field(int i) {
+			return getRuleContext(FieldContext.class,i);
+		}
+		public List<NestedIteratorContext> nestedIterator() {
+			return getRuleContexts(NestedIteratorContext.class);
+		}
+		public NestedIteratorContext nestedIterator(int i) {
+			return getRuleContext(NestedIteratorContext.class,i);
+		}
+		public NestedIteratorContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_nestedIterator; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterNestedIterator(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitNestedIterator(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitNestedIterator(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final NestedIteratorContext nestedIterator() throws RecognitionException {
+		NestedIteratorContext _localctx = new NestedIteratorContext(_ctx, getState());
+		enterRule(_localctx, 10, RULE_nestedIterator);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(109);
+			match(ITERATOR);
+			setState(110);
+			variable();
+			setState(111);
+			match(LESS_SYMBOL_QUERY);
+			setState(112);
+			match(QUERY_PART);
+			setState(113);
+			match(GREATER_SYMBOL_QUERY);
+			setState(114);
+			match(BRACE_LEFT);
+			setState(116); 
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			do {
+				{
+				{
+				setState(115);
+				field();
+				}
+				}
+				setState(118); 
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			} while ( _la==FIELD );
+			setState(123);
+			_errHandler.sync(this);
+			_la = _input.LA(1);
+			while (_la==ITERATOR) {
+				{
+				{
+				setState(120);
+				nestedIterator();
+				}
+				}
+				setState(125);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+			}
+			setState(126);
+			match(BRACE_RIGHT);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class FieldContext extends ParserRuleContext {
+		public TerminalNode FIELD() { return getToken(ShExMLParser.FIELD, 0); }
+		public VariableContext variable() {
+			return getRuleContext(VariableContext.class,0);
+		}
+		public TerminalNode LESS_SYMBOL_QUERY() { return getToken(ShExMLParser.LESS_SYMBOL_QUERY, 0); }
+		public TerminalNode QUERY_PART() { return getToken(ShExMLParser.QUERY_PART, 0); }
+		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
+		public FieldContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_field; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterField(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitField(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitField(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final FieldContext field() throws RecognitionException {
+		FieldContext _localctx = new FieldContext(_ctx, getState());
+		enterRule(_localctx, 12, RULE_field);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(128);
+			match(FIELD);
+			setState(129);
+			variable();
+			setState(130);
+			match(LESS_SYMBOL_QUERY);
+			setState(131);
+			match(QUERY_PART);
+			setState(132);
+			match(GREATER_SYMBOL_QUERY);
 			}
 		}
 		catch (RecognitionException re) {
@@ -386,44 +665,46 @@ public class ShExMLParser extends Parser {
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
+		public TerminalNode LESS_SYMBOL_QUERY() { return getToken(ShExMLParser.LESS_SYMBOL_QUERY, 0); }
 		public QueryClauseContext queryClause() {
 			return getRuleContext(QueryClauseContext.class,0);
 		}
+		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
 		public QueryContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_query; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterQuery(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterQuery(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitQuery(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitQuery(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitQuery(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitQuery(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final QueryContext query() throws RecognitionException {
 		QueryContext _localctx = new QueryContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_query);
+		enterRule(_localctx, 14, RULE_query);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(81);
+			setState(134);
 			match(QUERY);
-			setState(82);
+			setState(135);
 			variable();
-			setState(83);
-			match(LESS_SYMBOL);
-			setState(84);
+			setState(136);
+			match(LESS_SYMBOL_QUERY);
+			setState(137);
 			queryClause();
-			setState(85);
-			match(GREATER_SYMBOL);
+			setState(138);
+			match(GREATER_SYMBOL_QUERY);
 			}
 		}
 		catch (RecognitionException re) {
@@ -442,43 +723,45 @@ public class ShExMLParser extends Parser {
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
+		public TerminalNode LESS_SYMBOL() { return getToken(ShExMLParser.LESS_SYMBOL, 0); }
 		public ExpContext exp() {
 			return getRuleContext(ExpContext.class,0);
 		}
+		public TerminalNode GREATER_SYMBOL() { return getToken(ShExMLParser.GREATER_SYMBOL, 0); }
 		public ExpressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_expression; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterExpression(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterExpression(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitExpression(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitExpression(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitExpression(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitExpression(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ExpressionContext expression() throws RecognitionException {
 		ExpressionContext _localctx = new ExpressionContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_expression);
+		enterRule(_localctx, 16, RULE_expression);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(87);
+			setState(140);
 			match(EXPRESSION);
-			setState(88);
+			setState(141);
 			variable();
-			setState(89);
+			setState(142);
 			match(LESS_SYMBOL);
-			setState(90);
+			setState(143);
 			exp();
-			setState(91);
+			setState(144);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -498,49 +781,51 @@ public class ShExMLParser extends Parser {
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
+		public TerminalNode LESS_SYMBOL() { return getToken(ShExMLParser.LESS_SYMBOL, 0); }
 		public ReplacedStringsContext replacedStrings() {
 			return getRuleContext(ReplacedStringsContext.class,0);
 		}
 		public TerminalNode AS() { return getToken(ShExMLParser.AS, 0); }
 		public TerminalNode STRING_OR_VAR() { return getToken(ShExMLParser.STRING_OR_VAR, 0); }
+		public TerminalNode GREATER_SYMBOL() { return getToken(ShExMLParser.GREATER_SYMBOL, 0); }
 		public MatcherContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_matcher; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterMatcher(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterMatcher(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitMatcher(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitMatcher(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitMatcher(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitMatcher(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final MatcherContext matcher() throws RecognitionException {
 		MatcherContext _localctx = new MatcherContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_matcher);
+		enterRule(_localctx, 18, RULE_matcher);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(93);
+			setState(146);
 			match(MATCHER);
-			setState(94);
+			setState(147);
 			variable();
-			setState(95);
+			setState(148);
 			match(LESS_SYMBOL);
-			setState(96);
+			setState(149);
 			replacedStrings();
-			setState(97);
+			setState(150);
 			match(AS);
-			setState(98);
+			setState(151);
 			match(STRING_OR_VAR);
-			setState(99);
+			setState(152);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -566,41 +851,41 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_replacedStrings; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterReplacedStrings(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterReplacedStrings(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitReplacedStrings(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitReplacedStrings(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitReplacedStrings(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitReplacedStrings(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ReplacedStringsContext replacedStrings() throws RecognitionException {
 		ReplacedStringsContext _localctx = new ReplacedStringsContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_replacedStrings);
+		enterRule(_localctx, 20, RULE_replacedStrings);
 		try {
-			setState(105);
+			setState(158);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,7,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(101);
+				setState(154);
 				match(STRING_OR_VAR);
-				setState(102);
-				match(T__0);
-				setState(103);
+				setState(155);
+				match(COMMA);
+				setState(156);
 				replacedStrings();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(104);
+				setState(157);
 				match(STRING_OR_VAR);
 				}
 				break;
@@ -618,9 +903,6 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class ExpContext extends ParserRuleContext {
-		public SourceQueryContext sourceQuery() {
-			return getRuleContext(SourceQueryContext.class,0);
-		}
 		public UnionContext union() {
 			return getRuleContext(UnionContext.class,0);
 		}
@@ -630,58 +912,61 @@ public class ShExMLParser extends Parser {
 		public StringOperationContext stringOperation() {
 			return getRuleContext(StringOperationContext.class,0);
 		}
+		public IteratorQueryContext iteratorQuery() {
+			return getRuleContext(IteratorQueryContext.class,0);
+		}
 		public ExpContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_exp; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterExp(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterExp(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitExp(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitExp(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitExp(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitExp(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ExpContext exp() throws RecognitionException {
 		ExpContext _localctx = new ExpContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_exp);
+		enterRule(_localctx, 22, RULE_exp);
 		try {
-			setState(111);
+			setState(164);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,4,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(107);
-				sourceQuery();
+				setState(160);
+				union();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(108);
-				union();
+				setState(161);
+				join();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(109);
-				join();
+				setState(162);
+				stringOperation();
 				}
 				break;
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(110);
-				stringOperation();
+				setState(163);
+				iteratorQuery();
 				}
 				break;
 			}
@@ -698,11 +983,11 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class StringOperationContext extends ParserRuleContext {
-		public List<SourceQueryContext> sourceQuery() {
-			return getRuleContexts(SourceQueryContext.class);
+		public List<IteratorQueryContext> iteratorQuery() {
+			return getRuleContexts(IteratorQueryContext.class);
 		}
-		public SourceQueryContext sourceQuery(int i) {
-			return getRuleContext(SourceQueryContext.class,i);
+		public IteratorQueryContext iteratorQuery(int i) {
+			return getRuleContext(IteratorQueryContext.class,i);
 		}
 		public TerminalNode STRINGOPERATOR() { return getToken(ShExMLParser.STRINGOPERATOR, 0); }
 		public StringOperationContext(ParserRuleContext parent, int invokingState) {
@@ -711,35 +996,35 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_stringOperation; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterStringOperation(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterStringOperation(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitStringOperation(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitStringOperation(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitStringOperation(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitStringOperation(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final StringOperationContext stringOperation() throws RecognitionException {
 		StringOperationContext _localctx = new StringOperationContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_stringOperation);
+		enterRule(_localctx, 24, RULE_stringOperation);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(113);
-			sourceQuery();
-			setState(114);
+			setState(166);
+			iteratorQuery();
+			setState(167);
 			match(ADD);
-			setState(115);
+			setState(168);
 			match(STRINGOPERATOR);
-			setState(116);
+			setState(169);
 			match(ADD);
-			setState(117);
-			sourceQuery();
+			setState(170);
+			iteratorQuery();
 			}
 		}
 		catch (RecognitionException re) {
@@ -753,46 +1038,160 @@ public class ShExMLParser extends Parser {
 		return _localctx;
 	}
 
-	public static class SourceQueryContext extends ParserRuleContext {
-		public List<VariableContext> variable() {
-			return getRuleContexts(VariableContext.class);
+	public static class IteratorQueryContext extends ParserRuleContext {
+		public VariableContext variable() {
+			return getRuleContext(VariableContext.class,0);
 		}
-		public VariableContext variable(int i) {
-			return getRuleContext(VariableContext.class,i);
+		public ComposedVariableContext composedVariable() {
+			return getRuleContext(ComposedVariableContext.class,0);
 		}
-		public SourceQueryContext(ParserRuleContext parent, int invokingState) {
+		public IteratorQueryContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_sourceQuery; }
+		@Override public int getRuleIndex() { return RULE_iteratorQuery; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterSourceQuery(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterIteratorQuery(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitSourceQuery(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitIteratorQuery(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitSourceQuery(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitIteratorQuery(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final SourceQueryContext sourceQuery() throws RecognitionException {
-		SourceQueryContext _localctx = new SourceQueryContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_sourceQuery);
+	public final IteratorQueryContext iteratorQuery() throws RecognitionException {
+		IteratorQueryContext _localctx = new IteratorQueryContext(_ctx, getState());
+		enterRule(_localctx, 26, RULE_iteratorQuery);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(119);
-			match(DOLLAR);
-			setState(120);
+			setState(172);
 			variable();
-			setState(121);
+			setState(173);
 			match(DOT);
-			setState(122);
-			variable();
+			setState(174);
+			composedVariable();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class ComposedVariableContext extends ParserRuleContext {
+		public VariableContext variable() {
+			return getRuleContext(VariableContext.class,0);
+		}
+		public ComposedVariableContext composedVariable() {
+			return getRuleContext(ComposedVariableContext.class,0);
+		}
+		public ComposedVariableContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_composedVariable; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterComposedVariable(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitComposedVariable(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitComposedVariable(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final ComposedVariableContext composedVariable() throws RecognitionException {
+		ComposedVariableContext _localctx = new ComposedVariableContext(_ctx, getState());
+		enterRule(_localctx, 28, RULE_composedVariable);
+		try {
+			setState(181);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,9,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(176);
+				variable();
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(177);
+				variable();
+				setState(178);
+				match(DOT);
+				setState(179);
+				composedVariable();
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class QueryClauseContext extends ParserRuleContext {
+		public TerminalNode JSONPATH() { return getToken(ShExMLParser.JSONPATH, 0); }
+		public TerminalNode XMLPATH() { return getToken(ShExMLParser.XMLPATH, 0); }
+		public QueryClauseContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_queryClause; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterQueryClause(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitQueryClause(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitQueryClause(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final QueryClauseContext queryClause() throws RecognitionException {
+		QueryClauseContext _localctx = new QueryClauseContext(_ctx, getState());
+		enterRule(_localctx, 30, RULE_queryClause);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(183);
+			_la = _input.LA(1);
+			if ( !(_la==JSONPATH || _la==XMLPATH) ) {
+			_errHandler.recoverInline(this);
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
+				consume();
+			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -807,11 +1206,11 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class JoinContext extends ParserRuleContext {
-		public List<SourceQueryContext> sourceQuery() {
-			return getRuleContexts(SourceQueryContext.class);
+		public List<IteratorQueryContext> iteratorQuery() {
+			return getRuleContexts(IteratorQueryContext.class);
 		}
-		public SourceQueryContext sourceQuery(int i) {
-			return getRuleContext(SourceQueryContext.class,i);
+		public IteratorQueryContext iteratorQuery(int i) {
+			return getRuleContext(IteratorQueryContext.class,i);
 		}
 		public TerminalNode UNION() { return getToken(ShExMLParser.UNION, 0); }
 		public TerminalNode JOIN() { return getToken(ShExMLParser.JOIN, 0); }
@@ -821,35 +1220,35 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_join; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterJoin(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterJoin(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitJoin(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitJoin(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitJoin(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitJoin(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final JoinContext join() throws RecognitionException {
 		JoinContext _localctx = new JoinContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_join);
+		enterRule(_localctx, 32, RULE_join);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(124);
-			sourceQuery();
-			setState(125);
+			setState(185);
+			iteratorQuery();
+			setState(186);
 			match(UNION);
-			setState(126);
-			sourceQuery();
-			setState(127);
+			setState(187);
+			iteratorQuery();
+			setState(188);
 			match(JOIN);
-			setState(128);
-			sourceQuery();
+			setState(189);
+			iteratorQuery();
 			}
 		}
 		catch (RecognitionException re) {
@@ -877,30 +1276,30 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_union; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterUnion(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterUnion(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitUnion(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitUnion(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitUnion(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitUnion(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final UnionContext union() throws RecognitionException {
 		UnionContext _localctx = new UnionContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_union);
+		enterRule(_localctx, 34, RULE_union);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(130);
+			setState(191);
 			leftUnionOption();
-			setState(131);
+			setState(192);
 			match(UNION);
-			setState(132);
+			setState(193);
 			rightUnionOption();
 			}
 		}
@@ -916,8 +1315,8 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class LeftUnionOptionContext extends ParserRuleContext {
-		public SourceQueryContext sourceQuery() {
-			return getRuleContext(SourceQueryContext.class,0);
+		public IteratorQueryContext iteratorQuery() {
+			return getRuleContext(IteratorQueryContext.class,0);
 		}
 		public StringOperationContext stringOperation() {
 			return getRuleContext(StringOperationContext.class,0);
@@ -928,37 +1327,37 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_leftUnionOption; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterLeftUnionOption(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterLeftUnionOption(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitLeftUnionOption(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitLeftUnionOption(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitLeftUnionOption(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitLeftUnionOption(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final LeftUnionOptionContext leftUnionOption() throws RecognitionException {
 		LeftUnionOptionContext _localctx = new LeftUnionOptionContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_leftUnionOption);
+		enterRule(_localctx, 36, RULE_leftUnionOption);
 		try {
-			setState(136);
+			setState(197);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,5,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,10,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(134);
-				sourceQuery();
+				setState(195);
+				iteratorQuery();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(135);
+				setState(196);
 				stringOperation();
 				}
 				break;
@@ -976,8 +1375,8 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class RightUnionOptionContext extends ParserRuleContext {
-		public SourceQueryContext sourceQuery() {
-			return getRuleContext(SourceQueryContext.class,0);
+		public IteratorQueryContext iteratorQuery() {
+			return getRuleContext(IteratorQueryContext.class,0);
 		}
 		public UnionContext union() {
 			return getRuleContext(UnionContext.class,0);
@@ -991,44 +1390,44 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_rightUnionOption; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterRightUnionOption(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterRightUnionOption(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitRightUnionOption(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitRightUnionOption(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitRightUnionOption(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitRightUnionOption(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final RightUnionOptionContext rightUnionOption() throws RecognitionException {
 		RightUnionOptionContext _localctx = new RightUnionOptionContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_rightUnionOption);
+		enterRule(_localctx, 38, RULE_rightUnionOption);
 		try {
-			setState(141);
+			setState(202);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,6,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,11,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(138);
-				sourceQuery();
+				setState(199);
+				iteratorQuery();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(139);
+				setState(200);
 				union();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(140);
+				setState(201);
 				stringOperation();
 				}
 				break;
@@ -1070,85 +1469,82 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_shape; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterShape(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterShape(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitShape(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitShape(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitShape(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitShape(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ShapeContext shape() throws RecognitionException {
 		ShapeContext _localctx = new ShapeContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_shape);
+		enterRule(_localctx, 40, RULE_shape);
 		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(143);
+			setState(204);
 			tripleElement();
-			setState(144);
+			setState(205);
 			prefixVar();
-			setState(145);
+			setState(206);
 			match(BRACKET_LEFT);
-			setState(148);
+			setState(209);
 			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-			case DOLLAR:
+			switch ( getInterpreter().adaptivePredict(_input,12,_ctx) ) {
+			case 1:
 				{
-				setState(146);
+				setState(207);
 				exp();
 				}
 				break;
-			case STRING_OR_VAR:
-			case URI_VAR:
+			case 2:
 				{
-				setState(147);
+				setState(208);
 				variable();
 				}
 				break;
-			default:
-				throw new NoViableAltException(this);
 			}
-			setState(150);
+			setState(211);
 			match(BRACKET_RIGHT);
-			setState(151);
+			setState(212);
 			match(BRACE_LEFT);
-			setState(157);
+			setState(218);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,13,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(152);
+					setState(213);
 					predicateObject();
-					setState(153);
+					setState(214);
 					match(SEMICOLON);
 					}
 					} 
 				}
-				setState(159);
+				setState(220);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,13,_ctx);
 			}
-			setState(161);
+			setState(222);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << A) | (1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY))) != 0)) {
 				{
-				setState(160);
+				setState(221);
 				predicateObject();
 				}
 			}
 
-			setState(163);
+			setState(224);
 			match(BRACE_RIGHT);
 			}
 		}
@@ -1173,53 +1569,57 @@ public class ShExMLParser extends Parser {
 		public ShapeLinkContext shapeLink() {
 			return getRuleContext(ShapeLinkContext.class,0);
 		}
+		public LiteralValueContext literalValue() {
+			return getRuleContext(LiteralValueContext.class,0);
+		}
 		public PredicateObjectContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_predicateObject; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterPredicateObject(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterPredicateObject(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitPredicateObject(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitPredicateObject(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitPredicateObject(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitPredicateObject(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final PredicateObjectContext predicateObject() throws RecognitionException {
 		PredicateObjectContext _localctx = new PredicateObjectContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_predicateObject);
+		enterRule(_localctx, 42, RULE_predicateObject);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(165);
+			setState(226);
 			predicate();
-			setState(168);
+			setState(230);
 			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-			case BRACKET_LEFT:
-			case STRING_OR_VAR:
-			case URI_VAR:
-			case URL:
+			switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
+			case 1:
 				{
-				setState(166);
+				setState(227);
 				objectElement();
 				}
 				break;
-			case AT:
+			case 2:
 				{
-				setState(167);
+				setState(228);
 				shapeLink();
 				}
 				break;
-			default:
-				throw new NoViableAltException(this);
+			case 3:
+				{
+				setState(229);
+				literalValue();
+				}
+				break;
 			}
 			}
 		}
@@ -1254,70 +1654,67 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_objectElement; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterObjectElement(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterObjectElement(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitObjectElement(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitObjectElement(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitObjectElement(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitObjectElement(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ObjectElementContext objectElement() throws RecognitionException {
 		ObjectElementContext _localctx = new ObjectElementContext(_ctx, getState());
-		enterRule(_localctx, 34, RULE_objectElement);
+		enterRule(_localctx, 44, RULE_objectElement);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(171);
+			setState(233);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY))) != 0)) {
 				{
-				setState(170);
+				setState(232);
 				prefixVar();
 				}
 			}
 
-			setState(173);
+			setState(235);
 			match(BRACKET_LEFT);
-			setState(176);
+			setState(238);
 			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-			case DOLLAR:
+			switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
+			case 1:
 				{
-				setState(174);
+				setState(236);
 				exp();
 				}
 				break;
-			case STRING_OR_VAR:
-			case URI_VAR:
+			case 2:
 				{
-				setState(175);
+				setState(237);
 				variable();
 				}
 				break;
-			default:
-				throw new NoViableAltException(this);
 			}
-			setState(180);
+			setState(242);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==MATCHING) {
 				{
-				setState(178);
+				setState(240);
 				match(MATCHING);
-				setState(179);
+				setState(241);
 				variable();
 				}
 			}
 
-			setState(182);
+			setState(244);
 			match(BRACKET_RIGHT);
 			}
 		}
@@ -1342,28 +1739,28 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_shapeLink; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterShapeLink(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterShapeLink(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitShapeLink(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitShapeLink(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitShapeLink(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitShapeLink(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final ShapeLinkContext shapeLink() throws RecognitionException {
 		ShapeLinkContext _localctx = new ShapeLinkContext(_ctx, getState());
-		enterRule(_localctx, 36, RULE_shapeLink);
+		enterRule(_localctx, 46, RULE_shapeLink);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(184);
+			setState(246);
 			match(AT);
-			setState(185);
+			setState(247);
 			tripleElement();
 			}
 		}
@@ -1379,135 +1776,106 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class PredicateContext extends ParserRuleContext {
-		public PrefixVarContext prefixVar() {
-			return getRuleContext(PrefixVarContext.class,0);
+		public LiteralValueContext literalValue() {
+			return getRuleContext(LiteralValueContext.class,0);
 		}
-		public VariableContext variable() {
-			return getRuleContext(VariableContext.class,0);
-		}
+		public TerminalNode A() { return getToken(ShExMLParser.A, 0); }
 		public PredicateContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_predicate; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterPredicate(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterPredicate(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitPredicate(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitPredicate(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitPredicate(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitPredicate(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final PredicateContext predicate() throws RecognitionException {
 		PredicateContext _localctx = new PredicateContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_predicate);
+		enterRule(_localctx, 48, RULE_predicate);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(187);
+			setState(251);
+			_errHandler.sync(this);
+			switch (_input.LA(1)) {
+			case STRING_OR_VAR:
+			case URI_VAR:
+			case URL:
+			case STRING_OR_VAR_QUERY:
+			case URI_VAR_QUERY:
+				{
+				setState(249);
+				literalValue();
+				}
+				break;
+			case A:
+				{
+				setState(250);
+				match(A);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class LiteralValueContext extends ParserRuleContext {
+		public PrefixVarContext prefixVar() {
+			return getRuleContext(PrefixVarContext.class,0);
+		}
+		public VariableContext variable() {
+			return getRuleContext(VariableContext.class,0);
+		}
+		public LiteralValueContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_literalValue; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterLiteralValue(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitLiteralValue(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitLiteralValue(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final LiteralValueContext literalValue() throws RecognitionException {
+		LiteralValueContext _localctx = new LiteralValueContext(_ctx, getState());
+		enterRule(_localctx, 50, RULE_literalValue);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(253);
 			prefixVar();
-			setState(188);
+			setState(254);
 			variable();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class FileSourceContext extends ParserRuleContext {
-		public TerminalNode URL() { return getToken(ShExMLParser.URL, 0); }
-		public FileSourceContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_fileSource; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterFileSource(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitFileSource(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitFileSource(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final FileSourceContext fileSource() throws RecognitionException {
-		FileSourceContext _localctx = new FileSourceContext(_ctx, getState());
-		enterRule(_localctx, 40, RULE_fileSource);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(190);
-			match(URL);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public static class QueryClauseContext extends ParserRuleContext {
-		public TerminalNode JSONPATH() { return getToken(ShExMLParser.JSONPATH, 0); }
-		public TerminalNode XMLPATH() { return getToken(ShExMLParser.XMLPATH, 0); }
-		public QueryClauseContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_queryClause; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterQueryClause(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitQueryClause(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitQueryClause(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final QueryClauseContext queryClause() throws RecognitionException {
-		QueryClauseContext _localctx = new QueryClauseContext(_ctx, getState());
-		enterRule(_localctx, 42, RULE_queryClause);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(192);
-			_la = _input.LA(1);
-			if ( !(_la==JSONPATH || _la==XMLPATH) ) {
-			_errHandler.recoverInline(this);
-			}
-			else {
-				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-				_errHandler.reportMatch(this);
-				consume();
-			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -1525,52 +1893,57 @@ public class ShExMLParser extends Parser {
 		public PredicateContext predicate() {
 			return getRuleContext(PredicateContext.class,0);
 		}
+		public TerminalNode LESS_SYMBOL() { return getToken(ShExMLParser.LESS_SYMBOL, 0); }
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
+		public TerminalNode GREATER_SYMBOL() { return getToken(ShExMLParser.GREATER_SYMBOL, 0); }
 		public TripleElementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_tripleElement; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterTripleElement(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterTripleElement(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitTripleElement(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitTripleElement(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitTripleElement(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitTripleElement(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final TripleElementContext tripleElement() throws RecognitionException {
 		TripleElementContext _localctx = new TripleElementContext(_ctx, getState());
-		enterRule(_localctx, 44, RULE_tripleElement);
+		enterRule(_localctx, 52, RULE_tripleElement);
 		try {
-			setState(199);
+			setState(261);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
+			case A:
 			case STRING_OR_VAR:
 			case URI_VAR:
 			case URL:
+			case STRING_OR_VAR_QUERY:
+			case URI_VAR_QUERY:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(194);
+				setState(256);
 				predicate();
 				}
 				break;
 			case LESS_SYMBOL:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(195);
+				setState(257);
 				match(LESS_SYMBOL);
-				setState(196);
+				setState(258);
 				variable();
-				setState(197);
+				setState(259);
 				match(GREATER_SYMBOL);
 				}
 				break;
@@ -1600,38 +1973,40 @@ public class ShExMLParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_prefixVar; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterPrefixVar(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterPrefixVar(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitPrefixVar(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitPrefixVar(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitPrefixVar(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitPrefixVar(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final PrefixVarContext prefixVar() throws RecognitionException {
 		PrefixVarContext _localctx = new PrefixVarContext(_ctx, getState());
-		enterRule(_localctx, 46, RULE_prefixVar);
+		enterRule(_localctx, 54, RULE_prefixVar);
 		try {
-			setState(203);
+			setState(265);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case STRING_OR_VAR:
 			case URI_VAR:
+			case STRING_OR_VAR_QUERY:
+			case URI_VAR_QUERY:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(201);
+				setState(263);
 				variable();
 				}
 				break;
 			case URL:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(202);
+				setState(264);
 				match(URL);
 				}
 				break;
@@ -1653,35 +2028,37 @@ public class ShExMLParser extends Parser {
 	public static class VariableContext extends ParserRuleContext {
 		public TerminalNode STRING_OR_VAR() { return getToken(ShExMLParser.STRING_OR_VAR, 0); }
 		public TerminalNode URI_VAR() { return getToken(ShExMLParser.URI_VAR, 0); }
+		public TerminalNode STRING_OR_VAR_QUERY() { return getToken(ShExMLParser.STRING_OR_VAR_QUERY, 0); }
+		public TerminalNode URI_VAR_QUERY() { return getToken(ShExMLParser.URI_VAR_QUERY, 0); }
 		public VariableContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_variable; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).enterVariable(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterVariable(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof ShExMLListener ) ((ShExMLListener)listener).exitVariable(this);
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitVariable(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ShExMLVisitor ) return ((ShExMLVisitor<? extends T>)visitor).visitVariable(this);
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitVariable(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
 	public final VariableContext variable() throws RecognitionException {
 		VariableContext _localctx = new VariableContext(_ctx, getState());
-		enterRule(_localctx, 48, RULE_variable);
+		enterRule(_localctx, 56, RULE_variable);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(205);
+			setState(267);
 			_la = _input.LA(1);
-			if ( !(_la==STRING_OR_VAR || _la==URI_VAR) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -1703,69 +2080,93 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3 \u00d2\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3-\u0110\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
-		"\4\32\t\32\3\2\7\2\66\n\2\f\2\16\29\13\2\3\2\7\2<\n\2\f\2\16\2?\13\2\3"+
-		"\3\3\3\3\3\3\3\3\3\5\3F\n\3\3\4\3\4\3\4\3\4\3\4\3\4\3\5\3\5\3\5\3\5\3"+
-		"\5\3\5\3\6\3\6\3\6\3\6\3\6\3\6\3\7\3\7\3\7\3\7\3\7\3\7\3\b\3\b\3\b\3\b"+
-		"\3\b\3\b\3\b\3\b\3\t\3\t\3\t\3\t\5\tl\n\t\3\n\3\n\3\n\3\n\5\nr\n\n\3\13"+
-		"\3\13\3\13\3\13\3\13\3\13\3\f\3\f\3\f\3\f\3\f\3\r\3\r\3\r\3\r\3\r\3\r"+
-		"\3\16\3\16\3\16\3\16\3\17\3\17\5\17\u008b\n\17\3\20\3\20\3\20\5\20\u0090"+
-		"\n\20\3\21\3\21\3\21\3\21\3\21\5\21\u0097\n\21\3\21\3\21\3\21\3\21\3\21"+
-		"\7\21\u009e\n\21\f\21\16\21\u00a1\13\21\3\21\5\21\u00a4\n\21\3\21\3\21"+
-		"\3\22\3\22\3\22\5\22\u00ab\n\22\3\23\5\23\u00ae\n\23\3\23\3\23\3\23\5"+
-		"\23\u00b3\n\23\3\23\3\23\5\23\u00b7\n\23\3\23\3\23\3\24\3\24\3\24\3\25"+
-		"\3\25\3\25\3\26\3\26\3\27\3\27\3\30\3\30\3\30\3\30\3\30\5\30\u00ca\n\30"+
-		"\3\31\3\31\5\31\u00ce\n\31\3\32\3\32\3\32\2\2\33\2\4\6\b\n\f\16\20\22"+
-		"\24\26\30\32\34\36 \"$&(*,.\60\62\2\4\3\2\33\34\3\2\31\32\2\u00ce\2\67"+
-		"\3\2\2\2\4E\3\2\2\2\6G\3\2\2\2\bM\3\2\2\2\nS\3\2\2\2\fY\3\2\2\2\16_\3"+
-		"\2\2\2\20k\3\2\2\2\22q\3\2\2\2\24s\3\2\2\2\26y\3\2\2\2\30~\3\2\2\2\32"+
-		"\u0084\3\2\2\2\34\u008a\3\2\2\2\36\u008f\3\2\2\2 \u0091\3\2\2\2\"\u00a7"+
-		"\3\2\2\2$\u00ad\3\2\2\2&\u00ba\3\2\2\2(\u00bd\3\2\2\2*\u00c0\3\2\2\2,"+
-		"\u00c2\3\2\2\2.\u00c9\3\2\2\2\60\u00cd\3\2\2\2\62\u00cf\3\2\2\2\64\66"+
-		"\5\4\3\2\65\64\3\2\2\2\669\3\2\2\2\67\65\3\2\2\2\678\3\2\2\28=\3\2\2\2"+
-		"9\67\3\2\2\2:<\5 \21\2;:\3\2\2\2<?\3\2\2\2=;\3\2\2\2=>\3\2\2\2>\3\3\2"+
-		"\2\2?=\3\2\2\2@F\5\b\5\2AF\5\6\4\2BF\5\n\6\2CF\5\f\7\2DF\5\16\b\2E@\3"+
-		"\2\2\2EA\3\2\2\2EB\3\2\2\2EC\3\2\2\2ED\3\2\2\2F\5\3\2\2\2GH\7\4\2\2HI"+
-		"\5\62\32\2IJ\7\r\2\2JK\7\35\2\2KL\7\16\2\2L\7\3\2\2\2MN\7\5\2\2NO\5\62"+
-		"\32\2OP\7\r\2\2PQ\5*\26\2QR\7\16\2\2R\t\3\2\2\2ST\7\6\2\2TU\5\62\32\2"+
-		"UV\7\r\2\2VW\5,\27\2WX\7\16\2\2X\13\3\2\2\2YZ\7\7\2\2Z[\5\62\32\2[\\\7"+
-		"\r\2\2\\]\5\22\n\2]^\7\16\2\2^\r\3\2\2\2_`\7\n\2\2`a\5\62\32\2ab\7\r\2"+
-		"\2bc\5\20\t\2cd\7\13\2\2de\7\31\2\2ef\7\16\2\2f\17\3\2\2\2gh\7\31\2\2"+
-		"hi\7\3\2\2il\5\20\t\2jl\7\31\2\2kg\3\2\2\2kj\3\2\2\2l\21\3\2\2\2mr\5\26"+
-		"\f\2nr\5\32\16\2or\5\30\r\2pr\5\24\13\2qm\3\2\2\2qn\3\2\2\2qo\3\2\2\2"+
-		"qp\3\2\2\2r\23\3\2\2\2st\5\26\f\2tu\7\27\2\2uv\7\36\2\2vw\7\27\2\2wx\5"+
-		"\26\f\2x\25\3\2\2\2yz\7\17\2\2z{\5\62\32\2{|\7\25\2\2|}\5\62\32\2}\27"+
-		"\3\2\2\2~\177\5\26\f\2\177\u0080\7\b\2\2\u0080\u0081\5\26\f\2\u0081\u0082"+
-		"\7\t\2\2\u0082\u0083\5\26\f\2\u0083\31\3\2\2\2\u0084\u0085\5\34\17\2\u0085"+
-		"\u0086\7\b\2\2\u0086\u0087\5\36\20\2\u0087\33\3\2\2\2\u0088\u008b\5\26"+
-		"\f\2\u0089\u008b\5\24\13\2\u008a\u0088\3\2\2\2\u008a\u0089\3\2\2\2\u008b"+
-		"\35\3\2\2\2\u008c\u0090\5\26\f\2\u008d\u0090\5\32\16\2\u008e\u0090\5\24"+
-		"\13\2\u008f\u008c\3\2\2\2\u008f\u008d\3\2\2\2\u008f\u008e\3\2\2\2\u0090"+
-		"\37\3\2\2\2\u0091\u0092\5.\30\2\u0092\u0093\5\60\31\2\u0093\u0096\7\20"+
-		"\2\2\u0094\u0097\5\22\n\2\u0095\u0097\5\62\32\2\u0096\u0094\3\2\2\2\u0096"+
-		"\u0095\3\2\2\2\u0097\u0098\3\2\2\2\u0098\u0099\7\21\2\2\u0099\u009f\7"+
-		"\22\2\2\u009a\u009b\5\"\22\2\u009b\u009c\7\24\2\2\u009c\u009e\3\2\2\2"+
-		"\u009d\u009a\3\2\2\2\u009e\u00a1\3\2\2\2\u009f\u009d\3\2\2\2\u009f\u00a0"+
-		"\3\2\2\2\u00a0\u00a3\3\2\2\2\u00a1\u009f\3\2\2\2\u00a2\u00a4\5\"\22\2"+
-		"\u00a3\u00a2\3\2\2\2\u00a3\u00a4\3\2\2\2\u00a4\u00a5\3\2\2\2\u00a5\u00a6"+
-		"\7\23\2\2\u00a6!\3\2\2\2\u00a7\u00aa\5(\25\2\u00a8\u00ab\5$\23\2\u00a9"+
-		"\u00ab\5&\24\2\u00aa\u00a8\3\2\2\2\u00aa\u00a9\3\2\2\2\u00ab#\3\2\2\2"+
-		"\u00ac\u00ae\5\60\31\2\u00ad\u00ac\3\2\2\2\u00ad\u00ae\3\2\2\2\u00ae\u00af"+
-		"\3\2\2\2\u00af\u00b2\7\20\2\2\u00b0\u00b3\5\22\n\2\u00b1\u00b3\5\62\32"+
-		"\2\u00b2\u00b0\3\2\2\2\u00b2\u00b1\3\2\2\2\u00b3\u00b6\3\2\2\2\u00b4\u00b5"+
-		"\7\f\2\2\u00b5\u00b7\5\62\32\2\u00b6\u00b4\3\2\2\2\u00b6\u00b7\3\2\2\2"+
-		"\u00b7\u00b8\3\2\2\2\u00b8\u00b9\7\21\2\2\u00b9%\3\2\2\2\u00ba\u00bb\7"+
-		"\26\2\2\u00bb\u00bc\5.\30\2\u00bc\'\3\2\2\2\u00bd\u00be\5\60\31\2\u00be"+
-		"\u00bf\5\62\32\2\u00bf)\3\2\2\2\u00c0\u00c1\7\35\2\2\u00c1+\3\2\2\2\u00c2"+
-		"\u00c3\t\2\2\2\u00c3-\3\2\2\2\u00c4\u00ca\5(\25\2\u00c5\u00c6\7\r\2\2"+
-		"\u00c6\u00c7\5\62\32\2\u00c7\u00c8\7\16\2\2\u00c8\u00ca\3\2\2\2\u00c9"+
-		"\u00c4\3\2\2\2\u00c9\u00c5\3\2\2\2\u00ca/\3\2\2\2\u00cb\u00ce\5\62\32"+
-		"\2\u00cc\u00ce\7\35\2\2\u00cd\u00cb\3\2\2\2\u00cd\u00cc\3\2\2\2\u00ce"+
-		"\61\3\2\2\2\u00cf\u00d0\t\3\2\2\u00d0\63\3\2\2\2\22\67=Ekq\u008a\u008f"+
-		"\u0096\u009f\u00a3\u00aa\u00ad\u00b2\u00b6\u00c9\u00cd";
+		"\4\32\t\32\4\33\t\33\4\34\t\34\4\35\t\35\4\36\t\36\3\2\7\2>\n\2\f\2\16"+
+		"\2A\13\2\3\2\7\2D\n\2\f\2\16\2G\13\2\3\3\3\3\3\3\3\3\3\3\3\3\5\3O\n\3"+
+		"\3\4\3\4\3\4\3\4\3\4\3\4\3\5\3\5\3\5\3\5\3\5\3\5\3\6\3\6\3\6\3\6\3\6\3"+
+		"\6\3\6\6\6d\n\6\r\6\16\6e\3\6\7\6i\n\6\f\6\16\6l\13\6\3\6\3\6\3\7\3\7"+
+		"\3\7\3\7\3\7\3\7\3\7\6\7w\n\7\r\7\16\7x\3\7\7\7|\n\7\f\7\16\7\177\13\7"+
+		"\3\7\3\7\3\b\3\b\3\b\3\b\3\b\3\b\3\t\3\t\3\t\3\t\3\t\3\t\3\n\3\n\3\n\3"+
+		"\n\3\n\3\n\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\f\3\f\3\f\3\f\5\f"+
+		"\u00a1\n\f\3\r\3\r\3\r\3\r\5\r\u00a7\n\r\3\16\3\16\3\16\3\16\3\16\3\16"+
+		"\3\17\3\17\3\17\3\17\3\20\3\20\3\20\3\20\3\20\5\20\u00b8\n\20\3\21\3\21"+
+		"\3\22\3\22\3\22\3\22\3\22\3\22\3\23\3\23\3\23\3\23\3\24\3\24\5\24\u00c8"+
+		"\n\24\3\25\3\25\3\25\5\25\u00cd\n\25\3\26\3\26\3\26\3\26\3\26\5\26\u00d4"+
+		"\n\26\3\26\3\26\3\26\3\26\3\26\7\26\u00db\n\26\f\26\16\26\u00de\13\26"+
+		"\3\26\5\26\u00e1\n\26\3\26\3\26\3\27\3\27\3\27\3\27\5\27\u00e9\n\27\3"+
+		"\30\5\30\u00ec\n\30\3\30\3\30\3\30\5\30\u00f1\n\30\3\30\3\30\5\30\u00f5"+
+		"\n\30\3\30\3\30\3\31\3\31\3\31\3\32\3\32\5\32\u00fe\n\32\3\33\3\33\3\33"+
+		"\3\34\3\34\3\34\3\34\3\34\5\34\u0108\n\34\3\35\3\35\5\35\u010c\n\35\3"+
+		"\36\3\36\3\36\2\2\37\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60"+
+		"\62\64\668:\2\4\3\2%&\4\2\37 +,\2\u0110\2?\3\2\2\2\4N\3\2\2\2\6P\3\2\2"+
+		"\2\bV\3\2\2\2\n\\\3\2\2\2\fo\3\2\2\2\16\u0082\3\2\2\2\20\u0088\3\2\2\2"+
+		"\22\u008e\3\2\2\2\24\u0094\3\2\2\2\26\u00a0\3\2\2\2\30\u00a6\3\2\2\2\32"+
+		"\u00a8\3\2\2\2\34\u00ae\3\2\2\2\36\u00b7\3\2\2\2 \u00b9\3\2\2\2\"\u00bb"+
+		"\3\2\2\2$\u00c1\3\2\2\2&\u00c7\3\2\2\2(\u00cc\3\2\2\2*\u00ce\3\2\2\2,"+
+		"\u00e4\3\2\2\2.\u00eb\3\2\2\2\60\u00f8\3\2\2\2\62\u00fd\3\2\2\2\64\u00ff"+
+		"\3\2\2\2\66\u0107\3\2\2\28\u010b\3\2\2\2:\u010d\3\2\2\2<>\5\4\3\2=<\3"+
+		"\2\2\2>A\3\2\2\2?=\3\2\2\2?@\3\2\2\2@E\3\2\2\2A?\3\2\2\2BD\5*\26\2CB\3"+
+		"\2\2\2DG\3\2\2\2EC\3\2\2\2EF\3\2\2\2F\3\3\2\2\2GE\3\2\2\2HO\5\b\5\2IO"+
+		"\5\6\4\2JO\5\20\t\2KO\5\22\n\2LO\5\24\13\2MO\5\n\6\2NH\3\2\2\2NI\3\2\2"+
+		"\2NJ\3\2\2\2NK\3\2\2\2NL\3\2\2\2NM\3\2\2\2O\5\3\2\2\2PQ\7\3\2\2QR\5:\36"+
+		"\2RS\7*\2\2ST\7$\2\2TU\7(\2\2U\7\3\2\2\2VW\7\4\2\2WX\5:\36\2XY\7*\2\2"+
+		"YZ\7$\2\2Z[\7(\2\2[\t\3\2\2\2\\]\7\6\2\2]^\5:\36\2^_\7*\2\2_`\5 \21\2"+
+		"`a\7(\2\2ac\7\26\2\2bd\5\16\b\2cb\3\2\2\2de\3\2\2\2ec\3\2\2\2ef\3\2\2"+
+		"\2fj\3\2\2\2gi\5\f\7\2hg\3\2\2\2il\3\2\2\2jh\3\2\2\2jk\3\2\2\2km\3\2\2"+
+		"\2lj\3\2\2\2mn\7\27\2\2n\13\3\2\2\2op\7\6\2\2pq\5:\36\2qr\7*\2\2rs\7\'"+
+		"\2\2st\7(\2\2tv\7\26\2\2uw\5\16\b\2vu\3\2\2\2wx\3\2\2\2xv\3\2\2\2xy\3"+
+		"\2\2\2y}\3\2\2\2z|\5\f\7\2{z\3\2\2\2|\177\3\2\2\2}{\3\2\2\2}~\3\2\2\2"+
+		"~\u0080\3\2\2\2\177}\3\2\2\2\u0080\u0081\7\27\2\2\u0081\r\3\2\2\2\u0082"+
+		"\u0083\7\7\2\2\u0083\u0084\5:\36\2\u0084\u0085\7*\2\2\u0085\u0086\7\'"+
+		"\2\2\u0086\u0087\7(\2\2\u0087\17\3\2\2\2\u0088\u0089\7\5\2\2\u0089\u008a"+
+		"\5:\36\2\u008a\u008b\7*\2\2\u008b\u008c\5 \21\2\u008c\u008d\7(\2\2\u008d"+
+		"\21\3\2\2\2\u008e\u008f\7\b\2\2\u008f\u0090\5:\36\2\u0090\u0091\7\20\2"+
+		"\2\u0091\u0092\5\30\r\2\u0092\u0093\7\21\2\2\u0093\23\3\2\2\2\u0094\u0095"+
+		"\7\13\2\2\u0095\u0096\5:\36\2\u0096\u0097\7\20\2\2\u0097\u0098\5\26\f"+
+		"\2\u0098\u0099\7\f\2\2\u0099\u009a\7\37\2\2\u009a\u009b\7\21\2\2\u009b"+
+		"\25\3\2\2\2\u009c\u009d\7\37\2\2\u009d\u009e\7\34\2\2\u009e\u00a1\5\26"+
+		"\f\2\u009f\u00a1\7\37\2\2\u00a0\u009c\3\2\2\2\u00a0\u009f\3\2\2\2\u00a1"+
+		"\27\3\2\2\2\u00a2\u00a7\5$\23\2\u00a3\u00a7\5\"\22\2\u00a4\u00a7\5\32"+
+		"\16\2\u00a5\u00a7\5\34\17\2\u00a6\u00a2\3\2\2\2\u00a6\u00a3\3\2\2\2\u00a6"+
+		"\u00a4\3\2\2\2\u00a6\u00a5\3\2\2\2\u00a7\31\3\2\2\2\u00a8\u00a9\5\34\17"+
+		"\2\u00a9\u00aa\7\33\2\2\u00aa\u00ab\7!\2\2\u00ab\u00ac\7\33\2\2\u00ac"+
+		"\u00ad\5\34\17\2\u00ad\33\3\2\2\2\u00ae\u00af\5:\36\2\u00af\u00b0\7\31"+
+		"\2\2\u00b0\u00b1\5\36\20\2\u00b1\35\3\2\2\2\u00b2\u00b8\5:\36\2\u00b3"+
+		"\u00b4\5:\36\2\u00b4\u00b5\7\31\2\2\u00b5\u00b6\5\36\20\2\u00b6\u00b8"+
+		"\3\2\2\2\u00b7\u00b2\3\2\2\2\u00b7\u00b3\3\2\2\2\u00b8\37\3\2\2\2\u00b9"+
+		"\u00ba\t\2\2\2\u00ba!\3\2\2\2\u00bb\u00bc\5\34\17\2\u00bc\u00bd\7\t\2"+
+		"\2\u00bd\u00be\5\34\17\2\u00be\u00bf\7\n\2\2\u00bf\u00c0\5\34\17\2\u00c0"+
+		"#\3\2\2\2\u00c1\u00c2\5&\24\2\u00c2\u00c3\7\t\2\2\u00c3\u00c4\5(\25\2"+
+		"\u00c4%\3\2\2\2\u00c5\u00c8\5\34\17\2\u00c6\u00c8\5\32\16\2\u00c7\u00c5"+
+		"\3\2\2\2\u00c7\u00c6\3\2\2\2\u00c8\'\3\2\2\2\u00c9\u00cd\5\34\17\2\u00ca"+
+		"\u00cd\5$\23\2\u00cb\u00cd\5\32\16\2\u00cc\u00c9\3\2\2\2\u00cc\u00ca\3"+
+		"\2\2\2\u00cc\u00cb\3\2\2\2\u00cd)\3\2\2\2\u00ce\u00cf\5\66\34\2\u00cf"+
+		"\u00d0\58\35\2\u00d0\u00d3\7\22\2\2\u00d1\u00d4\5\30\r\2\u00d2\u00d4\5"+
+		":\36\2\u00d3\u00d1\3\2\2\2\u00d3\u00d2\3\2\2\2\u00d4\u00d5\3\2\2\2\u00d5"+
+		"\u00d6\7\23\2\2\u00d6\u00dc\7\26\2\2\u00d7\u00d8\5,\27\2\u00d8\u00d9\7"+
+		"\30\2\2\u00d9\u00db\3\2\2\2\u00da\u00d7\3\2\2\2\u00db\u00de\3\2\2\2\u00dc"+
+		"\u00da\3\2\2\2\u00dc\u00dd\3\2\2\2\u00dd\u00e0\3\2\2\2\u00de\u00dc\3\2"+
+		"\2\2\u00df\u00e1\5,\27\2\u00e0\u00df\3\2\2\2\u00e0\u00e1\3\2\2\2\u00e1"+
+		"\u00e2\3\2\2\2\u00e2\u00e3\7\27\2\2\u00e3+\3\2\2\2\u00e4\u00e8\5\62\32"+
+		"\2\u00e5\u00e9\5.\30\2\u00e6\u00e9\5\60\31\2\u00e7\u00e9\5\64\33\2\u00e8"+
+		"\u00e5\3\2\2\2\u00e8\u00e6\3\2\2\2\u00e8\u00e7\3\2\2\2\u00e9-\3\2\2\2"+
+		"\u00ea\u00ec\58\35\2\u00eb\u00ea\3\2\2\2\u00eb\u00ec\3\2\2\2\u00ec\u00ed"+
+		"\3\2\2\2\u00ed\u00f0\7\22\2\2\u00ee\u00f1\5\30\r\2\u00ef\u00f1\5:\36\2"+
+		"\u00f0\u00ee\3\2\2\2\u00f0\u00ef\3\2\2\2\u00f1\u00f4\3\2\2\2\u00f2\u00f3"+
+		"\7\r\2\2\u00f3\u00f5\5:\36\2\u00f4\u00f2\3\2\2\2\u00f4\u00f5\3\2\2\2\u00f5"+
+		"\u00f6\3\2\2\2\u00f6\u00f7\7\23\2\2\u00f7/\3\2\2\2\u00f8\u00f9\7\32\2"+
+		"\2\u00f9\u00fa\5\66\34\2\u00fa\61\3\2\2\2\u00fb\u00fe\5\64\33\2\u00fc"+
+		"\u00fe\7\36\2\2\u00fd\u00fb\3\2\2\2\u00fd\u00fc\3\2\2\2\u00fe\63\3\2\2"+
+		"\2\u00ff\u0100\58\35\2\u0100\u0101\5:\36\2\u0101\65\3\2\2\2\u0102\u0108"+
+		"\5\62\32\2\u0103\u0104\7\20\2\2\u0104\u0105\5:\36\2\u0105\u0106\7\21\2"+
+		"\2\u0106\u0108\3\2\2\2\u0107\u0102\3\2\2\2\u0107\u0103\3\2\2\2\u0108\67"+
+		"\3\2\2\2\u0109\u010c\5:\36\2\u010a\u010c\7$\2\2\u010b\u0109\3\2\2\2\u010b"+
+		"\u010a\3\2\2\2\u010c9\3\2\2\2\u010d\u010e\t\3\2\2\u010e;\3\2\2\2\30?E"+
+		"Nejx}\u00a0\u00a6\u00b7\u00c7\u00cc\u00d3\u00dc\u00e0\u00e8\u00eb\u00f0"+
+		"\u00f4\u00fd\u0107\u010b";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
