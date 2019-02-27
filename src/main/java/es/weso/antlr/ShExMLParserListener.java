@@ -260,6 +260,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitPredicate(ShExMLParser.PredicateContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#literalValue}.
+	 * @param ctx the parse tree
+	 */
+	void enterLiteralValue(ShExMLParser.LiteralValueContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#literalValue}.
+	 * @param ctx the parse tree
+	 */
+	void exitLiteralValue(ShExMLParser.LiteralValueContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#tripleElement}.
 	 * @param ctx the parse tree
 	 */

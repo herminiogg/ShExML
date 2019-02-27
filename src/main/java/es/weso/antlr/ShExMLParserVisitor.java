@@ -163,6 +163,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPredicate(ShExMLParser.PredicateContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#literalValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLiteralValue(ShExMLParser.LiteralValueContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#tripleElement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

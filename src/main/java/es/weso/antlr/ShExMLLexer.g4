@@ -31,6 +31,7 @@ AT: '@' ;
 ADD: '+' ;
 COMMA: ',' ;
 QUOTE: '"' ;
+A: 'a' ;
 STRING_OR_VAR: LETTER (LETTER | DIGIT | '_')* ;
 URI_VAR: (LETTER | DIGIT | '_')* ':' ;
 STRINGOPERATOR: '"' (LETTER | DIGIT | ALLOWED_CHARACTERS)+ '"' ;

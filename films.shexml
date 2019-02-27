@@ -40,6 +40,7 @@ ITERATOR film_json <jsonpath: $.films[*]> {
 EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
 
 :Films :[films.id] {
+    a :Film ;
     schema:name [films.name] ;
     :year dbr:[films.year] ;
     schema:countryOfOrigin dbr:[films.country] ;
@@ -52,11 +53,13 @@ EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
 }
 
 :Actor dbr:[films.actors.name] {
+    a :Actor ;
     :name [films.actors.name] ;
     :appear_on :[films.actors.film] ;
 }
 
 :Actress dbr:[films.actresses.name] {
+    a :Actor ;
     :name [films.actresses.name] ;
     :appear_on :[films.actresses.film] ;
 }

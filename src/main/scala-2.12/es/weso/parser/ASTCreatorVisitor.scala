@@ -139,16 +139,28 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitPredicateObject(ctx: PredicateObjectContext): AST = {
     val predicate = visit(ctx.predicate()).asInstanceOf[Predicate]
-    val objectElementOrShapeLink = if(ctx.objectElement() == null)
+    val objectElementOrShapeLink = if(ctx.objectElement() == null && ctx.literalValue() == null)
       visit(ctx.shapeLink()).asInstanceOf[ShapeLink]
-    else visit(ctx.objectElement()).asInstanceOf[ObjectElement]
+    else if(ctx.shapeLink() == null && ctx.literalValue() == null)
+      visit(ctx.objectElement()).asInstanceOf[ObjectElement]
+    else visit(ctx.literalValue()).asInstanceOf[LiteralObject]
     PredicateObject(predicate, objectElementOrShapeLink)
   }
 
   override def visitPredicate(ctx: PredicateContext): AST = {
-    val prefix = ctx.prefixVar().getText
-    val name = ctx.variable().getText
-    Predicate(prefix, name)
+    if(ctx.A() != null) {
+      Predicate("rdf:", "type")
+    } else {
+      val prefix = ctx.literalValue().prefixVar().getText
+      val name = ctx.literalValue().variable().getText
+      Predicate(prefix, name)
+    }
+  }
+
+  override def visitLiteralValue(ctx: LiteralValueContext): AST = {
+    val prefix = Var(ctx.prefixVar().getText)
+    val value = ctx.variable().getText
+    LiteralObject(prefix, value)
   }
 
   override def visitObjectElement(ctx: ObjectElementContext): AST = {

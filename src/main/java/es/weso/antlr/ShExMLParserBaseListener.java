@@ -318,6 +318,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterLiteralValue(ShExMLParser.LiteralValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLiteralValue(ShExMLParser.LiteralValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterTripleElement(ShExMLParser.TripleElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
