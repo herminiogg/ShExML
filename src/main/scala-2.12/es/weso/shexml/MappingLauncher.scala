@@ -5,7 +5,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import es.weso.antlr.{ShExMLLexer, ShExMLParser}
 import es.weso.ast._
 import es.weso.parser.ASTCreatorVisitor
-import es.weso.visitor.{RDFGeneratorVisitor, VarTableBuilderVisitor}
+import es.weso.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.rdf.model.{Model, ModelFactory}
 
@@ -29,6 +29,17 @@ class MappingLauncher {
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
     generateResultingRDF(ast, varTable)
+  }
+
+  def launchRMLTranslation(mappingCode: String): String = {
+    val lexer = createLexer(mappingCode)
+    val parser = createParser(lexer)
+    val ast = createAST(parser)
+    val varTable = createVarTable(ast)
+    val model = generateResultingRML(ast, varTable)
+    val outputStream = new ByteArrayOutputStream()
+    model.write(outputStream, "TURTLE")
+    outputStream.toString
   }
 
   private def createLexer(mappingCode: String): ShExMLLexer = {
@@ -57,6 +68,12 @@ class MappingLauncher {
     //val in = new ByteArrayInputStream(output.toString().getBytes)
     //val model = ModelFactory.createDefaultModel()
     //model.read(in, null, "TURTLE")
+    output
+  }
+
+  private def generateResultingRML(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Model = {
+    val output = ModelFactory.createDefaultModel()
+    new RMLGeneratorVisitor(output, varTable).visit(ast, null)
     output
   }
 

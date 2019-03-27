@@ -16,8 +16,8 @@ import scala.util.Try
   */
 class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any, Any] {
 
-  private val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
-  private val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
+  protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
+  protected val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
@@ -240,14 +240,14 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case default => visit(default, optionalArgument)
   }
 
-  private def createStatement(s: String, p: String, o: String): Statement = {
+  protected def createStatement(s: String, p: String, o: String): Statement = {
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
     val obj = ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
-  private def createStatementWithLiteral(s: String, p: String, o: String): Statement = {
+  protected def createStatementWithLiteral(s: String, p: String, o: String): Statement = {
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
     val xsdType = searchForXSDType(o)
@@ -255,7 +255,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
-  private def searchForXSDType(o: String): RDFDatatype = {
+  protected def searchForXSDType(o: String): RDFDatatype = {
     if(Try(o.toInt).isSuccess)
       XSDDatatype.XSDinteger
     else if(Try(o.toDouble).isSuccess)
@@ -266,24 +266,24 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       XSDDatatype.XSDstring
   }
 
-  private def normaliseURI(uri: String): String = {
+  protected def normaliseURI(uri: String): String = {
     uri.replaceAll("[\\s,_()']", "_")
       .replace("&quot;", "")
       .replace("&#209;", "N").replace("&#241;", "n")
       .replace("&#220;", "U").replace("&#252;", "u")
   }
 
-  private def doVisitIteratorQuery(nestedIterator: QueryClause, currentIterator: QueryClause, optionalArgument: Any): Result = nestedIterator match {
+  protected def doVisitIteratorQuery(nestedIterator: QueryClause, currentIterator: QueryClause, optionalArgument: Any): Result = nestedIterator match {
     case JsonPath(query) => doVisit(JsonPath(query + currentIterator.query), optionalArgument).asInstanceOf[Result]
     case XmlPath(query) => doVisit(XmlPath(query + currentIterator.query), optionalArgument).asInstanceOf[Result]
   }
 
-  private def iteratorQueryToList(i: IteratorQuery): List[Var] = i.composedVar match {
+  protected def iteratorQueryToList(i: IteratorQuery): List[Var] = i.composedVar match {
     case v: Var => List(i.firstVar, v)
     case c: IteratorQuery => List(i.firstVar) ::: iteratorQueryToList(c)
   }
 
-  private def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], fileContent: String): List[QueryWithIndex] = iteratorQueries.flatMap({
+  protected def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], fileContent: String): List[QueryWithIndex] = iteratorQueries.flatMap({
     case r: Result => r.results.indices.map(i => query match {
       case XmlPath(xpathQuery) => {
         val composedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
@@ -310,7 +310,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }).toList
   })
 
-  private def generateFinalQuery(varList: List[Var], context: String, rootQuery: QueryClause): QueryClause = varList match {
+  protected def generateFinalQuery(varList: List[Var], context: String, rootQuery: QueryClause): QueryClause = varList match {
     case x :: Nil => varTable(Var(context + x.name)).asInstanceOf[QueryClause]
     case x :: xs => varTable(Var(context + x.name)).asInstanceOf[QueryClause] match {
       case j: JsonPath => JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
@@ -322,7 +322,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
   }
 
-  private def doIteratorQueries(varList: List[Var], varContext: String, precedentQueries: List[String], arguments: Any, rootQuery: QueryClause): List[Resultable] = varList match {
+  protected def doIteratorQueries(varList: List[Var], varContext: String, precedentQueries: List[String], arguments: Any, rootQuery: QueryClause): List[Resultable] = varList match {
     case x :: Nil => precedentQueries.map(q => varTable(Var(varContext + x.name)) match {
       case JsonPath(query) => doVisit(JsonPath(q + query), arguments).asInstanceOf[Result]
       case XmlPath(query) => doVisit(XmlPath(q + query), arguments).asInstanceOf[Result]
@@ -350,7 +350,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
   }
 
-  private def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContent: String): List[Result] = {
+  protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContent: String): List[Result] = {
     val query = generateFinalQuery(iteratorVars, "", null)
     val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
     val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContent)
@@ -359,7 +359,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       .filter(_.results.nonEmpty)
   }
 
-  private def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {
+  protected def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {
     for ((l, r) <- left zip right) yield {
       val results = for (i <- l.results) yield {
         for (j <- r.results) yield {
@@ -370,7 +370,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
   }
 
-  private def getJoinResults(left: List[Result], right: List[Result], join: List[Result]): List[Result] = {
+  protected def getJoinResults(left: List[Result], right: List[Result], join: List[Result]): List[Result] = {
     val joinUnionList = for(r <- right.asInstanceOf[List[Result]]) yield {
       val filteredJoin = join.asInstanceOf[List[Result]].filter(j => j.results.nonEmpty && j.results == r.results)
       if(filteredJoin.nonEmpty)
