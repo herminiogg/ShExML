@@ -6,6 +6,8 @@ version := "1.0.0"
 
 scalaVersion := "2.12.4"
 
+resolvers += "jitpack" at "https://jitpack.io"
+
 libraryDependencies += "org.antlr" % "antlr4" % "4.7.1"
 
 libraryDependencies += "io.gatling" % "jsonpath_2.12" % "0.6.10"
@@ -19,3 +21,5 @@ libraryDependencies += "com.nrinaudo" %% "kantan.xpath" % "0.3.2"
 libraryDependencies += "org.apache.jena" % "apache-jena-libs" % "3.6.0" pomOnly()
 
 libraryDependencies += "org.scalatest" % "scalatest_2.12" % "3.0.4" % "test"
+
+libraryDependencies += "com.github.RMLio" % "rmlmapper-java" % "v4.3.3" % "test"

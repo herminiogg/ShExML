@@ -14,6 +14,8 @@ object Main {
       scala.io.Source.fromFile(args(0)).mkString
     val mappingLauncher = new MappingLauncher()
     val output = mappingLauncher.launchMapping(file, "TURTLE")
+    //val mappingLauncher = new MappingLauncher()
+    //val output = mappingLauncher.launchRMLTranslation(file)
     println(output)
   }
 
