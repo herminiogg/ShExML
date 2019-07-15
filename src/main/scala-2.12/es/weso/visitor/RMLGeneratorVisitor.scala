@@ -57,6 +57,7 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val arguments = if(receivedArguments.isDefinedAt("rmlType")) receivedArguments else receivedArguments.+("rmlType" -> "object")
       varTable(firstVar) match {
         case u: Union => doVisit(u, arguments + ("composedVar" -> composedVar))
+        case i: IteratorQuery => List(doVisit(i, arguments + ("composedVar" -> composedVar)))
         case source: URL => {
           val iterator = composedVar match {
             case IteratorQuery(iteratorVar, _) =>
