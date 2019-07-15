@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.7.1
+// Generated from ShExMLParser.g4 by ANTLR 4.7.2
 
 package es.weso.antlr;
 
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class ShExMLParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.7.1", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.7.2", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -36,30 +36,40 @@ public class ShExMLParser extends Parser {
 		RULE_shape = 20, RULE_predicateObject = 21, RULE_objectElement = 22, RULE_shapeLink = 23, 
 		RULE_predicate = 24, RULE_literalValue = 25, RULE_tripleElement = 26, 
 		RULE_prefixVar = 27, RULE_variable = 28;
-	public static final String[] ruleNames = {
-		"shExML", "decl", "prefix", "source", "iterator", "nestedIterator", "field", 
-		"query", "expression", "matcher", "replacedStrings", "exp", "stringOperation", 
-		"iteratorQuery", "composedVariable", "queryClause", "join", "union", "leftUnionOption", 
-		"rightUnionOption", "shape", "predicateObject", "objectElement", "shapeLink", 
-		"predicate", "literalValue", "tripleElement", "prefixVar", "variable"
-	};
+	private static String[] makeRuleNames() {
+		return new String[] {
+			"shExML", "decl", "prefix", "source", "iterator", "nestedIterator", "field", 
+			"query", "expression", "matcher", "replacedStrings", "exp", "stringOperation", 
+			"iteratorQuery", "composedVariable", "queryClause", "join", "union", 
+			"leftUnionOption", "rightUnionOption", "shape", "predicateObject", "objectElement", 
+			"shapeLink", "predicate", "literalValue", "tripleElement", "prefixVar", 
+			"variable"
+		};
+	}
+	public static final String[] ruleNames = makeRuleNames();
 
-	private static final String[] _LITERAL_NAMES = {
-		null, "'PREFIX'", "'SOURCE'", "'QUERY'", "'ITERATOR'", "'FIELD'", "'EXPRESSION'", 
-		"'UNION'", "'JOIN'", "'MATCHER'", "'AS'", "'MATCHING'", "'QUERY_SET'", 
-		"'EXPRESSION_SET'", null, null, "'['", "']'", "'('", "')'", "'{'", "'}'", 
-		"';'", "'.'", "'@'", "'+'", "','", "'\"'", "'a'"
-	};
-	private static final String[] _SYMBOLIC_NAMES = {
-		null, "PREFIX", "SOURCE", "QUERY", "ITERATOR", "FIELD", "EXPRESSION", 
-		"UNION", "JOIN", "MATCHER", "AS", "MATCHING", "QUERY_SET", "EXPRESSION_SET", 
-		"LESS_SYMBOL", "GREATER_SYMBOL", "BRACKET_LEFT", "BRACKET_RIGHT", "PAREN_LEFT", 
-		"PAREN_RIGHT", "BRACE_LEFT", "BRACE_RIGHT", "SEMICOLON", "DOT", "AT", 
-		"ADD", "COMMA", "QUOTE", "A", "STRING_OR_VAR", "URI_VAR", "STRINGOPERATOR", 
-		"COMMENT", "WS", "URL", "JSONPATH", "XMLPATH", "QUERY_PART", "GREATER_SYMBOL_QUERY", 
-		"WS_QUERY", "LESS_SYMBOL_QUERY", "STRING_OR_VAR_QUERY", "URI_VAR_QUERY", 
-		"WS_DECLARATION"
-	};
+	private static String[] makeLiteralNames() {
+		return new String[] {
+			null, "'PREFIX'", "'SOURCE'", "'QUERY'", "'ITERATOR'", "'FIELD'", "'EXPRESSION'", 
+			"'UNION'", "'JOIN'", "'MATCHER'", "'AS'", "'MATCHING'", "'QUERY_SET'", 
+			"'EXPRESSION_SET'", null, null, "'['", "']'", "'('", "')'", "'{'", "'}'", 
+			"';'", "'.'", "'@'", "'+'", "','", "'\"'", "'a'"
+		};
+	}
+	private static final String[] _LITERAL_NAMES = makeLiteralNames();
+	private static String[] makeSymbolicNames() {
+		return new String[] {
+			null, "PREFIX", "SOURCE", "QUERY", "ITERATOR", "FIELD", "EXPRESSION", 
+			"UNION", "JOIN", "MATCHER", "AS", "MATCHING", "QUERY_SET", "EXPRESSION_SET", 
+			"LESS_SYMBOL", "GREATER_SYMBOL", "BRACKET_LEFT", "BRACKET_RIGHT", "PAREN_LEFT", 
+			"PAREN_RIGHT", "BRACE_LEFT", "BRACE_RIGHT", "SEMICOLON", "DOT", "AT", 
+			"ADD", "COMMA", "QUOTE", "A", "STRING_OR_VAR", "URI_VAR", "STRINGOPERATOR", 
+			"COMMENT", "WS", "URL", "JSONPATH", "XMLPATH", "QUERY_PART", "GREATER_SYMBOL_QUERY", 
+			"WS_QUERY", "LESS_SYMBOL_QUERY", "STRING_OR_VAR_QUERY", "URI_VAR_QUERY", 
+			"WS_DECLARATION"
+		};
+	}
+	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
 	/**
@@ -109,6 +119,7 @@ public class ShExMLParser extends Parser {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
+
 	public static class ShExMLContext extends ParserRuleContext {
 		public List<DeclContext> decl() {
 			return getRuleContexts(DeclContext.class);
@@ -410,6 +421,8 @@ public class ShExMLParser extends Parser {
 			return getRuleContext(QueryClauseContext.class,0);
 		}
 		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
+		public TerminalNode BRACE_LEFT() { return getToken(ShExMLParser.BRACE_LEFT, 0); }
+		public TerminalNode BRACE_RIGHT() { return getToken(ShExMLParser.BRACE_RIGHT, 0); }
 		public List<FieldContext> field() {
 			return getRuleContexts(FieldContext.class);
 		}
@@ -511,6 +524,8 @@ public class ShExMLParser extends Parser {
 		public TerminalNode LESS_SYMBOL_QUERY() { return getToken(ShExMLParser.LESS_SYMBOL_QUERY, 0); }
 		public TerminalNode QUERY_PART() { return getToken(ShExMLParser.QUERY_PART, 0); }
 		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
+		public TerminalNode BRACE_LEFT() { return getToken(ShExMLParser.BRACE_LEFT, 0); }
+		public TerminalNode BRACE_RIGHT() { return getToken(ShExMLParser.BRACE_RIGHT, 0); }
 		public List<FieldContext> field() {
 			return getRuleContexts(FieldContext.class);
 		}
@@ -842,6 +857,7 @@ public class ShExMLParser extends Parser {
 
 	public static class ReplacedStringsContext extends ParserRuleContext {
 		public TerminalNode STRING_OR_VAR() { return getToken(ShExMLParser.STRING_OR_VAR, 0); }
+		public TerminalNode COMMA() { return getToken(ShExMLParser.COMMA, 0); }
 		public ReplacedStringsContext replacedStrings() {
 			return getRuleContext(ReplacedStringsContext.class,0);
 		}
@@ -989,6 +1005,10 @@ public class ShExMLParser extends Parser {
 		public IteratorQueryContext iteratorQuery(int i) {
 			return getRuleContext(IteratorQueryContext.class,i);
 		}
+		public List<TerminalNode> ADD() { return getTokens(ShExMLParser.ADD); }
+		public TerminalNode ADD(int i) {
+			return getToken(ShExMLParser.ADD, i);
+		}
 		public TerminalNode STRINGOPERATOR() { return getToken(ShExMLParser.STRINGOPERATOR, 0); }
 		public StringOperationContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1042,6 +1062,7 @@ public class ShExMLParser extends Parser {
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
+		public TerminalNode DOT() { return getToken(ShExMLParser.DOT, 0); }
 		public ComposedVariableContext composedVariable() {
 			return getRuleContext(ComposedVariableContext.class,0);
 		}
@@ -1093,6 +1114,7 @@ public class ShExMLParser extends Parser {
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
+		public TerminalNode DOT() { return getToken(ShExMLParser.DOT, 0); }
 		public ComposedVariableContext composedVariable() {
 			return getRuleContext(ComposedVariableContext.class,0);
 		}
@@ -1451,6 +1473,10 @@ public class ShExMLParser extends Parser {
 		public PrefixVarContext prefixVar() {
 			return getRuleContext(PrefixVarContext.class,0);
 		}
+		public TerminalNode BRACKET_LEFT() { return getToken(ShExMLParser.BRACKET_LEFT, 0); }
+		public TerminalNode BRACKET_RIGHT() { return getToken(ShExMLParser.BRACKET_RIGHT, 0); }
+		public TerminalNode BRACE_LEFT() { return getToken(ShExMLParser.BRACE_LEFT, 0); }
+		public TerminalNode BRACE_RIGHT() { return getToken(ShExMLParser.BRACE_RIGHT, 0); }
 		public ExpContext exp() {
 			return getRuleContext(ExpContext.class,0);
 		}
@@ -1462,6 +1488,10 @@ public class ShExMLParser extends Parser {
 		}
 		public PredicateObjectContext predicateObject(int i) {
 			return getRuleContext(PredicateObjectContext.class,i);
+		}
+		public List<TerminalNode> SEMICOLON() { return getTokens(ShExMLParser.SEMICOLON); }
+		public TerminalNode SEMICOLON(int i) {
+			return getToken(ShExMLParser.SEMICOLON, i);
 		}
 		public ShapeContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1635,6 +1665,8 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class ObjectElementContext extends ParserRuleContext {
+		public TerminalNode BRACKET_LEFT() { return getToken(ShExMLParser.BRACKET_LEFT, 0); }
+		public TerminalNode BRACKET_RIGHT() { return getToken(ShExMLParser.BRACKET_RIGHT, 0); }
 		public ExpContext exp() {
 			return getRuleContext(ExpContext.class,0);
 		}
@@ -1730,6 +1762,7 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class ShapeLinkContext extends ParserRuleContext {
+		public TerminalNode AT() { return getToken(ShExMLParser.AT, 0); }
 		public TripleElementContext tripleElement() {
 			return getRuleContext(TripleElementContext.class,0);
 		}

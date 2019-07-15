@@ -55,5 +55,5 @@ WS_DECLARATION: [ \t\n\r] -> skip ;
 
 fragment LETTER: [a-zA-Záéíóú] ;
 fragment DIGIT: [0-9] ;
-fragment ALLOWED_CHARACTERS: '[' | ']' | '*' | '_' | '/' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
+fragment ALLOWED_CHARACTERS: '[' | ']' | '*' | '_' | '/' | '\\' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
         | '?' | '=' | '&' | '#' | '$' | ':' | '^' ;
