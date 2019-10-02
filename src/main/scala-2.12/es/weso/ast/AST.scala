@@ -20,7 +20,8 @@ case class Iterator(name: Var, queryClause: QueryClause, fields: List[Field], it
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class Field(name: Var, queryClause: QueryClause) extends AST
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
-case class Matcher(name: Var, replacedStrings: ReplacedStrings, replacement: String) extends DeclarationStatement with VarResult
+case class Matcher(replacedStrings: ReplacedStrings, replacement: String) extends AST
+case class Matchers(name: Var, matchers: MatcherList) extends DeclarationStatement with VarResult
 
 
 sealed trait QueryClause extends VarResult {
@@ -70,3 +71,4 @@ sealed trait Iterators extends AST {
 case class URL(url: String) extends VarResult
 case class ReplacedStrings(strings: List[String]) extends AST
 case class ComposedVariable(variables: List[Var]) extends AST
+case class MatcherList(matchers: List[Matcher]) extends AST

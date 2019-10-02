@@ -20,7 +20,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
       val fieldName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable") + "." + name.name
       variableMap += ((Var(fieldName), value))
     }
-    case m: Matcher => variableMap += ((m.name, m))
+    case m: Matchers => variableMap += ((m.name, m))
     case s: Shape => variableMap += ((s.shapeName, s))
     case default => super.visit(default, optionalArgument)
   }

@@ -15,7 +15,8 @@ nestedIterator: ITERATOR variable LESS_SYMBOL_QUERY QUERY_PART GREATER_SYMBOL_QU
 field: FIELD variable LESS_SYMBOL_QUERY QUERY_PART GREATER_SYMBOL_QUERY ;
 query: QUERY variable LESS_SYMBOL_QUERY queryClause GREATER_SYMBOL_QUERY ;
 expression: EXPRESSION variable LESS_SYMBOL exp GREATER_SYMBOL ;
-matcher: MATCHER variable LESS_SYMBOL replacedStrings AS STRING_OR_VAR GREATER_SYMBOL ;
+matcher: MATCHER variable LESS_SYMBOL matchers GREATER_SYMBOL ;
+matchers: replacedStrings AS STRING_OR_VAR | matchers AND replacedStrings AS STRING_OR_VAR ;
 replacedStrings: STRING_OR_VAR ',' replacedStrings | STRING_OR_VAR ;
 exp: union | join | stringOperation | iteratorQuery ;
 stringOperation: iteratorQuery '+' STRINGOPERATOR '+' iteratorQuery ;
