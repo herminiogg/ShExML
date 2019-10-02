@@ -138,6 +138,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterMatchers(ShExMLParser.MatchersContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMatchers(ShExMLParser.MatchersContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterReplacedStrings(ShExMLParser.ReplacedStringsContext ctx) { }
 	/**
 	 * {@inheritDoc}

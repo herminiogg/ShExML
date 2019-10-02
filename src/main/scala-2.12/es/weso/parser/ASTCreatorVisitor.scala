@@ -57,9 +57,19 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitMatcher(ctx: MatcherContext): AST = {
     val matcherVar = createVar(ctx.variable())
+    val matchers = visit(ctx.matchers()).asInstanceOf[MatcherList]
+    Matchers(matcherVar, matchers)
+  }
+
+  override def visitMatchers(ctx: MatchersContext): AST = {
+    val otherMatchers =
+      if(ctx.matchers() != null)
+        visitMatchers(ctx.matchers()).asInstanceOf[MatcherList].matchers
+      else
+        Nil
     val replacedStrings = visit(ctx.replacedStrings()).asInstanceOf[ReplacedStrings]
     val replacementString = ctx.STRING_OR_VAR().getText
-    Matcher(matcherVar, replacedStrings, replacementString)
+    MatcherList(otherMatchers.::(Matcher(replacedStrings, replacementString)))
   }
 
   override def visitReplacedStrings(ctx: ReplacedStringsContext): AST = {

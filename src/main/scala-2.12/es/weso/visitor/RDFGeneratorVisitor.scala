@@ -219,11 +219,15 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       }
     }
 
-    case Matcher(_, replacedStrings, replacement) => {
+    case Matchers(_, matchers) => {
       val listToMatch = optionalArgument.asInstanceOf[List[Result]]
       listToMatch.map(r => Result(r.id, r.rootIds, r.results.map(s => {
-        if(replacedStrings.strings.contains(s)) replacement else s
+        matchers.matchers.foldLeft(s)((value, matcher) => doVisit(matcher, value).asInstanceOf[String])
       })))
+    }
+
+    case Matcher(replacedStrings, replacement) => {
+      if(replacedStrings.strings.contains(optionalArgument.toString)) replacement else optionalArgument.toString
     }
 
     case LiteralObject(prefix, value) => {
