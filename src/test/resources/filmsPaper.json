@@ -14,8 +14,7 @@
             "date": "2006",
             "countryOfOrigin": "USA",
             "director": "Christopher Nolan",
-            "screenwriter": ["Christopher Nolan", 
-            	"Jonathan Nolan"]
+            "screenwriter": ["Christopher Nolan", "Jonathan Nolan"]
         }
     ]
 }
