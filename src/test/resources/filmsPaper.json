@@ -1,0 +1,21 @@
+{
+    "films": [
+        {
+            "id": 3,
+            "title": "Inception",
+            "date": "2010",
+            "countryOfOrigin": "USA",
+            "director": "Christopher Nolan",
+            "screenwriter": "Christopher Nolan"
+        },
+        {
+            "id": 4,
+            "title": "The Prestige",
+            "date": "2006",
+            "countryOfOrigin": "USA",
+            "director": "Christopher Nolan",
+            "screenwriter": ["Christopher Nolan", 
+            	"Jonathan Nolan"]
+        }
+    ]
+}
