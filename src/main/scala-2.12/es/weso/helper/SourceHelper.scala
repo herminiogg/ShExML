@@ -6,7 +6,8 @@ package es.weso.helper
 class SourceHelper {
 
   def getURLContent(url: String): String = {
-    scala.io.Source.fromURL(url).mkString
+    val file = scala.io.Source.fromURL(url, "UTF-8")
+    try { file.mkString } finally { file.close() }
   }
 
 }
