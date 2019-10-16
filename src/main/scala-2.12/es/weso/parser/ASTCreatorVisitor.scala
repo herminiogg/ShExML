@@ -68,7 +68,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       else
         Nil
     val replacedStrings = visit(ctx.replacedStrings()).asInstanceOf[ReplacedStrings]
-    val replacementString = ctx.STRING_OR_VAR().getText
+    val replacementString =
+      if(ctx.STRING_OR_VAR() != null ) ctx.STRING_OR_VAR().getText
+      else ctx.STRINGOPERATOR().getText.replaceAll("\"", "")
     MatcherList(otherMatchers.::(Matcher(replacedStrings, replacementString)))
   }
 
@@ -78,7 +80,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
         visit(ctx.replacedStrings()).asInstanceOf[ReplacedStrings].strings
       else
         Nil
-    val string = ctx.STRING_OR_VAR().getText
+    val string =
+      if(ctx.STRING_OR_VAR() != null ) ctx.STRING_OR_VAR().getText
+      else ctx.STRINGOPERATOR().getText.replaceAll("\"", "")
     ReplacedStrings(replacedStrings.::(string))
   }
 
