@@ -30,7 +30,7 @@ leftUnionOption: iteratorQuery | stringOperation ;
 rightUnionOption: iteratorQuery | union | stringOperation ;
 shape: tripleElement prefixVar '[' (exp | variable) ']' '{' (predicateObject ';')* predicateObject? '}' ;
 predicateObject: predicate (objectElement | shapeLink | literalValue) ;
-objectElement: prefixVar? '[' (exp | variable) (MATCHING variable)? ']' ;
+objectElement: prefixVar? '[' (exp | variable) (MATCHING variable)? ']' XMLSCHEMADATATYPE? ;
 shapeLink: '@' tripleElement ;
 predicate: (literalValue | A) ;
 literalValue: prefixVar variable ;
