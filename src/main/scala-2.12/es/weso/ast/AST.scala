@@ -57,7 +57,7 @@ case class Predicate(prefix: String, extension: String) extends AST
 
 sealed trait ObjectOrShapeLink extends AST
 
-case class ObjectElement(prefix: String, action: ExpOrVar, matcher: Option[Var]) extends ObjectOrShapeLink
+case class ObjectElement(prefix: String, action: ExpOrVar, matcher: Option[Var], dataType: Option[String]) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 
 sealed trait VarResult extends AST

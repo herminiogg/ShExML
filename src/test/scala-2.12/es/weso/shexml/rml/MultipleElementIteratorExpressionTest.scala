@@ -9,6 +9,7 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
   private val example =
     """
       |PREFIX : <http://example.com/>
+      |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
       |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
       |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
       |ITERATOR film_xml <xpath: //film> {
@@ -30,7 +31,7 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
       |:Films :[films.id] {
       |    :type :Film ;
       |    :name [films.name] ;
-      |    :year [films.year] ;
+      |    :year [films.year] xs:gYear ;
       |    :country [films.country] ;
       |    :director [films.directors] ;
       |}
@@ -44,7 +45,7 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
   }
@@ -52,7 +53,7 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
   test("Shape 2 is translated correctly") {
     assert(output.contains(createStatement(prefix, "2", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "name", "Interstellar", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "director", "Jonathan Nolan", XSDDatatype.XSDstring)))
@@ -61,7 +62,7 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
   test("Shape 3 is translated correctly") {
     assert(output.contains(createStatement(prefix, "3", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "name", "Inception", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
   }
@@ -69,7 +70,7 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
   test("Shape 4 is translated correctly") {
     assert(output.contains(createStatement(prefix, "4", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "name", "The Prestige", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Jonathan Nolan", XSDDatatype.XSDstring)))
