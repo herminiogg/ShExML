@@ -1,5 +1,4 @@
 # ShExML
-
 Shape Expressions Mapping Language (ShExML) is a DSL that offers a solution
 for mapping and merging heterogeneous data sources. As being based on ShEx the
 shape is the main foundation to define the transformations.
@@ -36,80 +35,34 @@ This example shows how to map and merge two files (in JSON and XML) with differe
 declarations, we can define some 'variables' that can be used inside the shapes. Prefixes used in the resulting RDF,
 sources to the files, iterators and fields (queries) to be applied over the files and expressions to merge and transform the queries results.
 Then, the shapes are defined as in ShEx but using the previously defined expressions or composing them inside the
-square brackets.
+square brackets. More complex example can be seen under the ````films.shexml```` file.
 
-## Run the example
-To run this example clone this project and run the following command:
+## Usage
+
+### CLI
+A command line interface is offered under the jar library with the following options available:
 ```
-> sbt "run films.shexml"
+Usage: ShExML [-hrV] [-f=<format>] -m=<file> [-o=<output>]
+Map and merge heterogeneous data sources with a Shape Expressions based syntax
+  -f, --format=<format>   Output format for RDF graph. Turtle, RDF/XML,
+                            N-Triples, ...
+  -h, --help              Show this help message and exit.
+  -m, --mapping=<file>    Path to the file with the mappings
+  -o, --output=<output>   Path where the output file should be created
+  -r, --rml               Generate RML output
+  -V, --version           Print version information and exit.
 ```
-You can design your own files and run them using the same command but changing films.shexml for the path or the URL to
-your target file.
+Therefore, to execute the films example: ```java -jar shexml.jar -m films.shexml```
 
-## Complex example
+### JVM compatible API
+ShExML is coded in Scala and, because of that, it can be used with JVM compatible languages. See the example below 
+on how to use the programmatic API.
 ```
-PREFIX : <http://example.com/>
-PREFIX dbr: <http://dbpedia.org/resource/>
-PREFIX schema: <http://schema.org/>
-SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/enhancement-%237/src/test/resources/filmsExpanded.xml>
-SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/enhancement-%237/src/test/resources/filmsExpanded.json>
-ITERATOR film_xml <xpath: //film> {
-    FIELD id <@id>
-    FIELD name <name>
-    FIELD year <year>
-    FIELD country <country>
-    FIELD directors <crew/directors/director>
-    FIELD screenwritters <crew//screenwritter>
-    FIELD music <crew/music>
-    FIELD photography <crew/photography>
-    ITERATOR actors <cast/actor> {
-        FIELD name <name>
-        FIELD role <role>
-        FIELD film <../../@id>
-    }
-    ITERATOR actresses <cast/actress> {
-        FIELD name <name>
-        FIELD role <role>
-        FIELD film <../../@id>
-    }
-}
-ITERATOR film_json <jsonpath: $.films[*]> {
-    FIELD id <id>
-    FIELD name <name>
-    FIELD year <year>
-    FIELD country <country>
-    FIELD directors <crew.director>
-    FIELD screenwritters <crew.screenwritter>
-    FIELD music <crew.music>
-    FIELD photography <crew.cinematography>
-    ITERATOR actors <cast[*]> {
-        FIELD name <name>
-        FIELD role <role>
-    }
-}
-EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
-
-:Films :[films.id] {
-    schema:name [films.name] ;
-    :year dbr:[films.year] ;
-    schema:countryOfOrigin dbr:[films.country] ;
-    schema:director dbr:[films.directors] ;
-    :screenwritter dbr:[films.screenwritters] ;
-    schema:musicBy dbr:[films.music] ;
-    :cinematographer dbr:[films.photography] ;
-    schema:actor @:Actor ;
-    schema:actor @:Actress ;
-}
-
-:Actor dbr:[films.actors.name] {
-    :name [films.actors.name] ;
-    :appear_on :[films.actors.film] ;
-}
-
-:Actress dbr:[films.actresses.name] {
-    :name [films.actresses.name] ;
-    :appear_on :[films.actresses.film] ;
-}
+val file = scala.io.Source.fromFile(pathToFile).mkString
+val mappingLauncher = new MappingLauncher()
+val output = mappingLauncher.launchMapping(file, "TURTLE")
 ```
-This example shows how iterators can be nested to cover more complicated data structures and how different shapes
-can be used and linked.
+
+### Webpage
+Also a live demo is offered online (http://shexml.herminiogarcia.com). However, due to hardware limitations it is not 
+intended for intesive use.
