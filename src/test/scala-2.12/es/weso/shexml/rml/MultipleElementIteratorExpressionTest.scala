@@ -1,9 +1,10 @@
-package es.weso.shexml
+package es.weso.shexml.rml
 
+import es.weso.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.scalatest.{FunSuite, Matchers}
 
-class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with RDFStatementCreator {
+class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
 
   private val example =
     """
@@ -37,8 +38,9 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
     """.stripMargin
 
   private val mappingLauncher = new MappingLauncher()
-  private val output = mappingLauncher.launchMapping(example)
+  private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://example.com/"
+  private val output = doTranslation(result, prefix)
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))

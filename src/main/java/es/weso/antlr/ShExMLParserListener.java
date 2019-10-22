@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.7.1
+// Generated from ShExMLParser.g4 by ANTLR 4.7.2
 
 package es.weso.antlr;
 
@@ -109,6 +109,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitMatcher(ShExMLParser.MatcherContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#matchers}.
+	 * @param ctx the parse tree
+	 */
+	void enterMatchers(ShExMLParser.MatchersContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#matchers}.
+	 * @param ctx the parse tree
+	 */
+	void exitMatchers(ShExMLParser.MatchersContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#replacedStrings}.
 	 * @param ctx the parse tree

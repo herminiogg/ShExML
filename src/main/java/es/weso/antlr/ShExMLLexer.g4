@@ -31,10 +31,12 @@ AT: '@' ;
 ADD: '+' ;
 COMMA: ',' ;
 QUOTE: '"' ;
+AND: '&' | 'AND' ;
 A: 'a' ;
 STRING_OR_VAR: LETTER (LETTER | DIGIT | '_')* ;
 URI_VAR: (LETTER | DIGIT | '_')* ':' ;
-STRINGOPERATOR: '"' (LETTER | DIGIT | ALLOWED_CHARACTERS)+ '"' ;
+STRINGOPERATOR: '"' (LETTER | DIGIT | ALLOWED_CHARACTERS | ' ')+ '"' ;
+XMLSCHEMADATATYPE: XMLSCHEMADATATYPEPREFIX ':' ALLOWEDTYPES ;
 COMMENT: '#' ~[\r\n]* -> skip ;
 WS: [ \t\n\r] -> skip ;
 
@@ -53,7 +55,14 @@ URI_VAR_QUERY: (LETTER | DIGIT | '_')* ':' ;
 WS_DECLARATION: [ \t\n\r] -> skip ;
 
 
-fragment LETTER: [a-zA-Záéíóú] ;
+fragment LETTER: [a-zA-Z] | '\u00C0'..'\u00D6' | '\u00D8'..'\u00F6' | '\u00F8'..'\u00FF' ;
 fragment DIGIT: [0-9] ;
-fragment ALLOWED_CHARACTERS: '[' | ']' | '*' | '_' | '/' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
-        | '?' | '=' | '&' | '#' | '$' | ':' | '^' ;
+fragment XMLSCHEMADATATYPEPREFIX: ('xs' | 'xsd') ;
+fragment ALLOWEDTYPES: ('string' | 'boolean' | 'decimal' | 'integer' | 'double' | 'float' | 'date' | 'time'
+    | 'dateTime' | 'dateTimeStamp' | 'gYear' | 'gMonth' | 'gDay' | 'gYearMonth' | 'gMonthDay' | 'duration'
+    | 'yearMonthDuration' | 'dayTimeDuration' | 'byte' | 'short' | 'int' | 'long' | 'unsignedByte' | 'unsignedShort'
+    | 'unsignedInt' | 'unsignedLong' | 'positiveInteger' | 'nonNegativeInteger' | 'negativeInteger'
+    | 'nonPositiveInteger' | 'hexBinary' | 'base64Binary' | 'anyURI' | 'language' | 'normalizedString' | 'token'
+    | 'NMTOKEN' | 'Name' | 'NCName') ;
+fragment ALLOWED_CHARACTERS: '[' | ']' | '*' | '_' | '/' | '\\' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
+        | '?' | '=' | '&' | '#' | '$' | ':' | '^' | '\'' ;

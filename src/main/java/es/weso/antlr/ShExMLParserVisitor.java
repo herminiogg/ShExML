@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.7.1
+// Generated from ShExMLParser.g4 by ANTLR 4.7.2
 
 package es.weso.antlr;
 
@@ -72,6 +72,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitMatcher(ShExMLParser.MatcherContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#matchers}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMatchers(ShExMLParser.MatchersContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#replacedStrings}.
 	 * @param ctx the parse tree

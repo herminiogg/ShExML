@@ -1,14 +1,17 @@
 package es.weso.visitor
 import java.util
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import es.weso.ast._
 import es.weso.helper.SourceHelper
 import kantan.xpath.XPathCompiler
+
 import scala.collection.mutable
 import kantan.xpath.implicits._
-import org.apache.jena.datatypes.RDFDatatype
+import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.rdf.model.{Model, ResourceFactory, Statement}
+
 import scala.util.Try
 
 /**
@@ -16,8 +19,8 @@ import scala.util.Try
   */
 class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any, Any] {
 
-  private val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
-  private val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
+  protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
+  protected val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
@@ -44,11 +47,12 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
             if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://"))
               output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
             else
-              output.add(createStatementWithLiteral(prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1)))
+              output.add(createStatementWithLiteral(
+                prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType))
           }
         }
       }
-      actions.map(r => Result(r.id, r.rootIds, r.results.map(prefixTable(shapePrefix) + _)))
+      actions.map(r => Result(r.id, r.rootIds, r.results.map(prefixTable(shapePrefix) + _), r.dataType))
     }
 
     case PredicateObject(predicate, objectOrShapeLink) => {
@@ -57,7 +61,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       if(predicateResult != null && objectResult != null)
         objectResult.map(result => {
           val results = result.results.map(predicateResult.toString + " " + _)
-          Result(result.id, result.rootIds, results)
+          Result(result.id, result.rootIds, results, result.dataType)
         })
       else Nil
     }
@@ -66,7 +70,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action, matcher) => {
+    case ObjectElement(prefix, action, matcher, dataType) => {
       val result = doVisit(action, optionalArgument)
       val matchedResultList = matcher match {
         case Some(matcherVar) => doVisit(matcherVar, result)
@@ -74,7 +78,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       }
       matchedResultList.asInstanceOf[List[Result]].map(result => {
         val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
-        Result(result.id, result.rootIds, newResults)
+        Result(result.id, result.rootIds, newResults, dataType)
       })
     }
 
@@ -200,7 +204,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
             case l: util.ArrayList[_] => l.toArray.map(_.toString)
             case default => List(default.toString)
           })
-          Result(id, rootIds, finalList)
+          Result(id, rootIds, finalList, None)
         }
       }
     }
@@ -214,21 +218,25 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val rootIds = arguments.getOrElse("rootIds", List(id)).asInstanceOf[List[String]]
       val compilationResult = XPathCompiler.builtIn.compile(query)
       compilationResult.toOption match {
-        case Some(value) => Result(id, rootIds, fileContent.evalXPath[List[String]](value).getOrElse(Nil))
+        case Some(value) => Result(id, rootIds, fileContent.evalXPath[List[String]](value).getOrElse(Nil), None)
         case None => throw new Exception("Bad iterator query: " + query)
       }
     }
 
-    case Matcher(_, replacedStrings, replacement) => {
+    case Matchers(_, matchers) => {
       val listToMatch = optionalArgument.asInstanceOf[List[Result]]
       listToMatch.map(r => Result(r.id, r.rootIds, r.results.map(s => {
-        if(replacedStrings.strings.contains(s)) replacement else s
-      })))
+        matchers.matchers.foldLeft(s)((value, matcher) => doVisit(matcher, value).asInstanceOf[String])
+      }), r.dataType))
+    }
+
+    case Matcher(replacedStrings, replacement) => {
+      if(replacedStrings.strings.contains(optionalArgument.toString)) replacement else optionalArgument.toString
     }
 
     case LiteralObject(prefix, value) => {
       val prefixValue = prefixTable(prefix.name)
-      List(Result("", Nil, List(prefixValue + value)))
+      List(Result("", Nil, List(prefixValue + value), None))
     }
 
     case ShapeLink(shapeVar) => {
@@ -240,22 +248,23 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case default => visit(default, optionalArgument)
   }
 
-  private def createStatement(s: String, p: String, o: String): Statement = {
+  protected def createStatement(s: String, p: String, o: String): Statement = {
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
     val obj = ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
-  private def createStatementWithLiteral(s: String, p: String, o: String): Statement = {
+  protected def createStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None): Statement = {
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
-    val xsdType = searchForXSDType(o)
+    val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
+      .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
     val obj = ResourceFactory.createTypedLiteral(o, xsdType)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
-  private def searchForXSDType(o: String): RDFDatatype = {
+  protected def searchForXSDType(o: String): RDFDatatype = {
     if(Try(o.toInt).isSuccess)
       XSDDatatype.XSDinteger
     else if(Try(o.toDouble).isSuccess)
@@ -266,51 +275,51 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       XSDDatatype.XSDstring
   }
 
-  private def normaliseURI(uri: String): String = {
+  protected def normaliseURI(uri: String): String = {
     uri.replaceAll("[\\s,_()']", "_")
       .replace("&quot;", "")
       .replace("&#209;", "N").replace("&#241;", "n")
       .replace("&#220;", "U").replace("&#252;", "u")
   }
 
-  private def doVisitIteratorQuery(nestedIterator: QueryClause, currentIterator: QueryClause, optionalArgument: Any): Result = nestedIterator match {
+  protected def doVisitIteratorQuery(nestedIterator: QueryClause, currentIterator: QueryClause, optionalArgument: Any): Result = nestedIterator match {
     case JsonPath(query) => doVisit(JsonPath(query + currentIterator.query), optionalArgument).asInstanceOf[Result]
     case XmlPath(query) => doVisit(XmlPath(query + currentIterator.query), optionalArgument).asInstanceOf[Result]
   }
 
-  private def iteratorQueryToList(i: IteratorQuery): List[Var] = i.composedVar match {
+  protected def iteratorQueryToList(i: IteratorQuery): List[Var] = i.composedVar match {
     case v: Var => List(i.firstVar, v)
     case c: IteratorQuery => List(i.firstVar) ::: iteratorQueryToList(c)
   }
 
-  private def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], fileContent: String): List[QueryWithIndex] = iteratorQueries.flatMap({
-    case r: Result => r.results.indices.map(i => query match {
+  protected def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], fileContent: String): List[QueryWithIndex] = iteratorQueries.flatMap({
+    case r: ResultWithIteratorQuery => r.results.indices.map(i => query match {
       case XmlPath(xpathQuery) => {
         val composedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
-        val rootId = (r.results(i) + fileContent + i.toString).hashCode.toString
-        QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.results(i))
+        val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
+        QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.iteratorQuery)
       }
       case JsonPath(jsonpathQuery) => {
         val composedQuery = JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
-        val rootId = (r.results(i) + fileContent + i.toString).hashCode.toString
-        QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.results(i))
+        val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
+        QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.iteratorQuery)
       }
     }).toList
     case r: ResultWithNested => r.results.indices.flatMap(i => query match {
       case XmlPath(xpathQuery) => {
         val indicedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
-        val rootId = (r.results(i) + fileContent + i.toString).hashCode.toString
+        val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
         iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
       }
       case JsonPath(jsonpathQuery) => {
         val indicedQuery = JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
-        val rootId = (r.results(i) + fileContent + i.toString).hashCode.toString
+        val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
         iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
       }
     }).toList
   })
 
-  private def generateFinalQuery(varList: List[Var], context: String, rootQuery: QueryClause): QueryClause = varList match {
+  protected def generateFinalQuery(varList: List[Var], context: String, rootQuery: QueryClause): QueryClause = varList match {
     case x :: Nil => varTable(Var(context + x.name)).asInstanceOf[QueryClause]
     case x :: xs => varTable(Var(context + x.name)).asInstanceOf[QueryClause] match {
       case j: JsonPath => JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
@@ -322,35 +331,39 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
   }
 
-  private def doIteratorQueries(varList: List[Var], varContext: String, precedentQueries: List[String], arguments: Any, rootQuery: QueryClause): List[Resultable] = varList match {
-    case x :: Nil => precedentQueries.map(q => varTable(Var(varContext + x.name)) match {
-      case JsonPath(query) => doVisit(JsonPath(q + query), arguments).asInstanceOf[Result]
-      case XmlPath(query) => doVisit(XmlPath(q + query), arguments).asInstanceOf[Result]
-      case FieldQuery(query) => rootQuery match {
-        case JsonPath(_) => doVisit(JsonPath(q + query), arguments).asInstanceOf[Result]
-        case XmlPath(_) => doVisit(XmlPath(q + query), arguments).asInstanceOf[Result]
-      }
-    })
+  protected def doIteratorQueries(varList: List[Var], varContext: String, precedentQueries: List[String], arguments: Any, rootQuery: QueryClause): List[Resultable] = varList match {
+    case x :: Nil => val results = {
+      precedentQueries.map(q => {
+        val optionalXPathEnd = if(q.isEmpty) "[*]" else ""
+        varTable(Var(varContext + x.name)) match {
+          case JsonPath(query) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
+          case XmlPath(query) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + optionalXPathEnd)
+          case FieldQuery(query) => rootQuery match {
+            case JsonPath(_) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
+            case XmlPath(_) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + optionalXPathEnd)
+          }
+        }
+      })
+    }
+    results.map(r => ResultWithIteratorQuery(r._1.id, r._1.rootIds, r._1.results, r._2))
     case x :: xs => {
       val queries = precedentQueries.map(q => varTable(Var(varContext + x.name)) match {
         case JsonPath(query) => JsonPath(q + query)
         case XmlPath(query) => XmlPath(q + query + "[*]")
       })
       val results = queries.map(doVisit(_, arguments).asInstanceOf[Result])
-      val newQueries = for(q <- queries) yield {
-        for(r <- results) yield {
-          r.results.indices.map(i => q match {
-            case JsonPath(_) => q.query.replaceFirst("[*]", i.toString) + "."
-            case XmlPath(_) => q.query.replaceFirst("[*]", (i + 1).toString) + "/"
-          })
-        }
-      }.flatten
-      results.map(r => ResultWithNested(r.id, r.rootIds, r.results,
-        doIteratorQueries(xs, x.name + ".", newQueries.flatten, arguments, queries.head)))
+      val newQueries = queries.indices.map(iq => {
+        results(iq).results.indices.map(ir => queries(iq) match {
+          case JsonPath(query) => query.replaceFirst("[*]", ir.toString) + "."
+          case XmlPath(query) => query.replaceFirst("[*]", (ir + 1).toString) + "/"
+        })
+      }).toList
+      results.indices.map(r => ResultWithNested(results(r).id, results(r).rootIds, results(r).results,
+        doIteratorQueries(xs, varContext + x.name + ".", newQueries(r).toList, arguments, queries.head), queries(r).query)).toList
     }
   }
 
-  private def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContent: String): List[Result] = {
+  protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContent: String): List[Result] = {
     val query = generateFinalQuery(iteratorVars, "", null)
     val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
     val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContent)
@@ -359,22 +372,22 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       .filter(_.results.nonEmpty)
   }
 
-  private def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {
+  protected def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {
     for ((l, r) <- left zip right) yield {
       val results = for (i <- l.results) yield {
         for (j <- r.results) yield {
           i + unionString + j
         }
       }
-      Result(l.id, l.rootIds, results.flatten)
+      Result(l.id, l.rootIds, results.flatten, r.dataType)
     }
   }
 
-  private def getJoinResults(left: List[Result], right: List[Result], join: List[Result]): List[Result] = {
+  protected def getJoinResults(left: List[Result], right: List[Result], join: List[Result]): List[Result] = {
     val joinUnionList = for(r <- right.asInstanceOf[List[Result]]) yield {
       val filteredJoin = join.asInstanceOf[List[Result]].filter(j => j.results.nonEmpty && j.results == r.results)
       if(filteredJoin.nonEmpty)
-        Result(r.id, r.rootIds, left.filter(l => l.id == filteredJoin.head.id && l.results.nonEmpty).head.results)
+        Result(r.id, r.rootIds, left.filter(l => l.id == filteredJoin.head.id && l.results.nonEmpty).head.results, r.dataType)
       else r
     }
     left.union(joinUnionList)
@@ -387,7 +400,8 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 sealed trait Resultable {
   def results: List[String]
 }
-case class Result(id: String, rootIds: List[String], results: List[String]) extends Resultable
-case class ResultWithNested(id: String, rootIds: List[String], results: List[String], nestedResults: List[Resultable]) extends Resultable
+case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String]) extends Resultable
+case class ResultWithIteratorQuery(id: String, rootIds: List[String], results: List[String], iteratorQuery: String) extends Resultable
+case class ResultWithNested(id: String, rootIds: List[String], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
 case class QueryByID(id: String, query: String)
 case class QueryWithIndex(index: String, rootIds: List[String], query: QueryClause, iteratorQuery: String)

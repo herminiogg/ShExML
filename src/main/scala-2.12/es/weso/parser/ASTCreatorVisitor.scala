@@ -57,9 +57,21 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitMatcher(ctx: MatcherContext): AST = {
     val matcherVar = createVar(ctx.variable())
+    val matchers = visit(ctx.matchers()).asInstanceOf[MatcherList]
+    Matchers(matcherVar, matchers)
+  }
+
+  override def visitMatchers(ctx: MatchersContext): AST = {
+    val otherMatchers =
+      if(ctx.matchers() != null)
+        visitMatchers(ctx.matchers()).asInstanceOf[MatcherList].matchers
+      else
+        Nil
     val replacedStrings = visit(ctx.replacedStrings()).asInstanceOf[ReplacedStrings]
-    val replacementString = ctx.STRING_OR_VAR().getText
-    Matcher(matcherVar, replacedStrings, replacementString)
+    val replacementString =
+      if(ctx.STRING_OR_VAR() != null ) ctx.STRING_OR_VAR().getText
+      else ctx.STRINGOPERATOR().getText.replaceAll("\"", "")
+    MatcherList(otherMatchers.::(Matcher(replacedStrings, replacementString)))
   }
 
   override def visitReplacedStrings(ctx: ReplacedStringsContext): AST = {
@@ -68,7 +80,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
         visit(ctx.replacedStrings()).asInstanceOf[ReplacedStrings].strings
       else
         Nil
-    val string = ctx.STRING_OR_VAR().getText
+    val string =
+      if(ctx.STRING_OR_VAR() != null ) ctx.STRING_OR_VAR().getText
+      else ctx.STRINGOPERATOR().getText.replaceAll("\"", "")
     ReplacedStrings(replacedStrings.::(string))
   }
 
@@ -167,7 +181,8 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val prefix = if(ctx.prefixVar() != null) ctx.prefixVar().getText else ""
     val expOrVar = if(ctx.variable().size() == 2 || (ctx.variable().size() == 1 && ctx.exp() == null)) createVar(ctx.variable(0)) else visit(ctx.exp()).asInstanceOf[ExpOrVar]
     val matcherVar = if(ctx.variable(1) == null && ctx.exp() != null) Option(ctx.variable(0)).map(createVar) else Option(ctx.variable(1)).map(createVar)
-    ObjectElement(prefix, expOrVar, matcherVar)
+    val dataType = if(ctx.XMLSCHEMADATATYPE() != null) Some(ctx.XMLSCHEMADATATYPE().getText) else None
+    ObjectElement(prefix, expOrVar, matcherVar, dataType)
   }
 
   override def visitShapeLink(ctx: ShapeLinkContext): AST = {

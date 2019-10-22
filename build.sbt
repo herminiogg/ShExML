@@ -2,9 +2,11 @@ organization := "es.weso"
 
 name := "ShExML"
 
-version := "1.0.0"
+version := "0.1.0"
 
 scalaVersion := "2.12.4"
+
+resolvers += "jitpack" at "https://jitpack.io"
 
 libraryDependencies += "org.antlr" % "antlr4" % "4.7.1"
 
@@ -19,3 +21,14 @@ libraryDependencies += "com.nrinaudo" %% "kantan.xpath" % "0.3.2"
 libraryDependencies += "org.apache.jena" % "apache-jena-libs" % "3.6.0" pomOnly()
 
 libraryDependencies += "org.scalatest" % "scalatest_2.12" % "3.0.4" % "test"
+
+libraryDependencies += "com.github.RMLio" % "rmlmapper-java" % "v4.3.3" % "test"
+
+libraryDependencies += "info.picocli" % "picocli" % "4.0.4"
+
+libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.7.27"
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}

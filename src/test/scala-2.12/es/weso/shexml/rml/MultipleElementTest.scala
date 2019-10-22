@@ -1,14 +1,14 @@
-package es.weso.shexml
+package es.weso.shexml.rml
 
+import es.weso.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.scalatest.{FunSuite, Matchers}
 
-class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with RDFStatementCreator {
+class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
 
   private val example =
     """
       |PREFIX : <http://example.com/>
-      |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
       |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
       |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
       |ITERATOR film_xml <xpath: //film> {
@@ -25,50 +25,50 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
       |    FIELD country <country>
       |    FIELD directors <director>
       |}
-      |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
+      |EXPRESSION film_ids <films_xml_file.film_xml.id UNION films_json_file.film_json.id>
+      |EXPRESSION film_names <films_xml_file.film_xml.name UNION films_json_file.film_json.name>
+      |EXPRESSION film_years <films_xml_file.film_xml.year UNION films_json_file.film_json.year>
+      |EXPRESSION film_countries <films_xml_file.film_xml.country UNION films_json_file.film_json.country>
+      |EXPRESSION film_directors <films_xml_file.film_xml.directors UNION films_json_file.film_json.directors>
       |
-      |:Films :[films.id] {
-      |    :type :Film ;
-      |    :name [films.name] ;
-      |    :year [films.year] xs:gYear ;
-      |    :country [films.country] ;
-      |    :director [films.directors] ;
+      |:Films :[film_ids] {
+      |    :name [film_names] ;
+      |    :year [film_years] ;
+      |    :country [film_countries] ;
+      |    :director [film_directors] ;
       |}
     """.stripMargin
 
   private val mappingLauncher = new MappingLauncher()
-  private val output = mappingLauncher.launchMapping(example)
+  private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://example.com/"
+  private val output = doTranslation(result, prefix)
 
   test("Shape 1 is translated correctly") {
-    assert(output.contains(createStatement(prefix, "1", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDgYear)))
+    assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
   }
 
   test("Shape 2 is translated correctly") {
-    assert(output.contains(createStatement(prefix, "2", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "name", "Interstellar", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDgYear)))
+    assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "director", "Jonathan Nolan", XSDDatatype.XSDstring)))
   }
 
   test("Shape 3 is translated correctly") {
-    assert(output.contains(createStatement(prefix, "3", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "name", "Inception", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDgYear)))
+    assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
   }
 
   test("Shape 4 is translated correctly") {
-    assert(output.contains(createStatement(prefix, "4", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "name", "The Prestige", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDgYear)))
+    assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Jonathan Nolan", XSDDatatype.XSDstring)))
