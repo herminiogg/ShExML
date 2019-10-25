@@ -69,13 +69,16 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           val referenceFormulation = iterator match {
             case JsonPath(_) => "JSONPath"
             case XmlPath(_) => "XPath"
+            case CSVPerRow(_) => "CSV"
           }
+          val iteratorStatement = if(iterator.isInstanceOf[JsonPath] | iterator.isInstanceOf[XmlPath])
+            List(createStatementWithLiteral(logicalSourceName, rmlPrefix + "iterator", iterator.query))
+          else Nil
           val logicalSource = List(
             createStatement(logicalSourceName, rdfPrefix + "type", rmlPrefix + "LogicalSource"),
             createStatementWithLiteral(logicalSourceName, rmlPrefix + "source", source.url),
-            createStatementWithLiteral(logicalSourceName, rmlPrefix + "iterator", iterator.query),
             createStatement(logicalSourceName, rmlPrefix + "referenceFormulation", qlPrefix + referenceFormulation)
-          )
+          ) ::: iteratorStatement
           val fieldQuery = composedVar match {
             case v: Var => varTable(v) match {
               case f: FieldQuery => f
@@ -285,9 +288,11 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case FieldQuery(query) => varTable(Var(v.name.split('.').head)) match {
       case JsonPath(jsonQuery) => JsonPath(jsonQuery + "." + query)
       case XmlPath(xpathQuery) => XmlPath(xpathQuery + "/" + query)
+      case CSVPerRow(_) => CSVPerRow(query)
     }
     case j: JsonPath => j
     case x: XmlPath => x
+    case c: CSVPerRow => c
   }
 
   private def getNestedIteratorFieldQuery(iteratorQuery: IteratorQuery, precedentVar: Var, iteratorQueryClause: QueryClause): Option[FieldQuery] = {

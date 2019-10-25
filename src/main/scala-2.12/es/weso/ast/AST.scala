@@ -30,6 +30,7 @@ sealed trait QueryClause extends VarResult {
 
 case class JsonPath(query: String) extends QueryClause
 case class XmlPath(query: String) extends QueryClause
+case class CSVPerRow(query: String) extends QueryClause
 case class FieldQuery(query: String) extends QueryClause
 
 

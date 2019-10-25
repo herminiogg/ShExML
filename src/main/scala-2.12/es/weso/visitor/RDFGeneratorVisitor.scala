@@ -1,7 +1,9 @@
 package es.weso.visitor
+import java.io.StringReader
 import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
 import es.weso.ast._
 import es.weso.helper.SourceHelper
 import kantan.xpath.XPathCompiler
@@ -88,12 +90,13 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val rightList = doVisit(right, optionalArgument)
       leftList match {
         case ml: Map[String, List[Result]] => rightList match {
-          case mr: Map[String, List[Result]] => ml.keySet.union(mr.keySet).foreach(k => {
+          case mr: Map[String, List[Result]] => ml.keySet.union(mr.keySet).map(k => {
             val leftResult = mr.getOrElse(k, Nil)
             val rightResult = ml.getOrElse(k, Nil)
             val value = expName + k -> leftResult.union(rightResult)
             iteratorsCombinations += value
-          })
+            k -> leftResult.union(rightResult)
+          }).toMap
           case _ => throw new Exception("Impossible to combine an iterator with a non iterator expression")
         }
         case l: List[Result] => l.union(rightList.asInstanceOf[List[Result]])
@@ -324,9 +327,11 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case x :: xs => varTable(Var(context + x.name)).asInstanceOf[QueryClause] match {
       case j: JsonPath => JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
       case xp: XmlPath => XmlPath(xp.query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
+      case csv: CSVPerRow => CSVPerRow(generateFinalQuery(xs, context + x.name + ".", csv).query)
       case FieldQuery(query) => rootQuery match {
         case j: JsonPath => JsonPath(query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
         case xp: XmlPath => XmlPath(query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
+        case csv: CSVPerRow => CSVPerRow(query)
       }
     }
   }
@@ -365,11 +370,44 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContent: String): List[Result] = {
     val query = generateFinalQuery(iteratorVars, "", null)
-    val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
-    val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContent)
-    queries.map(q => doVisit(q.query, middleArguments.+(
-      "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
-      .filter(_.results.nonEmpty)
+    if(query.isInstanceOf[CSVPerRow]) doPerRowResults(query, fileContent)
+    else {
+      val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
+      val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContent)
+      queries.map(q => doVisit(q.query, middleArguments.+(
+        "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
+        .filter(_.results.nonEmpty)
+    }
+  }
+
+  private def doPerRowResults(query: QueryClause, fileContent: String): List[Result] = {
+    val reader = new StringReader(fileContent)
+    val fileDelimiter = inferCSVDelimiter(fileContent)
+    implicit object MyCSVFormat extends DefaultCSVFormat {
+      override val delimiter = fileDelimiter
+    }
+    val allLines = CSVReader.open(reader).allWithHeaders()
+    val results = for (i <- allLines.indices) yield {
+      allLines(i).get(query.query) match {
+        case Some(result) => {
+          val id = (fileContent + i).hashCode.toString
+          Result(id, List(id), List(result), None)
+        }
+        case None => throw new Exception("Field not present")
+      }
+    }
+    results.toList
+  }
+
+  private def inferCSVDelimiter(fileContent: String): Char = {
+    val comma = fileContent.count(_.equals(','))
+    val semicolon = fileContent.count(_.equals(';'))
+    val dot = fileContent.count(_.equals('.'))
+    val colon = fileContent.count(_.equals(':'))
+    val at = fileContent.count(_.equals('@'))
+    val sharp = fileContent.count(_.equals('#'))
+    val map = Map(',' -> comma, ';' -> semicolon, '.' -> dot, ':' -> colon, '@' -> at, '#' -> sharp)
+    map.foldLeft(',')((greater, count) => if(map(greater) < count._2) count._1 else greater)
   }
 
   protected def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {
