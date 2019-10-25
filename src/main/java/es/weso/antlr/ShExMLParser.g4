@@ -23,7 +23,7 @@ exp: union | join | stringOperation | iteratorQuery ;
 stringOperation: iteratorQuery '+' STRINGOPERATOR '+' iteratorQuery ;
 iteratorQuery: variable '.' composedVariable ;
 composedVariable: variable | variable '.' composedVariable ;
-queryClause: JSONPATH | XMLPATH ;
+queryClause: JSONPATH QUERY_PART | XMLPATH QUERY_PART | CSVPERROW ;
 join: iteratorQuery UNION iteratorQuery JOIN iteratorQuery ;
 union: leftUnionOption UNION rightUnionOption ;
 leftUnionOption: iteratorQuery | stringOperation ;

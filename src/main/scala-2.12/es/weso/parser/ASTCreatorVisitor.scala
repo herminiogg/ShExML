@@ -45,8 +45,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitQueryClause(ctx: QueryClauseContext): AST = {
-    if(ctx.JSONPATH() != null) JsonPath(ctx.JSONPATH().getText.replace("jsonpath:", ""))
-    else XmlPath(ctx.XMLPATH().getText.replace("xpath:", ""))
+    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART().getText)
+    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART().getText)
+    else CSVPerRow("")
   }
 
   override def visitExpression(ctx: ExpressionContext): AST = {

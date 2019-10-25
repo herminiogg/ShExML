@@ -28,6 +28,8 @@ libraryDependencies += "info.picocli" % "picocli" % "4.0.4"
 
 libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.7.27"
 
+libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.6"
+
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case x => MergeStrategy.first
