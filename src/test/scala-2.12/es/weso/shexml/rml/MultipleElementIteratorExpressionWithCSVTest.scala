@@ -38,7 +38,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
       |
       |:Films :[films.id] {
       |    :type :Film ;
-      |    :name [films.name] ;
+      |    :name [films.name] @en ;
       |    :year [films.year] xs:gYear ;
       |    :country [films.country] ;
       |    :director [films.directors] ;
@@ -52,7 +52,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
@@ -60,7 +60,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
 
   test("Shape 2 is translated correctly") {
     assert(output.contains(createStatement(prefix, "2", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "2", "name", "Interstellar", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "2", "name", "Interstellar", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
@@ -69,7 +69,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
 
   test("Shape 3 is translated correctly") {
     assert(output.contains(createStatement(prefix, "3", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "3", "name", "Inception", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "3", "name", "Inception", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
@@ -77,7 +77,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
 
   test("Shape 4 is translated correctly") {
     assert(output.contains(createStatement(prefix, "4", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "4", "name", "The Prestige", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "4", "name", "The Prestige", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
@@ -86,7 +86,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
 
   test("Shape 5 is translated correctly") {
     assert(output.contains(createStatement(prefix, "4", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "5", "name", "Memento", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "5", "name", "Memento", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "5", "year", "2000", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "5", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "5", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
@@ -94,7 +94,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
 
   test("Shape 6 is translated correctly") {
     assert(output.contains(createStatement(prefix, "4", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "6", "name", "Insomnia", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "6", "name", "Insomnia", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "6", "year", "2002", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "6", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "6", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
