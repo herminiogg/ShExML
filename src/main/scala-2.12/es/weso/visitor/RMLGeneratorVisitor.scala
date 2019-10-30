@@ -110,14 +110,18 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
               val datatypePrefix = arguments.get("dataType").map(d => prefixTable(d.toString.split(":")(0) + ":"))
               val datatype = arguments.get("dataType").map(d => d.toString.split(":")(1))
               val datatypeURI = datatypePrefix.map(_ + datatype.get)
+              val langTag = arguments.get("langTag").map(_.asInstanceOf[String])
               val datatypeStatement =
                 if(datatypeURI.isDefined) List(createStatement(objectMapID, rrPrefix + "datatype", datatypeURI.get))
+                else List()
+              val langTagStatement =
+                if(langTag.isDefined) List(createStatementWithLiteral(objectMapID, rrPrefix + "language", langTag.get))
                 else List()
               val objectMap = List(
                 createStatement(objectMapID, rdfPrefix + "type", rrPrefix + "ObjectMap"),
                 createStatementWithLiteral(objectMapID, rrPrefix + "template", "{" + fieldQuery.query + "}"),
                 createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "Literal")
-              ) ::: datatypeStatement
+              ) ::: datatypeStatement ::: langTagStatement
               RMLMap(logicalSource, objectMap, Nil, Nil)
             }
           } else if(fieldQuery != null) {
@@ -235,10 +239,11 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       )
     }
 
-    case ObjectElement(prefix, action, matcher, dataType) => {
+    case ObjectElement(prefix, action, matcher, dataType, langTag) => {
       val arguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
       val prefixArguments = if(prefix.nonEmpty) arguments.+("prefix" -> prefix) else arguments
-      val finalArguments = if(dataType.isDefined) prefixArguments.+("dataType" -> dataType.getOrElse(None)) else prefixArguments
+      val dataTypeArguments = if(dataType.isDefined) prefixArguments.+("dataType" -> dataType.getOrElse(None)) else prefixArguments
+      val finalArguments = if(langTag.isDefined) dataTypeArguments.+("langTag" -> langTag.getOrElse(None)) else dataTypeArguments
       doVisit(action, finalArguments)
     }
 

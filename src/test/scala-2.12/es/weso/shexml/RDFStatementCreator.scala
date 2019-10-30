@@ -22,4 +22,11 @@ trait RDFStatementCreator {
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
+  def createStatementWithLiteral(prefix: String, s: String, p: String, o: String, langTag: String): Statement = {
+    val subject = ResourceFactory.createResource(prefix + s)
+    val predicate = ResourceFactory.createProperty(prefix + p)
+    val obj = ResourceFactory.createLangLiteral(o, langTag)
+    ResourceFactory.createStatement(subject, predicate, obj)
+  }
+
 }

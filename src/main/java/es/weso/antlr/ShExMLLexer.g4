@@ -25,7 +25,6 @@ BRACE_LEFT: '{' ;
 BRACE_RIGHT: '}' ;
 SEMICOLON: ';' ;
 DOT: '.' ;
-AT: '@' ;
 ADD: '+' ;
 COMMA: ',' ;
 QUOTE: '"' ;
@@ -35,6 +34,8 @@ STRING_OR_VAR: LETTER (LETTER | DIGIT | '_')* ;
 URI_VAR: (LETTER | DIGIT | '_')* ':' ;
 STRINGOPERATOR: '"' (LETTER | DIGIT | ALLOWED_CHARACTERS | ' ')+ '"' ;
 XMLSCHEMADATATYPE: XMLSCHEMADATATYPEPREFIX ':' ALLOWEDTYPES ;
+SHAPELINK: '@' (URI_VAR STRING_OR_VAR | '<' STRING_OR_VAR '>') ;
+LANGTAG: '@' LETTER+ ('-' (LETTER | DIGIT)+)* ;
 COMMENT: '#' ~[\r\n]* -> skip ;
 WS: [ \t\n\r] -> skip ;
 

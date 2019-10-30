@@ -50,11 +50,11 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
               output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
             else
               output.add(createStatementWithLiteral(
-                prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType))
+                prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
           }
         }
       }
-      actions.map(r => Result(r.id, r.rootIds, r.results.map(prefixTable(shapePrefix) + _), r.dataType))
+      actions.map(r => Result(r.id, r.rootIds, r.results.map(prefixTable(shapePrefix) + _), r.dataType, r.langTag))
     }
 
     case PredicateObject(predicate, objectOrShapeLink) => {
@@ -63,7 +63,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       if(predicateResult != null && objectResult != null)
         objectResult.map(result => {
           val results = result.results.map(predicateResult.toString + " " + _)
-          Result(result.id, result.rootIds, results, result.dataType)
+          Result(result.id, result.rootIds, results, result.dataType, result.langTag)
         })
       else Nil
     }
@@ -72,7 +72,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action, matcher, dataType) => {
+    case ObjectElement(prefix, action, matcher, dataType, langTag) => {
       val result = doVisit(action, optionalArgument)
       val matchedResultList = matcher match {
         case Some(matcherVar) => doVisit(matcherVar, result)
@@ -80,7 +80,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       }
       matchedResultList.asInstanceOf[List[Result]].map(result => {
         val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
-        Result(result.id, result.rootIds, newResults, dataType)
+        Result(result.id, result.rootIds, newResults, dataType, langTag)
       })
     }
 
@@ -207,7 +207,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
             case l: util.ArrayList[_] => l.toArray.map(_.toString)
             case default => List(default.toString)
           })
-          Result(id, rootIds, finalList, None)
+          Result(id, rootIds, finalList, None, None)
         }
       }
     }
@@ -221,7 +221,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val rootIds = arguments.getOrElse("rootIds", List(id)).asInstanceOf[List[String]]
       val compilationResult = XPathCompiler.builtIn.compile(query)
       compilationResult.toOption match {
-        case Some(value) => Result(id, rootIds, fileContent.evalXPath[List[String]](value).getOrElse(Nil), None)
+        case Some(value) => Result(id, rootIds, fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None)
         case None => throw new Exception("Bad iterator query: " + query)
       }
     }
@@ -230,7 +230,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val listToMatch = optionalArgument.asInstanceOf[List[Result]]
       listToMatch.map(r => Result(r.id, r.rootIds, r.results.map(s => {
         matchers.matchers.foldLeft(s)((value, matcher) => doVisit(matcher, value).asInstanceOf[String])
-      }), r.dataType))
+      }), r.dataType, r.langTag))
     }
 
     case Matcher(replacedStrings, replacement) => {
@@ -239,7 +239,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
     case LiteralObject(prefix, value) => {
       val prefixValue = prefixTable(prefix.name)
-      List(Result("", Nil, List(prefixValue + value), None))
+      List(Result("", Nil, List(prefixValue + value), None, None))
     }
 
     case ShapeLink(shapeVar) => {
@@ -258,12 +258,14 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
-  protected def createStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None): Statement = {
+  protected def createStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None, langTag: Option[String] = None): Statement = {
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
     val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
       .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
-    val obj = ResourceFactory.createTypedLiteral(o, xsdType)
+    val obj = if(langTag.isDefined)
+      ResourceFactory.createLangLiteral(o, langTag.get)
+      else ResourceFactory.createTypedLiteral(o, xsdType)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
@@ -391,7 +393,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       allLines(i).get(query.query) match {
         case Some(result) => {
           val id = (fileContent + i).hashCode.toString
-          Result(id, List(id), List(result), None)
+          Result(id, List(id), List(result), None, None)
         }
         case None => throw new Exception("Field not present")
       }
@@ -417,7 +419,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           i + unionString + j
         }
       }
-      Result(l.id, l.rootIds, results.flatten, r.dataType)
+      Result(l.id, l.rootIds, results.flatten, r.dataType, r.langTag)
     }
   }
 
@@ -425,7 +427,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     val joinUnionList = for(r <- right.asInstanceOf[List[Result]]) yield {
       val filteredJoin = join.asInstanceOf[List[Result]].filter(j => j.results.nonEmpty && j.results == r.results)
       if(filteredJoin.nonEmpty)
-        Result(r.id, r.rootIds, left.filter(l => l.id == filteredJoin.head.id && l.results.nonEmpty).head.results, r.dataType)
+        Result(r.id, r.rootIds, left.filter(l => l.id == filteredJoin.head.id && l.results.nonEmpty).head.results, r.dataType, r.langTag)
       else r
     }
     left.union(joinUnionList)
@@ -438,7 +440,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 sealed trait Resultable {
   def results: List[String]
 }
-case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String]) extends Resultable
+case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String], langTag: Option[String]) extends Resultable
 case class ResultWithIteratorQuery(id: String, rootIds: List[String], results: List[String], iteratorQuery: String) extends Resultable
 case class ResultWithNested(id: String, rootIds: List[String], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
 case class QueryByID(id: String, query: String)
