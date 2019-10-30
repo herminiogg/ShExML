@@ -61,7 +61,12 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
         case source: URL => {
           val iterator = composedVar match {
             case IteratorQuery(iteratorVar, _) =>
-              if(varTable.get(iteratorVar).isDefined) transformNestedIterator(varTable(iteratorVar).asInstanceOf[QueryClause], iteratorVar)
+              if(varTable.get(iteratorVar).isDefined && iteratorVar.name.contains(".")) {
+                val query = transformNestedIterator(varTable(iteratorVar).asInstanceOf[QueryClause], iteratorVar)
+                val rootQuery = varTable(Var(iteratorVar.name.splitAt(iteratorVar.name.lastIndexOf("."))._1)).asInstanceOf[QueryClause]
+                mergeQueries(rootQuery, query)
+              } else if(varTable.get(iteratorVar).isDefined)
+                transformNestedIterator(varTable(iteratorVar).asInstanceOf[QueryClause], iteratorVar)
               else return RMLMap(Nil, Nil, Nil, Nil)
             case v: Var => transformNestedIterator(varTable(v).asInstanceOf[QueryClause], v)
           }
@@ -99,12 +104,16 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           if(arguments("rmlType").asInstanceOf[String] != "subject" && fieldQuery != null) {
             val objectMapID = mapPrefix + "o_" + objectIndex.next
             if(arguments.isDefinedAt("prefix")) {
-              val prefix = prefixTable(arguments("prefix").asInstanceOf[String])
+              val prefix = if(arguments("prefix") == "_:") arguments("prefix")
+                else prefixTable(arguments("prefix").asInstanceOf[String])
+              val termType = if(prefix == "_:")
+                List(createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "BlankNode"),
+                  createStatementWithLiteral(objectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"))
+                else List(createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "IRI"),
+                  createStatementWithLiteral(objectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"))
               val objectMap = List(
-                createStatement(objectMapID, rdfPrefix + "type", rrPrefix + "ObjectMap"),
-                createStatementWithLiteral(objectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"),
-                createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "IRI")
-              )
+                createStatement(objectMapID, rdfPrefix + "type", rrPrefix + "ObjectMap")
+              ) ::: termType
               RMLMap(logicalSource, objectMap, Nil, Nil)
             } else {
               val datatypePrefix = arguments.get("dataType").map(d => prefixTable(d.toString.split(":")(0) + ":"))
@@ -126,11 +135,14 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
             }
           } else if(fieldQuery != null) {
             val subjectMapID = mapPrefix + "s_" + subjectIndex.next
-            val prefix = arguments.get("prefix").map(_.asInstanceOf[String]).map(prefixTable(_)).getOrElse("http://example.com")
+            val prefix = arguments.get("prefix").filterNot(_ == "_:").map(_.asInstanceOf[String]).map(prefixTable(_)).getOrElse("_:")
+            val bnode = if(arguments.getOrElse("prefix", "").equals("_:"))
+              List(createStatement(subjectMapID, rrPrefix + "termType", rrPrefix + "BlankNode"),
+                createStatementWithLiteral(subjectMapID, rrPrefix + "template", "{" + fieldQuery.query + "}"))
+            else List(createStatementWithLiteral(subjectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"))
             val subjectMap = List(
-              createStatement(subjectMapID, rdfPrefix + "type", rrPrefix + "SubjectMap"),
-              createStatementWithLiteral(subjectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}")
-            )
+              createStatement(subjectMapID, rdfPrefix + "type", rrPrefix + "SubjectMap")
+            ) ::: bnode
             RMLMap(logicalSource, subjectMap, Nil, Nil)
           } else RMLMap(Nil, Nil, Nil, Nil)
         }
@@ -152,15 +164,19 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case StringOperation(left, right, unionString) => {
       val leftMap = doVisit(left, optionalArgument).asInstanceOf[RMLMap]
       val rightMap = doVisit(right, optionalArgument).asInstanceOf[RMLMap]
-      val leftTemplate = leftMap.objectMap(1).getObject.asLiteral().getString
-      val rightTemplate = rightMap.objectMap(1).getObject.asLiteral().getString
+      val leftTemplate = leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
+      val rightTemplate = rightMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
       val leftDiff = leftTemplate.split('{')(1).dropRight(1)
       val rightDiff = rightTemplate.split('{')(1).dropRight(1)
       val intersection = leftTemplate.intersect(rightTemplate).split('{')(0)
       val newTemplate =
         intersection + "{" + leftDiff + "}" + unionString + "{" + rightDiff + "}"
-      val newStatement = createStatementWithLiteral(leftMap.objectMap(1).getSubject.getURI, leftMap.objectMap(1).getPredicate.getURI, newTemplate)
-      val objectMap = leftMap.objectMap.updated(1, newStatement)
+      val newStatement = createStatementWithLiteral(
+        leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getSubject.getURI,
+        leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getPredicate.getURI,
+        newTemplate)
+      val index = leftMap.objectMap.indexOf(leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head)
+      val objectMap = leftMap.objectMap.updated(index, newStatement)
       List(
         RMLMap(leftMap.logicalSource, objectMap, leftMap.predicateObjectMap, leftMap.predicateMap),
         RMLMap(rightMap.logicalSource, objectMap, rightMap.predicateObjectMap, rightMap.predicateMap)
@@ -180,7 +196,8 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       )
       val subject = List(
         createStatement(subjectID, rdfPrefix + "type", rrPrefix + "SubjectMap"),
-        createStatementWithLiteral(subjectID, rrPrefix + "template", leftMap.objectMap(1).getObject.asLiteral().getString)
+        createStatementWithLiteral(subjectID, rrPrefix + "template",
+          leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString)
       )
       output.add(mapping.toArray)
       output.add(subject.toArray)
@@ -188,9 +205,11 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val joinID = mapPrefix + "j_" + joinIndex.next
       val joinMapping = List(
         createStatementWithLiteral(joinID, rrPrefix + "parent",
-          joinMap.objectMap(1).getObject.asLiteral().getString.split('{')(1).replace('}', ' ').trim),
+          joinMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head
+            .getObject.asLiteral().getString.split('{')(1).replace('}', ' ').trim),
         createStatementWithLiteral(joinID, rrPrefix + "child",
-          rightMap.objectMap(1).getObject.asLiteral().getString.split('{')(1).replace('}', ' ').trim)
+          rightMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head
+            .getObject.asLiteral().getString.split('{')(1).replace('}', ' ').trim)
       )
       output.add(joinMapping.toArray)
       val objectID = mapPrefix + "o_" + objectIndex.next
@@ -298,6 +317,11 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case j: JsonPath => j
     case x: XmlPath => x
     case c: CSVPerRow => c
+  }
+
+  private def mergeQueries(leftQuery: QueryClause, rightQuery: QueryClause): QueryClause = rightQuery match {
+    case XmlPath(query) => XmlPath(leftQuery.query + "/" + query)
+    case JsonPath(query) => JsonPath(leftQuery.query + "." + query)
   }
 
   private def getNestedIteratorFieldQuery(iteratorQuery: IteratorQuery, precedentVar: Var, iteratorQueryClause: QueryClause): Option[FieldQuery] = {

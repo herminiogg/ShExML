@@ -12,7 +12,7 @@ import scala.collection.mutable
 import kantan.xpath.implicits._
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.apache.jena.rdf.model.{Model, ResourceFactory, Statement}
+import org.apache.jena.rdf.model.{AnonId, Model, ModelFactory, ResourceFactory, Statement}
 
 import scala.util.Try
 
@@ -46,15 +46,23 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
           for(predicateObject <- predicateObjects) {
-            if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://"))
-              output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
-            else
-              output.add(createStatementWithLiteral(
-                prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+            if(shapePrefix == "_:") {
+              if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
+                output.add(createBNodeStatement(action, predicateObject(0), normaliseURI(predicateObject(1))))
+              else
+                output.add(createBNodeStatementWithLiteral(
+                  action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+            } else {
+              if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
+                output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
+              else
+                output.add(createStatementWithLiteral(
+                  prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+            }
           }
         }
       }
-      actions.map(r => Result(r.id, r.rootIds, r.results.map(prefixTable(shapePrefix) + _), r.dataType, r.langTag))
+      actions.map(r => Result(r.id, r.rootIds, r.results.map(prefixTable.getOrElse(shapePrefix, "_:") + _), r.dataType, r.langTag))
     }
 
     case PredicateObject(predicate, objectOrShapeLink) => {
@@ -254,7 +262,19 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
   protected def createStatement(s: String, p: String, o: String): Statement = {
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
-    val obj = ResourceFactory.createResource(o)
+    val obj = if(o.contains("_:"))
+      output.createResource(new AnonId(o.replace("_:", "")))
+      else ResourceFactory.createResource(o)
+    ResourceFactory.createStatement(subject, predicate, obj)
+  }
+
+  protected def createBNodeStatement(s: String, p: String, o: String): Statement = {
+    val anonID = new AnonId(s)
+    val subject = output.createResource(anonID)
+    val predicate = ResourceFactory.createProperty(p)
+    val obj = if(o.contains("_:"))
+      output.createResource(new AnonId(o.replace("_:", "")))
+      else ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
@@ -266,6 +286,18 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     val obj = if(langTag.isDefined)
       ResourceFactory.createLangLiteral(o, langTag.get)
       else ResourceFactory.createTypedLiteral(o, xsdType)
+    ResourceFactory.createStatement(subject, predicate, obj)
+  }
+
+  protected def createBNodeStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None, langTag: Option[String] = None): Statement = {
+    val anonID = new AnonId(s)
+    val subject = output.createResource(anonID)
+    val predicate = ResourceFactory.createProperty(p)
+    val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
+      .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
+    val obj = if(langTag.isDefined)
+      ResourceFactory.createLangLiteral(o, langTag.get)
+    else ResourceFactory.createTypedLiteral(o, xsdType)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
