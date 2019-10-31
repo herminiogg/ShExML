@@ -45,8 +45,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitQueryClause(ctx: QueryClauseContext): AST = {
-    if(ctx.JSONPATH() != null) JsonPath(ctx.JSONPATH().getText.replace("jsonpath:", ""))
-    else XmlPath(ctx.XMLPATH().getText.replace("xpath:", ""))
+    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART().getText)
+    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART().getText)
+    else CSVPerRow("")
   }
 
   override def visitExpression(ctx: ExpressionContext): AST = {
@@ -182,11 +183,12 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val expOrVar = if(ctx.variable().size() == 2 || (ctx.variable().size() == 1 && ctx.exp() == null)) createVar(ctx.variable(0)) else visit(ctx.exp()).asInstanceOf[ExpOrVar]
     val matcherVar = if(ctx.variable(1) == null && ctx.exp() != null) Option(ctx.variable(0)).map(createVar) else Option(ctx.variable(1)).map(createVar)
     val dataType = if(ctx.XMLSCHEMADATATYPE() != null) Some(ctx.XMLSCHEMADATATYPE().getText) else None
-    ObjectElement(prefix, expOrVar, matcherVar, dataType)
+    val langTag = if(ctx.LANGTAG() != null) Some(ctx.LANGTAG().getText.replace("@", "")) else None
+    ObjectElement(prefix, expOrVar, matcherVar, dataType, langTag)
   }
 
   override def visitShapeLink(ctx: ShapeLinkContext): AST = {
-    val shapeName = createShapeVar(ctx.tripleElement)
+    val shapeName = ShapeVar(ctx.getText.replace("@", ""))
     ShapeLink(shapeName)
   }
 

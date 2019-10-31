@@ -2,7 +2,7 @@ organization := "es.weso"
 
 name := "ShExML"
 
-version := "0.1.0"
+version := "0.2.0"
 
 scalaVersion := "2.12.4"
 
@@ -27,6 +27,8 @@ libraryDependencies += "com.github.RMLio" % "rmlmapper-java" % "v4.3.3" % "test"
 libraryDependencies += "info.picocli" % "picocli" % "4.0.4"
 
 libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.7.27"
+
+libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.6"
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

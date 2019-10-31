@@ -30,6 +30,7 @@ sealed trait QueryClause extends VarResult {
 
 case class JsonPath(query: String) extends QueryClause
 case class XmlPath(query: String) extends QueryClause
+case class CSVPerRow(query: String) extends QueryClause
 case class FieldQuery(query: String) extends QueryClause
 
 
@@ -57,7 +58,8 @@ case class Predicate(prefix: String, extension: String) extends AST
 
 sealed trait ObjectOrShapeLink extends AST
 
-case class ObjectElement(prefix: String, action: ExpOrVar, matcher: Option[Var], dataType: Option[String]) extends ObjectOrShapeLink
+case class ObjectElement(prefix: String, action: ExpOrVar, matcher: Option[Var],
+                         dataType: Option[String], langTag: Option[String]) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 
 sealed trait VarResult extends AST
