@@ -61,6 +61,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitQuery(ShExMLParser.QueryContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#autoincrement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAutoincrement(ShExMLParser.AutoincrementContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#expression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

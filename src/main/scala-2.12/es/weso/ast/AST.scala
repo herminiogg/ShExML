@@ -22,6 +22,9 @@ case class Field(name: Var, queryClause: QueryClause) extends AST
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
 case class Matcher(replacedStrings: ReplacedStrings, replacement: String) extends AST
 case class Matchers(name: Var, matchers: MatcherList) extends DeclarationStatement with VarResult
+case class AutoIncrement(name: Var, from: Int, to: Int, by: Int) extends Iterable[Int] with DeclarationStatement with VarResult {
+  override val iterator: scala.Iterator[Int] = scala.Iterator.range(from, to, by)
+}
 
 
 sealed trait QueryClause extends VarResult {

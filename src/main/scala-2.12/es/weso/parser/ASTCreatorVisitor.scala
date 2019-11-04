@@ -87,6 +87,14 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     ReplacedStrings(replacedStrings.::(string))
   }
 
+  override def visitAutoincrement(ctx: AutoincrementContext): AST = {
+    val name = createVar(ctx.variable())
+    val from = ctx.DIGITS(0).getText.toInt
+    val to = if(ctx.TO() != null) ctx.DIGITS(1).getText.toInt else Int.MaxValue
+    val by = if(ctx.BY() != null) ctx.DIGITS(2).getText.toInt else 1
+    AutoIncrement(name, from, to, by)
+  }
+
   override def visitUnion(ctx: UnionContext): AST = {
     val left = visit(ctx.leftUnionOption()).asInstanceOf[LeftUnion]
     val right = visit(ctx.rightUnionOption()).asInstanceOf[RightUnion]
