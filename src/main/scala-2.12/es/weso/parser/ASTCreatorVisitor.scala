@@ -91,8 +91,22 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val name = createVar(ctx.variable())
     val from = ctx.DIGITS(0).getText.toInt
     val to = if(ctx.TO() != null) ctx.DIGITS(1).getText.toInt else Int.MaxValue
-    val by = if(ctx.BY() != null) ctx.DIGITS(2).getText.toInt else 1
-    AutoIncrement(name, from, to, by)
+    val by = if(ctx.BY() != null && ctx.TO() == null) ctx.DIGITS(1).getText.toInt
+    else if(ctx.BY() != null && ctx.TO() != null) ctx.DIGITS(2).getText.toInt
+    else 1
+    val precedentString = if((ctx.STRINGOPERATOR_AUTOINCREMENT(0) != null && ctx.STRINGOPERATOR_AUTOINCREMENT(1) != null)
+      || (ctx.STRINGOPERATOR_AUTOINCREMENT(0) != null
+          && ctx.STRINGOPERATOR_AUTOINCREMENT(0).getSourceInterval.startsBeforeDisjoint(ctx.ADD_AUTOINCREMENT(0).getSourceInterval)))
+      Some(ctx.STRINGOPERATOR_AUTOINCREMENT(0).getText.replaceAll("\"", ""))
+    else None
+    val closingString = if(ctx.STRINGOPERATOR_AUTOINCREMENT(0) != null
+      && ctx.STRINGOPERATOR_AUTOINCREMENT(1) == null
+      && ctx.STRINGOPERATOR_AUTOINCREMENT(0).getSourceInterval.startsAfter(ctx.ADD_AUTOINCREMENT(0).getSourceInterval))
+      Some(ctx.STRINGOPERATOR_AUTOINCREMENT(0).getText.replaceAll("\"", ""))
+    else if(ctx.STRINGOPERATOR_AUTOINCREMENT(0) != null && ctx.STRINGOPERATOR_AUTOINCREMENT(1) != null)
+      Some(ctx.STRINGOPERATOR_AUTOINCREMENT(1).getText.replaceAll("\"", ""))
+    else None
+    AutoIncrement(name, from, to, by, precedentString, closingString)
   }
 
   override def visitUnion(ctx: UnionContext): AST = {

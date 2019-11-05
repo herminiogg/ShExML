@@ -500,6 +500,8 @@ case class QueryByID(id: String, query: String)
 case class QueryWithIndex(index: String, rootIds: List[String], query: QueryClause, iteratorQuery: String)
 case class ResultAutoIncrement(iterator: AutoIncrement, predicate: String, namespace: String, dataType: Option[String], langTag: Option[String]) extends Resultable {
   def results: List[String] = {
-    List(predicate + " " + namespace + iterator.iterator.next())
+    val precedentString = iterator.precedentString.getOrElse("")
+    val closingString = iterator.closingString.getOrElse("")
+    List(predicate + " " + namespace + precedentString + iterator.iterator.next() + closingString)
   }
 }
