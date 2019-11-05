@@ -38,9 +38,10 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
     case Shape(shapeName, shapePrefix, action, predicateObjects) => {
       val actions = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
-      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument)).asInstanceOf[List[List[Result]]]
+      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
       for(a <- actions) {
-        val finalPredicateObjectsList = predicateObjectsList.flatten.filter(i => i.rootIds.contains(a.id) ||
+        val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
+        val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => i.rootIds.contains(a.id) ||
           i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
@@ -67,12 +68,16 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
     case PredicateObject(predicate, objectOrShapeLink) => {
       val predicateResult = doVisit(predicate, optionalArgument)
-      val objectResult = doVisit(objectOrShapeLink, optionalArgument).asInstanceOf[List[Result]]
+      val objectResult = doVisit(objectOrShapeLink, optionalArgument)
       if(predicateResult != null && objectResult != null)
-        objectResult.map(result => {
-          val results = result.results.map(predicateResult.toString + " " + _)
-          Result(result.id, result.rootIds, results, result.dataType, result.langTag)
-        })
+        objectResult match {
+          case lr: List[Result] => lr.map(result => {
+            val results = result.results.map(predicateResult.toString + " " + _)
+            Result(result.id, result.rootIds, results, result.dataType, result.langTag)
+          })
+          case ResultAutoIncrement(iterator, _, namespace, dataType, langTag) =>
+            ResultAutoIncrement(iterator, predicateResult.toString, namespace, dataType, langTag)
+        }
       else Nil
     }
 
@@ -86,10 +91,16 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
       }
-      matchedResultList.asInstanceOf[List[Result]].map(result => {
-        val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
-        Result(result.id, result.rootIds, newResults, dataType, langTag)
-      })
+      result match {
+        case _: List[Result] =>
+          matchedResultList.asInstanceOf[List[Result]].map(result => {
+          val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
+          Result(result.id, result.rootIds, newResults, dataType, langTag)
+        })
+        case ResultAutoIncrement(iterator, predicate, _, _, _) =>
+          ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), dataType, langTag)
+        case _ => result
+      }
     }
 
     case Union(left, right) => {
@@ -232,6 +243,10 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
         case Some(value) => Result(id, rootIds, fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None)
         case None => throw new Exception("Bad iterator query: " + query)
       }
+    }
+
+    case a: AutoIncrement => {
+      ResultAutoIncrement(a, "", "", None, None)
     }
 
     case Matchers(_, matchers) => {
@@ -465,6 +480,12 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     left.union(joinUnionList)
   }
 
+  private def solveAutoIncrementResults(list: List[Any], action: Result): List[Result] = {
+    val resultsAutoIncrement = list.filter(_.isInstanceOf[ResultAutoIncrement]).map(_.asInstanceOf[ResultAutoIncrement])
+    val newResultsAutoIncrement = resultsAutoIncrement.map(r => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag))
+    list.filterNot(_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement
+  }
+
   override def doVisitDefault(): Any = Nil
 
 }
@@ -477,3 +498,10 @@ case class ResultWithIteratorQuery(id: String, rootIds: List[String], results: L
 case class ResultWithNested(id: String, rootIds: List[String], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
 case class QueryByID(id: String, query: String)
 case class QueryWithIndex(index: String, rootIds: List[String], query: QueryClause, iteratorQuery: String)
+case class ResultAutoIncrement(iterator: AutoIncrement, predicate: String, namespace: String, dataType: Option[String], langTag: Option[String]) extends Resultable {
+  def results: List[String] = {
+    val precedentString = iterator.precedentString.getOrElse("")
+    val closingString = iterator.closingString.getOrElse("")
+    List(predicate + " " + namespace + precedentString + iterator.iterator.next() + closingString)
+  }
+}
