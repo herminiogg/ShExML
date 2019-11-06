@@ -26,6 +26,15 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
+    case ShExML(declarations, shapes) => {
+      declarations.foreach(doVisit(_, optionalArgument))
+      val linkedShapes = shapes.flatMap(_.predicateObjects.flatMap(_.objectOrShapeLink match {
+        case ShapeLink(shapeVar) => List(shapeVar)
+        case _ => List()
+      }))
+      shapes.filterNot(s => linkedShapes.contains(s.shapeName)).map(doVisit(_, optionalArgument)).head
+    }
+
     case Declaration(declarationStatement) => {
       if(declarationStatement.isInstanceOf[Prefix])
         doVisit(declarationStatement, optionalArgument)
@@ -37,9 +46,9 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case Shape(shapeName, shapePrefix, action, predicateObjects) => {
-      val actions = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
-      for(a <- actions) {
+      val actions = visitAction(action, predicateObjectsList, optionalArgument)
+      val finalActions = for(a <- actions) yield {
         val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
         val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => i.rootIds.contains(a.id) ||
           i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
@@ -62,8 +71,12 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
             }
           }
         }
+        a
       }
-      actions.map(r => Result(r.id, r.rootIds, r.results.map(prefixTable.getOrElse(shapePrefix, "_:") + _), r.dataType, r.langTag))
+      finalActions.map(r => Result(r.id, r.rootIds, r.results.map(ir => {
+        val namespace = if(ir.startsWith("_:")) "" else prefixTable.getOrElse(shapePrefix, "_:")
+        namespace + ir
+      }), r.dataType, r.langTag))
     }
 
     case PredicateObject(predicate, objectOrShapeLink) => {
@@ -486,6 +499,19 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     list.filterNot(_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement
   }
 
+  private def visitAction(action: ExpOrVar, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = {
+    if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
+      predicateObjectsList.flatMap {
+        case lr: List[Result] => lr.flatMap(r =>
+          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None)))
+        case ra: ResultAutoIncrement =>
+          val id = ra.hashCode().toString
+          val rootIds = List(id)
+          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None))
+      }
+    } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+  }
+
   override def doVisitDefault(): Any = Nil
 
 }
@@ -502,6 +528,7 @@ case class ResultAutoIncrement(iterator: AutoIncrement, predicate: String, names
   def results: List[String] = {
     val precedentString = iterator.precedentString.getOrElse("")
     val closingString = iterator.closingString.getOrElse("")
-    List(predicate + " " + namespace + precedentString + iterator.iterator.next() + closingString)
+    val predicateWithSpace = if(predicate.isEmpty) "" else predicate + " "
+    List(predicateWithSpace + namespace + precedentString + iterator.iterator.next() + closingString)
   }
 }

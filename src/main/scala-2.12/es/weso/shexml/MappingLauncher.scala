@@ -64,7 +64,7 @@ class MappingLauncher {
 
   private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Model = {
     val output = ModelFactory.createDefaultModel()
-    new RDFGeneratorVisitor(output, varTable).visit(ast, null)
+    new RDFGeneratorVisitor(output, varTable).doVisit(ast, null)
     //val in = new ByteArrayInputStream(output.toString().getBytes)
     //val model = ModelFactory.createDefaultModel()
     //model.read(in, null, "TURTLE")
