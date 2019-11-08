@@ -203,7 +203,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           }.toMap
           values.foreach {
             case (k, v) => iteratorsCombinations.get(expName + k) match {
-              case Some(previousValue) => iteratorsCombinations += expName + k -> (previousValue ::: v)
+              case Some(previousValue) => iteratorsCombinations += expName + k -> (previousValue ::: v.filterNot(previousValue.contains(_)))
               case None => iteratorsCombinations += expName + k -> v
             }
           }
@@ -550,7 +550,11 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 sealed trait Resultable {
   def results: List[String]
 }
-case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String], langTag: Option[String]) extends Resultable
+case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String], langTag: Option[String]) extends Resultable {
+  override def equals(that: Any): Boolean = {
+    canEqual(that) && id == that.asInstanceOf[Result].id
+  }
+}
 case class ResultWithIteratorQuery(id: String, rootIds: List[String], results: List[String], iteratorQuery: String) extends Resultable
 case class ResultWithNested(id: String, rootIds: List[String], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
 case class QueryByID(id: String, query: String)
