@@ -189,7 +189,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       Predicate("rdf:", "type")
     } else {
       val prefix = ctx.literalValue().prefixVar().getText
-      val name = ctx.literalValue().variable().getText
+      val name = ctx.literalValue().variable().getText.replaceAll("\\\\.|%2E", ".")
       Predicate(prefix, name)
     }
   }
@@ -210,16 +210,16 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitShapeLink(ctx: ShapeLinkContext): AST = {
-    val shapeName = ShapeVar(ctx.getText.replace("@", ""))
+    val shapeName = ShapeVar(ctx.getText.replace("@", "").replaceAll("\\\\.|%2E", "."))
     ShapeLink(shapeName)
   }
 
   def createVar(variable: VariableContext): Var = {
-    Var(Try(variable.getText).getOrElse(""))
+    Var(Try(variable.getText).getOrElse("").replaceAll("\\\\.|%2E", "."))
   }
 
   def createShapeVar(tripleElementContext: TripleElementContext): ShapeVar = {
-    ShapeVar(tripleElementContext.getText)
+    ShapeVar(tripleElementContext.getText.replaceAll("\\\\.|%2E", "."))
   }
 
   def getDeclarationContent(content: String): String = content.replaceAll("<>", "")
