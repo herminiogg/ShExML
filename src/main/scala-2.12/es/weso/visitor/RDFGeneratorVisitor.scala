@@ -1,5 +1,5 @@
 package es.weso.visitor
-import java.io.StringReader
+import java.io.{File, StringReader}
 import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -166,34 +166,43 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case i: IteratorQuery => {
       val expName = Option(optionalArgument).map(_.asInstanceOf[Map[String, Any]].getOrElse("varName", "")).getOrElse("")
       val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
-      val fileContent = doVisit(i.firstVar, optionalArgument).toString
-      val fileMap = Map("fileContent" -> fileContent)
-      val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
-      val varList = iteratorQueryToList(i)
-      if(varTable(varList.head).isInstanceOf[URL] && varList.size == 2) {
-        val iteratorName = varList.tail.head.name
-        val values = varTable.keys.filter {
-          case Var(name) => name.contains(iteratorName)
-          case _ => false
-        }.map {
-          case v: Var => v.name.replace(iteratorName, "") -> {
-            val vars = v.name.split("[.]").map(Var).toList
-            if(vars.size > 1)
-              doIteratorQuery(vars, middleArguments, fileContent)
-            else Nil
-          }
-        }.toMap
-        values.foreach {
-          case (k, v) => iteratorsCombinations += expName + k -> v
-        }
-        values
-      } else if(varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
-        iteratorsCombinations(varList.map(_.name).mkString("."))
-      } else if(varList.size >= 3) {
-        doIteratorQuery(varList.slice(1, varList.size), middleArguments, fileContent)
-      } else {
-        throw new Exception("Bad number of vars")
+      val fileContents = doVisit(i.firstVar, optionalArgument).asInstanceOf[List[Any]]
+      val fileContentsToIterate = fileContents.head match {
+        case _: String => fileContents
+        case _ => List("")
       }
+      fileContentsToIterate.map(_.toString).flatMap(fileContent => {
+        val fileMap = Map("fileContent" -> fileContent)
+        val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
+        val varList = iteratorQueryToList(i)
+        if (varTable(varList.head).isInstanceOf[URL] && varList.size == 2) {
+          val iteratorName = varList.tail.head.name
+          val values = varTable.keys.filter {
+            case Var(name) => name.contains(iteratorName)
+            case _ => false
+          }.map {
+            case v: Var => v.name.replace(iteratorName, "") -> {
+              val vars = v.name.split("[.]").map(Var).toList
+              if (vars.size > 1)
+                doIteratorQuery(vars, middleArguments, fileContent)
+              else Nil
+            }
+          }.toMap
+          values.foreach {
+            case (k, v) => iteratorsCombinations.get(expName + k) match {
+              case Some(previousValue) => iteratorsCombinations += expName + k -> (previousValue ::: v)
+              case None => iteratorsCombinations += expName + k -> v
+            }
+          }
+          values
+        } else if (varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
+          iteratorsCombinations(varList.map(_.name).mkString("."))
+        } else if (varList.size >= 3) {
+          doIteratorQuery(varList.slice(1, varList.size), middleArguments, fileContent)
+        } else {
+          throw new Exception("Bad number of vars")
+        }
+      })
     }
 
     case v: Var => {
@@ -269,7 +278,12 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       doVisit(shapeVar, optionalArgument)
     }
 
-    case URL(url) => new SourceHelper().getURLContent(url)
+    case URL(url) => if(url.contains('*') && url.startsWith("file://"))
+      getAllFilesContents(url)
+    else if(url.contains('*'))
+      throw new Exception("* wildcard not allowed over remote files")
+    else
+      List(new SourceHelper().getURLContent(url))
 
     case default => visit(default, optionalArgument)
   }
@@ -484,6 +498,23 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     val resultsAutoIncrement = list.filter(_.isInstanceOf[ResultAutoIncrement]).map(_.asInstanceOf[ResultAutoIncrement])
     val newResultsAutoIncrement = resultsAutoIncrement.map(r => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag))
     list.filterNot(_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement
+  }
+
+  private def getAllFilesContents(url: String): List[String] = {
+    val slices = url.split("\\*")
+    val windows = slices(0).lastIndexOf("/") < slices(0).lastIndexOf("\\")
+    val path = if(windows)
+      slices(0).splitAt(slices(0).lastIndexOf("\\"))._1.replace("file:///", "")
+      else slices(0).splitAt(slices(0).lastIndexOf("/"))._1.replace("file://", "")
+    val fileBeginning = if(windows)
+      slices(0).splitAt(slices(0).lastIndexOf("\\"))._2.replace("\\", "")
+      else slices(0).splitAt(slices(0).lastIndexOf("/"))._2.replace("/", "")
+    val fileEnding = slices(1).splitAt(slices(1).lastIndexOf("."))._1
+    val fileExtension = slices(1).splitAt(slices(1).lastIndexOf("."))._2
+    val files = new File(path).listFiles().filter(_.isFile)
+      .filter(_.getName.endsWith(fileEnding + fileExtension)).filter(_.getName.startsWith(fileBeginning))
+    val fileProtocol = if(windows) "file:///" else "file://"
+    files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath)).toList
   }
 
   override def doVisitDefault(): Any = Nil

@@ -48,9 +48,9 @@ class MultipleElementIteratorExpressionWithAutoIncrementWithStringsTest extends 
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "internalId1", "something: 5", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "internalId2", "something: 5 ending", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "internalId3", "3 :closing", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "1", "internalId1", "something: 1", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "1", "internalId2", "something: 1 ending", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "1", "internalId3", "1 :closing", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "country", "USA", XSDDatatype.XSDstring)))
@@ -59,9 +59,9 @@ class MultipleElementIteratorExpressionWithAutoIncrementWithStringsTest extends 
 
   test("Shape 2 is translated correctly") {
     assert(output.contains(createStatement(prefix, "2", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "2", "internalId1", "something: 7", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "2", "internalId2", "something: 7 ending", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "2", "internalId3", "4 :closing", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "2", "internalId1", "something: 3", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "2", "internalId2", "something: 3 ending", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "2", "internalId3", "2 :closing", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "name", "Interstellar", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "country", "USA", XSDDatatype.XSDstring)))
@@ -71,9 +71,9 @@ class MultipleElementIteratorExpressionWithAutoIncrementWithStringsTest extends 
 
   test("Shape 3 is translated correctly") {
     assert(output.contains(createStatement(prefix, "3", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "3", "internalId1", "something: 1", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "3", "internalId2", "something: 1 ending", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "3", "internalId3", "1 :closing", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "3", "internalId1", "something: 5", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "3", "internalId2", "something: 5 ending", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "3", "internalId3", "3 :closing", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "name", "Inception", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "country", "USA", XSDDatatype.XSDstring)))
@@ -82,9 +82,9 @@ class MultipleElementIteratorExpressionWithAutoIncrementWithStringsTest extends 
 
   test("Shape 4 is translated correctly") {
     assert(output.contains(createStatement(prefix, "4", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "4", "internalId1", "something: 3", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "4", "internalId2", "something: 3 ending", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "4", "internalId3", "2 :closing", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "4", "internalId1", "something: 7", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "4", "internalId2", "something: 7 ending", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "4", "internalId3", "4 :closing", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "name", "The Prestige", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "country", "USA", XSDDatatype.XSDstring)))
