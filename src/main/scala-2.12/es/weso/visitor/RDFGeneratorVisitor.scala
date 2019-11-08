@@ -528,6 +528,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       .filter(_.getName.endsWith(fileEnding + fileExtension)).filter(_.getName.startsWith(fileBeginning))
     val fileProtocol = if(windows) "file:///" else "file://"
     files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath)).toList
+  }
 
   private def visitAction(action: ExpOrVar, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = {
     if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
@@ -540,7 +541,6 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None))
       }
     } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
-
   }
 
   override def doVisitDefault(): Any = Nil
