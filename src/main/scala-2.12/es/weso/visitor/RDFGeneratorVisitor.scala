@@ -98,8 +98,14 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action, matcher, dataType, langTag) => {
-      val result = doVisit(action, optionalArgument)
+    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag) => {
+      val result = action match {
+        case Some(value) => doVisit(value, optionalArgument)
+        case None => literalValue match {
+          case Some(literal) => doVisit(literal, optionalArgument)
+          case None => throw new Exception("No generation clause given.")
+        }
+      }
       val matchedResultList = matcher match {
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
@@ -285,6 +291,10 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case LiteralObject(prefix, value) => {
       val prefixValue = prefixTable(prefix.name)
       List(Result("", Nil, List(prefixValue + value), None, None))
+    }
+
+    case LiteralObjectValue(value) => {
+      List(Result("", Nil, List(value), None, None))
     }
 
     case ShapeLink(shapeVar) => {
