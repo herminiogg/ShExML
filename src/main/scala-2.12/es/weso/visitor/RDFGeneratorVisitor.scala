@@ -542,7 +542,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   private def visitAction(action: ExpOrVar, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = {
     if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
-      predicateObjectsList.flatMap {
+      getLargerPredicateObjectList(predicateObjectsList) match {
         case lr: List[Result] => lr.flatMap(r =>
           doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None)))
         case ra: ResultAutoIncrement =>
@@ -552,6 +552,18 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       }
     } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
   }
+
+  private def getLargerPredicateObjectList(list: List[Any]) =  list.fold(list.head)((l, r) => {
+    val leftSize = l match {
+      case lr: List[Result] => lr.size
+      case ra: ResultAutoIncrement => ra.results.size
+    }
+    val rightSize = r match {
+      case lr: List[Result] => lr.size
+      case ra: ResultAutoIncrement => ra.results.size
+    }
+    if(leftSize > rightSize) l else r
+  })
 
   override def doVisitDefault(): Any = Nil
 
