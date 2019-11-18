@@ -51,7 +51,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val finalActions = for(a <- actions) yield {
         val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
         val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => i.rootIds.contains(a.id) ||
-          i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
+          a.rootIds.contains(i.id) || i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
