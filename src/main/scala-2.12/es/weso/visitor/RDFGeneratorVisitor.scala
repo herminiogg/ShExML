@@ -51,7 +51,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val finalActions = for(a <- actions) yield {
         val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
         val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => i.rootIds.contains(a.id) ||
-          a.rootIds.contains(i.id) || i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
+          i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
@@ -542,7 +542,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   private def visitAction(action: ExpOrVar, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = {
     if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
-      getLargerPredicateObjectList(predicateObjectsList) match {
+      getShorterPredicateObjectList(predicateObjectsList) match {
         case lr: List[Result] => lr.flatMap(r =>
           doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None)))
         case ra: ResultAutoIncrement =>
@@ -553,7 +553,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
   }
 
-  private def getLargerPredicateObjectList(list: List[Any]) =  list.fold(list.head)((l, r) => {
+  private def getShorterPredicateObjectList(list: List[Any]) =  list.fold(list.head)((l, r) => {
     val leftSize = l match {
       case lr: List[Result] => lr.size
       case ra: ResultAutoIncrement => ra.results.size
@@ -562,7 +562,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       case lr: List[Result] => lr.size
       case ra: ResultAutoIncrement => ra.results.size
     }
-    if(leftSize > rightSize) l else r
+    if(leftSize > rightSize) r else l
   })
 
   override def doVisitDefault(): Any = Nil
