@@ -542,7 +542,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   private def visitAction(action: ExpOrVar, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = {
     if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
-      getShorterPredicateObjectList(predicateObjectsList) match {
+      getMaxOccurrencesPredicateObjectList(predicateObjectsList) match {
         case lr: List[Result] => lr.flatMap(r =>
           doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None)))
         case ra: ResultAutoIncrement =>
@@ -553,17 +553,18 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
   }
 
-  private def getShorterPredicateObjectList(list: List[Any]) =  list.fold(list.head)((l, r) => {
-    val leftSize = l match {
-      case lr: List[Result] => lr.size
+  private def getMaxOccurrencesPredicateObjectList(list: List[Any]) = {
+    val mostCommonSize = mutable.HashMap[Int, Int]()
+    list.map {
+      case lr: List[Result] => mostCommonSize += ((lr.size, mostCommonSize.getOrElse(lr.size, 0) + 1))
       case ra: ResultAutoIncrement => ra.results.size
     }
-    val rightSize = r match {
-      case lr: List[Result] => lr.size
-      case ra: ResultAutoIncrement => ra.results.size
-    }
-    if(rightSize > 0 && leftSize > rightSize) r else if(leftSize > 0) l else r
-  })
+    val maxSize = mostCommonSize.maxBy(_._2)
+    list.filter {
+      case lr: List[Result] => lr.size == maxSize._1
+      case ra: ResultAutoIncrement => ra.results.size == maxSize._1
+    }.head
+  }
 
   override def doVisitDefault(): Any = Nil
 
