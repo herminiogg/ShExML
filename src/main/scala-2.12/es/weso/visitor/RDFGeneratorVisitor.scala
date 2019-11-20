@@ -562,7 +562,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       case lr: List[Result] => lr.size
       case ra: ResultAutoIncrement => ra.results.size
     }
-    if(leftSize > rightSize) r else l
+    if(rightSize > 0 && leftSize > rightSize) r else if(leftSize > 0) l else r
   })
 
   override def doVisitDefault(): Any = Nil
