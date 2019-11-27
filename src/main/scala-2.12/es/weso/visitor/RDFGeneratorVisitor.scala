@@ -555,15 +555,17 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   private def getMaxOccurrencesPredicateObjectList(list: List[Any]) = {
     val mostCommonSize = mutable.HashMap[Int, Int]()
-    list.map {
-      case lr: List[Result] => mostCommonSize += ((lr.size, mostCommonSize.getOrElse(lr.size, 0) + 1))
-      case ra: ResultAutoIncrement => ra.results.size
+    list.filter(_ != Nil).foreach {
+      case lr: List[Result] if lr.nonEmpty => mostCommonSize += ((lr.size, mostCommonSize.getOrElse(lr.size, 0) + 1))
+      case ra: ResultAutoIncrement if ra.results.nonEmpty =>
+        mostCommonSize += ((ra.results.size, mostCommonSize.getOrElse(ra.results.size, 0) + 1))
     }
-    val maxSize = mostCommonSize.maxBy(_._2)
-    list.filter {
+    val maxSize = if(mostCommonSize.isEmpty) (0, 0) else mostCommonSize.toList.sortBy(_._1)(Ordering[Int].reverse).maxBy(_._2)
+    val filterList = list.filter {
       case lr: List[Result] => lr.size == maxSize._1
       case ra: ResultAutoIncrement => ra.results.size == maxSize._1
-    }.head
+    }
+    filterList.head
   }
 
   override def doVisitDefault(): Any = Nil
