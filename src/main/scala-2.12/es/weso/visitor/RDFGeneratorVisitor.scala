@@ -51,7 +51,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val finalActions = for(a <- actions) yield {
         val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
         val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => i.rootIds.contains(a.id) ||
-          i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
+          i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty) || a.id.isEmpty)
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
@@ -98,8 +98,14 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action, matcher, dataType, langTag) => {
-      val result = doVisit(action, optionalArgument)
+    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag) => {
+      val result = action match {
+        case Some(value) => doVisit(value, optionalArgument)
+        case None => literalValue match {
+          case Some(literal) => doVisit(literal, optionalArgument)
+          case None => throw new Exception("No generation clause given.")
+        }
+      }
       val matchedResultList = matcher match {
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
@@ -285,6 +291,10 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case LiteralObject(prefix, value) => {
       val prefixValue = prefixTable(prefix.name)
       List(Result("", Nil, List(prefixValue + value), None, None))
+    }
+
+    case LiteralObjectValue(value) => {
+      List(Result("", Nil, List(value), None, None))
     }
 
     case ShapeLink(shapeVar) => {
@@ -532,7 +542,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   private def visitAction(action: ExpOrVar, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = {
     if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
-      predicateObjectsList.flatMap {
+      getMaxOccurrencesPredicateObjectList(predicateObjectsList) match {
         case lr: List[Result] => lr.flatMap(r =>
           doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None)))
         case ra: ResultAutoIncrement =>
@@ -541,6 +551,21 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None))
       }
     } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+  }
+
+  private def getMaxOccurrencesPredicateObjectList(list: List[Any]) = {
+    val mostCommonSize = mutable.HashMap[Int, Int]()
+    list.filter(_ != Nil).foreach {
+      case lr: List[Result] if lr.nonEmpty => mostCommonSize += ((lr.size, mostCommonSize.getOrElse(lr.size, 0) + 1))
+      case ra: ResultAutoIncrement if ra.results.nonEmpty =>
+        mostCommonSize += ((ra.results.size, mostCommonSize.getOrElse(ra.results.size, 0) + 1))
+    }
+    val maxSize = if(mostCommonSize.isEmpty) (0, 0) else mostCommonSize.toList.sortBy(_._1)(Ordering[Int].reverse).maxBy(_._2)
+    val filterList = list.filter {
+      case lr: List[Result] => lr.size == maxSize._1
+      case ra: ResultAutoIncrement => ra.results.size == maxSize._1
+    }
+    filterList.head
   }
 
   override def doVisitDefault(): Any = Nil
