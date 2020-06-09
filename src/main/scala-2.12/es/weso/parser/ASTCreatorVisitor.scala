@@ -202,11 +202,17 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitObjectElement(ctx: ObjectElementContext): AST = {
     val prefix = if(ctx.prefixVar() != null) ctx.prefixVar().getText else ""
-    val expOrVar = if(ctx.variable().size() == 2 || (ctx.variable().size() == 1 && ctx.exp() == null)) createVar(ctx.variable(0)) else visit(ctx.exp()).asInstanceOf[ExpOrVar]
+    val expOrVar = if(ctx.variable().size() == 2 || (ctx.variable().size() == 1 && ctx.exp() == null))
+      Some(createVar(ctx.variable(0)))
+    else if(ctx.exp() != null) Some(visit(ctx.exp()).asInstanceOf[ExpOrVar])
+    else None
+    val literalValue = if(ctx.STRINGOPERATOR() != null)
+      Some(LiteralObjectValue(ctx.STRINGOPERATOR().getText.replaceAll("\"", "")))
+    else None
     val matcherVar = if(ctx.variable(1) == null && ctx.exp() != null) Option(ctx.variable(0)).map(createVar) else Option(ctx.variable(1)).map(createVar)
     val dataType = if(ctx.XMLSCHEMADATATYPE() != null) Some(ctx.XMLSCHEMADATATYPE().getText) else None
     val langTag = if(ctx.LANGTAG() != null) Some(ctx.LANGTAG().getText.replace("@", "")) else None
-    ObjectElement(prefix, expOrVar, matcherVar, dataType, langTag)
+    ObjectElement(prefix, expOrVar, literalValue, matcherVar, dataType, langTag)
   }
 
   override def visitShapeLink(ctx: ShapeLinkContext): AST = {
