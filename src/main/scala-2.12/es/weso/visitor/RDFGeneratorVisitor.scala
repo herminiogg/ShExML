@@ -1,5 +1,5 @@
 package es.weso.visitor
-import java.io.StringReader
+import java.io.{File, StringReader}
 import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -26,6 +26,15 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
+    case ShExML(declarations, shapes) => {
+      declarations.foreach(doVisit(_, optionalArgument))
+      val linkedShapes = shapes.flatMap(_.predicateObjects.flatMap(_.objectOrShapeLink match {
+        case ShapeLink(shapeVar) => List(shapeVar)
+        case _ => List()
+      }))
+      shapes.filterNot(s => linkedShapes.contains(s.shapeName)).map(doVisit(_, optionalArgument)).head
+    }
+
     case Declaration(declarationStatement) => {
       if(declarationStatement.isInstanceOf[Prefix])
         doVisit(declarationStatement, optionalArgument)
@@ -37,11 +46,12 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
 
     case Shape(shapeName, shapePrefix, action, predicateObjects) => {
-      val actions = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
-      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument)).asInstanceOf[List[List[Result]]]
-      for(a <- actions) {
-        val finalPredicateObjectsList = predicateObjectsList.flatten.filter(i => i.rootIds.contains(a.id) ||
-          i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty))
+      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
+      val actions = visitAction(action, predicateObjectsList, optionalArgument)
+      val finalActions = for(a <- actions) yield {
+        val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
+        val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => i.rootIds.contains(a.id) ||
+          i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty) || a.id.isEmpty)
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
@@ -61,18 +71,26 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
             }
           }
         }
+        a
       }
-      actions.map(r => Result(r.id, r.rootIds, r.results.map(prefixTable.getOrElse(shapePrefix, "_:") + _), r.dataType, r.langTag))
+      finalActions.map(r => Result(r.id, r.rootIds, r.results.map(ir => {
+        val namespace = if(ir.startsWith("_:")) "" else prefixTable.getOrElse(shapePrefix, "_:")
+        namespace + ir
+      }), r.dataType, r.langTag))
     }
 
     case PredicateObject(predicate, objectOrShapeLink) => {
       val predicateResult = doVisit(predicate, optionalArgument)
-      val objectResult = doVisit(objectOrShapeLink, optionalArgument).asInstanceOf[List[Result]]
+      val objectResult = doVisit(objectOrShapeLink, optionalArgument)
       if(predicateResult != null && objectResult != null)
-        objectResult.map(result => {
-          val results = result.results.map(predicateResult.toString + " " + _)
-          Result(result.id, result.rootIds, results, result.dataType, result.langTag)
-        })
+        objectResult match {
+          case lr: List[Result] => lr.map(result => {
+            val results = result.results.map(predicateResult.toString + " " + _)
+            Result(result.id, result.rootIds, results, result.dataType, result.langTag)
+          })
+          case ResultAutoIncrement(iterator, _, namespace, dataType, langTag) =>
+            ResultAutoIncrement(iterator, predicateResult.toString, namespace, dataType, langTag)
+        }
       else Nil
     }
 
@@ -80,16 +98,28 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action, matcher, dataType, langTag) => {
-      val result = doVisit(action, optionalArgument)
+    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag) => {
+      val result = action match {
+        case Some(value) => doVisit(value, optionalArgument)
+        case None => literalValue match {
+          case Some(literal) => doVisit(literal, optionalArgument)
+          case None => throw new Exception("No generation clause given.")
+        }
+      }
       val matchedResultList = matcher match {
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
       }
-      matchedResultList.asInstanceOf[List[Result]].map(result => {
-        val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
-        Result(result.id, result.rootIds, newResults, dataType, langTag)
-      })
+      result match {
+        case _: List[Result] =>
+          matchedResultList.asInstanceOf[List[Result]].map(result => {
+          val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
+          Result(result.id, result.rootIds, newResults, dataType, langTag)
+        })
+        case ResultAutoIncrement(iterator, predicate, _, _, _) =>
+          ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), dataType, langTag)
+        case _ => result
+      }
     }
 
     case Union(left, right) => {
@@ -155,34 +185,43 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     case i: IteratorQuery => {
       val expName = Option(optionalArgument).map(_.asInstanceOf[Map[String, Any]].getOrElse("varName", "")).getOrElse("")
       val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
-      val fileContent = doVisit(i.firstVar, optionalArgument).toString
-      val fileMap = Map("fileContent" -> fileContent)
-      val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
-      val varList = iteratorQueryToList(i)
-      if(varTable(varList.head).isInstanceOf[URL] && varList.size == 2) {
-        val iteratorName = varList.tail.head.name
-        val values = varTable.keys.filter {
-          case Var(name) => name.contains(iteratorName)
-          case _ => false
-        }.map {
-          case v: Var => v.name.replace(iteratorName, "") -> {
-            val vars = v.name.split("[.]").map(Var).toList
-            if(vars.size > 1)
-              doIteratorQuery(vars, middleArguments, fileContent)
-            else Nil
-          }
-        }.toMap
-        values.foreach {
-          case (k, v) => iteratorsCombinations += expName + k -> v
-        }
-        values
-      } else if(varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
-        iteratorsCombinations(varList.map(_.name).mkString("."))
-      } else if(varList.size >= 3) {
-        doIteratorQuery(varList.slice(1, varList.size), middleArguments, fileContent)
-      } else {
-        throw new Exception("Bad number of vars")
+      val fileContents = doVisit(i.firstVar, optionalArgument).asInstanceOf[List[Any]]
+      val fileContentsToIterate = fileContents.head match {
+        case _: String => fileContents
+        case _ => List("")
       }
+      fileContentsToIterate.map(_.toString).flatMap(fileContent => {
+        val fileMap = Map("fileContent" -> fileContent)
+        val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
+        val varList = iteratorQueryToList(i)
+        if (varTable(varList.head).isInstanceOf[URL] && varList.size == 2) {
+          val iteratorName = varList.tail.head.name
+          val values = varTable.keys.filter {
+            case Var(name) => name.contains(iteratorName)
+            case _ => false
+          }.map {
+            case v: Var => v.name.replace(iteratorName, "") -> {
+              val vars = v.name.split("[.]").map(Var).toList
+              if (vars.size > 1)
+                doIteratorQuery(vars, middleArguments, fileContent)
+              else Nil
+            }
+          }.toMap
+          values.foreach {
+            case (k, v) => iteratorsCombinations.get(expName + k) match {
+              case Some(previousValue) => iteratorsCombinations += expName + k -> (previousValue ::: v.filterNot(previousValue.contains(_)))
+              case None => iteratorsCombinations += expName + k -> v
+            }
+          }
+          values
+        } else if (varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
+          iteratorsCombinations(varList.map(_.name).mkString("."))
+        } else if (varList.size >= 3) {
+          doIteratorQuery(varList.slice(1, varList.size), middleArguments, fileContent)
+        } else {
+          throw new Exception("Bad number of vars")
+        }
+      })
     }
 
     case v: Var => {
@@ -234,6 +273,10 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       }
     }
 
+    case a: AutoIncrement => {
+      ResultAutoIncrement(a, "", "", None, None)
+    }
+
     case Matchers(_, matchers) => {
       val listToMatch = optionalArgument.asInstanceOf[List[Result]]
       listToMatch.map(r => Result(r.id, r.rootIds, r.results.map(s => {
@@ -250,11 +293,20 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       List(Result("", Nil, List(prefixValue + value), None, None))
     }
 
+    case LiteralObjectValue(value) => {
+      List(Result("", Nil, List(value), None, None))
+    }
+
     case ShapeLink(shapeVar) => {
       doVisit(shapeVar, optionalArgument)
     }
 
-    case URL(url) => new SourceHelper().getURLContent(url)
+    case URL(url) => if(url.contains('*') && url.startsWith("file://"))
+      getAllFilesContents(url)
+    else if(url.contains('*'))
+      throw new Exception("* wildcard not allowed over remote files")
+    else
+      List(new SourceHelper().getURLContent(url))
 
     case default => visit(default, optionalArgument)
   }
@@ -465,6 +517,57 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     left.union(joinUnionList)
   }
 
+  private def solveAutoIncrementResults(list: List[Any], action: Result): List[Result] = {
+    val resultsAutoIncrement = list.filter(_.isInstanceOf[ResultAutoIncrement]).map(_.asInstanceOf[ResultAutoIncrement])
+    val newResultsAutoIncrement = resultsAutoIncrement.map(r => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag))
+    list.filterNot(_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement
+  }
+
+  private def getAllFilesContents(url: String): List[String] = {
+    val slices = url.split("\\*")
+    val windows = slices(0).lastIndexOf("/") < slices(0).lastIndexOf("\\")
+    val path = if(windows)
+      slices(0).splitAt(slices(0).lastIndexOf("\\"))._1.replace("file:///", "")
+      else slices(0).splitAt(slices(0).lastIndexOf("/"))._1.replace("file://", "")
+    val fileBeginning = if(windows)
+      slices(0).splitAt(slices(0).lastIndexOf("\\"))._2.replace("\\", "")
+      else slices(0).splitAt(slices(0).lastIndexOf("/"))._2.replace("/", "")
+    val fileEnding = slices(1).splitAt(slices(1).lastIndexOf("."))._1
+    val fileExtension = slices(1).splitAt(slices(1).lastIndexOf("."))._2
+    val files = new File(path).listFiles().filter(_.isFile)
+      .filter(_.getName.endsWith(fileEnding + fileExtension)).filter(_.getName.startsWith(fileBeginning))
+    val fileProtocol = if(windows) "file:///" else "file://"
+    files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath)).toList
+  }
+
+  private def visitAction(action: ExpOrVar, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = {
+    if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
+      getMaxOccurrencesPredicateObjectList(predicateObjectsList) match {
+        case lr: List[Result] => lr.flatMap(r =>
+          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None)))
+        case ra: ResultAutoIncrement =>
+          val id = ra.hashCode().toString
+          val rootIds = List(id)
+          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None))
+      }
+    } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+  }
+
+  private def getMaxOccurrencesPredicateObjectList(list: List[Any]) = {
+    val mostCommonSize = mutable.HashMap[Int, Int]()
+    list.filter(_ != Nil).foreach {
+      case lr: List[Result] if lr.nonEmpty => mostCommonSize += ((lr.size, mostCommonSize.getOrElse(lr.size, 0) + 1))
+      case ra: ResultAutoIncrement if ra.results.nonEmpty =>
+        mostCommonSize += ((ra.results.size, mostCommonSize.getOrElse(ra.results.size, 0) + 1))
+    }
+    val maxSize = if(mostCommonSize.isEmpty) (0, 0) else mostCommonSize.toList.sortBy(_._1)(Ordering[Int].reverse).maxBy(_._2)
+    val filterList = list.filter {
+      case lr: List[Result] => lr.size == maxSize._1
+      case ra: ResultAutoIncrement => ra.results.size == maxSize._1
+    }
+    filterList.head
+  }
+
   override def doVisitDefault(): Any = Nil
 
 }
@@ -472,8 +575,20 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 sealed trait Resultable {
   def results: List[String]
 }
-case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String], langTag: Option[String]) extends Resultable
+case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String], langTag: Option[String]) extends Resultable {
+  override def equals(that: Any): Boolean = {
+    canEqual(that) && id == that.asInstanceOf[Result].id
+  }
+}
 case class ResultWithIteratorQuery(id: String, rootIds: List[String], results: List[String], iteratorQuery: String) extends Resultable
 case class ResultWithNested(id: String, rootIds: List[String], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
 case class QueryByID(id: String, query: String)
 case class QueryWithIndex(index: String, rootIds: List[String], query: QueryClause, iteratorQuery: String)
+case class ResultAutoIncrement(iterator: AutoIncrement, predicate: String, namespace: String, dataType: Option[String], langTag: Option[String]) extends Resultable {
+  def results: List[String] = {
+    val precedentString = iterator.precedentString.getOrElse("")
+    val closingString = iterator.closingString.getOrElse("")
+    val predicateWithSpace = if(predicate.isEmpty) "" else predicate + " "
+    List(predicateWithSpace + namespace + precedentString + iterator.iterator.next() + closingString)
+  }
+}

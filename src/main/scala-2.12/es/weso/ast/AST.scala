@@ -22,6 +22,9 @@ case class Field(name: Var, queryClause: QueryClause) extends AST
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
 case class Matcher(replacedStrings: ReplacedStrings, replacement: String) extends AST
 case class Matchers(name: Var, matchers: MatcherList) extends DeclarationStatement with VarResult
+case class AutoIncrement(name: Var, from: Int, to: Int, by: Int, precedentString: Option[String], closingString: Option[String]) extends Iterable[Int] with DeclarationStatement with VarResult {
+  override val iterator: scala.Iterator[Int] = scala.Iterator.range(from, to, by)
+}
 
 
 sealed trait QueryClause extends VarResult {
@@ -51,6 +54,7 @@ case class Var(name: String) extends Variable with VarOrIteratorQuery
 case class ShapeVar(name: String) extends Variable
 
 case class LiteralObject(prefix: Var, value: String) extends ObjectOrShapeLink
+case class LiteralObjectValue(value: String) extends ObjectOrShapeLink
 
 case class PredicateObject(predicate: Predicate, objectOrShapeLink: ObjectOrShapeLink) extends AST
 case class Predicate(prefix: String, extension: String) extends AST
@@ -58,7 +62,7 @@ case class Predicate(prefix: String, extension: String) extends AST
 
 sealed trait ObjectOrShapeLink extends AST
 
-case class ObjectElement(prefix: String, action: ExpOrVar, matcher: Option[Var],
+case class ObjectElement(prefix: String, action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var],
                          dataType: Option[String], langTag: Option[String]) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 

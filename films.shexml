@@ -42,7 +42,7 @@ EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
 :Films :[films.id] {
     schema:name [films.name] ;
     :year dbr:[films.year] ;
-    schema:countryOfOrigin dbr:[films.country] ;
+    schema:2232-22 dbr:[films.country] ;
     schema:director dbr:[films.directors] ;
     :screenwritter dbr:[films.screenwritters] ;
     schema:musicBy dbr:[films.music] ;

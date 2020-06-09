@@ -258,12 +258,18 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       )
     }
 
-    case ObjectElement(prefix, action, matcher, dataType, langTag) => {
+    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag) => {
       val arguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
       val prefixArguments = if(prefix.nonEmpty) arguments.+("prefix" -> prefix) else arguments
       val dataTypeArguments = if(dataType.isDefined) prefixArguments.+("dataType" -> dataType.getOrElse(None)) else prefixArguments
       val finalArguments = if(langTag.isDefined) dataTypeArguments.+("langTag" -> langTag.getOrElse(None)) else dataTypeArguments
-      doVisit(action, finalArguments)
+      action match {
+        case Some(value) => doVisit(value, finalArguments)
+        case None => literalValue match {
+          case Some(literal) => doVisit(literal, finalArguments)
+          case None => throw new Exception("No generation clause given.")
+        }
+      }
     }
 
     case LiteralObject(prefix, value) => {
@@ -274,6 +280,27 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
         createStatementWithLiteral(objectMapID, rrPrefix + "template", fullPrefix + value),
         createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "Constant")
       )
+      List(RMLMap(Nil, objectMap, Nil, Nil))
+    }
+
+    case LiteralObjectValue(value) => {
+      val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
+      val datatypePrefix = arguments.get("dataType").map(d => prefixTable(d.toString.split(":")(0) + ":"))
+      val datatype = arguments.get("dataType").map(d => d.toString.split(":")(1))
+      val datatypeURI = datatypePrefix.map(_ + datatype.get)
+      val langTag = arguments.get("langTag").map(_.asInstanceOf[String])
+      val objectMapID = mapPrefix + "o_" + objectIndex.next
+      val datatypeStatement =
+        if(datatype.isDefined) List(createStatement(objectMapID, rrPrefix + "datatype", datatypeURI.get))
+        else List()
+      val langTagStatement =
+        if(langTag.isDefined) List(createStatementWithLiteral(objectMapID, rrPrefix + "language", langTag.get))
+        else List()
+      val objectMap = List(
+        createStatement(objectMapID, rdfPrefix + "type", rrPrefix + "ObjectMap"),
+        createStatementWithLiteral(objectMapID, rrPrefix + "template", value),
+        createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "Literal")
+      ) ::: datatypeStatement ::: langTagStatement
       List(RMLMap(Nil, objectMap, Nil, Nil))
     }
 

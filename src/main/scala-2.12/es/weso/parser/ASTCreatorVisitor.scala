@@ -87,6 +87,28 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     ReplacedStrings(replacedStrings.::(string))
   }
 
+  override def visitAutoincrement(ctx: AutoincrementContext): AST = {
+    val name = createVar(ctx.variable())
+    val from = ctx.DIGITS(0).getText.toInt
+    val to = if(ctx.TO() != null) ctx.DIGITS(1).getText.toInt else Int.MaxValue
+    val by = if(ctx.BY() != null && ctx.TO() == null) ctx.DIGITS(1).getText.toInt
+    else if(ctx.BY() != null && ctx.TO() != null) ctx.DIGITS(2).getText.toInt
+    else 1
+    val precedentString = if((ctx.STRINGOPERATOR_AUTOINCREMENT(0) != null && ctx.STRINGOPERATOR_AUTOINCREMENT(1) != null)
+      || (ctx.STRINGOPERATOR_AUTOINCREMENT(0) != null
+          && ctx.STRINGOPERATOR_AUTOINCREMENT(0).getSourceInterval.startsBeforeDisjoint(ctx.ADD_AUTOINCREMENT(0).getSourceInterval)))
+      Some(ctx.STRINGOPERATOR_AUTOINCREMENT(0).getText.replaceAll("\"", ""))
+    else None
+    val closingString = if(ctx.STRINGOPERATOR_AUTOINCREMENT(0) != null
+      && ctx.STRINGOPERATOR_AUTOINCREMENT(1) == null
+      && ctx.STRINGOPERATOR_AUTOINCREMENT(0).getSourceInterval.startsAfter(ctx.ADD_AUTOINCREMENT(0).getSourceInterval))
+      Some(ctx.STRINGOPERATOR_AUTOINCREMENT(0).getText.replaceAll("\"", ""))
+    else if(ctx.STRINGOPERATOR_AUTOINCREMENT(0) != null && ctx.STRINGOPERATOR_AUTOINCREMENT(1) != null)
+      Some(ctx.STRINGOPERATOR_AUTOINCREMENT(1).getText.replaceAll("\"", ""))
+    else None
+    AutoIncrement(name, from, to, by, precedentString, closingString)
+  }
+
   override def visitUnion(ctx: UnionContext): AST = {
     val left = visit(ctx.leftUnionOption()).asInstanceOf[LeftUnion]
     val right = visit(ctx.rightUnionOption()).asInstanceOf[RightUnion]
@@ -167,7 +189,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       Predicate("rdf:", "type")
     } else {
       val prefix = ctx.literalValue().prefixVar().getText
-      val name = ctx.literalValue().variable().getText
+      val name = ctx.literalValue().variable().getText.replaceAll("\\\\.|%2E", ".")
       Predicate(prefix, name)
     }
   }
@@ -180,24 +202,30 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitObjectElement(ctx: ObjectElementContext): AST = {
     val prefix = if(ctx.prefixVar() != null) ctx.prefixVar().getText else ""
-    val expOrVar = if(ctx.variable().size() == 2 || (ctx.variable().size() == 1 && ctx.exp() == null)) createVar(ctx.variable(0)) else visit(ctx.exp()).asInstanceOf[ExpOrVar]
+    val expOrVar = if(ctx.variable().size() == 2 || (ctx.variable().size() == 1 && ctx.exp() == null))
+      Some(createVar(ctx.variable(0)))
+    else if(ctx.exp() != null) Some(visit(ctx.exp()).asInstanceOf[ExpOrVar])
+    else None
+    val literalValue = if(ctx.STRINGOPERATOR() != null)
+      Some(LiteralObjectValue(ctx.STRINGOPERATOR().getText.replaceAll("\"", "")))
+    else None
     val matcherVar = if(ctx.variable(1) == null && ctx.exp() != null) Option(ctx.variable(0)).map(createVar) else Option(ctx.variable(1)).map(createVar)
     val dataType = if(ctx.XMLSCHEMADATATYPE() != null) Some(ctx.XMLSCHEMADATATYPE().getText) else None
     val langTag = if(ctx.LANGTAG() != null) Some(ctx.LANGTAG().getText.replace("@", "")) else None
-    ObjectElement(prefix, expOrVar, matcherVar, dataType, langTag)
+    ObjectElement(prefix, expOrVar, literalValue, matcherVar, dataType, langTag)
   }
 
   override def visitShapeLink(ctx: ShapeLinkContext): AST = {
-    val shapeName = ShapeVar(ctx.getText.replace("@", ""))
+    val shapeName = ShapeVar(ctx.getText.replace("@", "").replaceAll("\\\\.|%2E", "."))
     ShapeLink(shapeName)
   }
 
   def createVar(variable: VariableContext): Var = {
-    Var(Try(variable.getText).getOrElse(""))
+    Var(Try(variable.getText).getOrElse("").replaceAll("\\\\.|%2E", "."))
   }
 
   def createShapeVar(tripleElementContext: TripleElementContext): ShapeVar = {
-    ShapeVar(tripleElementContext.getText)
+    ShapeVar(tripleElementContext.getText.replaceAll("\\\\.|%2E", "."))
   }
 
   def getDeclarationContent(content: String): String = content.replaceAll("<>", "")
