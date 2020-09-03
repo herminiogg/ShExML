@@ -48,7 +48,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
   private val mappingLauncher = new MappingLauncher()
   private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://example.com/"
-  private val output = doTranslation(result, prefix)
+  private val output = doTranslation(result, prefix).getDefaultModel
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))

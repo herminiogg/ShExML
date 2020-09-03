@@ -42,7 +42,7 @@ class CommentIteratorExpressionTest extends FunSuite with Matchers with RDFState
   private val mappingLauncher = new MappingLauncher()
   private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://ex.com/"
-  private val output = doTranslation(result, prefix)
+  private val output = doTranslation(result, prefix).getDefaultModel
 
   test("Location shape is translated correctly") {
     assert(output.contains(createStatementWithLiteral(prefix, "51.043613-3.717333", "lat", "51.043613", XSDDatatype.XSDstring)))

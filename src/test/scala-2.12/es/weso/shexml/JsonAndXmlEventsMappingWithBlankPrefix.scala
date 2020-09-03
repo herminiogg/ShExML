@@ -42,7 +42,7 @@ class JsonAndXmlEventsMappingWithBlankPrefix extends FunSuite with Matchers with
     """.stripMargin
 
   private val mappingLauncher = new MappingLauncher()
-  private val output = mappingLauncher.launchMapping(example)
+  private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://ex.com/"
 
   test("Location shape is translated correctly") {

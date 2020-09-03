@@ -1,14 +1,7 @@
 package es.weso.shexml.rml
 
-import java.io.ByteArrayInputStream
-
-import be.ugent.rml.records.RecordsFactory
-import be.ugent.rml.{DataFetcher, Executor}
-import be.ugent.rml.store.RDF4JStore
 import es.weso.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.apache.jena.rdf.model.ModelFactory
-import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.scalatest.{FunSuite, Matchers}
 
 /**
@@ -54,7 +47,7 @@ class JsonAndXmlEventsMapping extends FunSuite with Matchers with RDFStatementCr
   private val mappingLauncher = new MappingLauncher()
   private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://ex.com/"
-  private val output = doTranslation(result, prefix)
+  private val output = doTranslation(result, prefix).getDefaultModel
 
   test("Location shape is translated correctly") {
     assert(output.contains(createStatementWithLiteral(prefix, "51.043613-3.717333", "lat", "51.043613", XSDDatatype.XSDstring)))

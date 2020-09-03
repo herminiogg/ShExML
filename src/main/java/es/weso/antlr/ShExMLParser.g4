@@ -6,7 +6,7 @@ package es.weso.antlr;
 
 options{tokenVocab=ShExMLLexer;}
 
-shExML: decl* shape* ;
+shExML: decl* (shape | graph)* ;
 decl: (source | prefix | query | expression | matcher | iterator | autoincrement) ;
 prefix: PREFIX variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
 source: SOURCE variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
@@ -31,6 +31,7 @@ join: iteratorQuery UNION iteratorQuery JOIN iteratorQuery ;
 union: leftUnionOption UNION rightUnionOption ;
 leftUnionOption: iteratorQuery | stringOperation ;
 rightUnionOption: iteratorQuery | union | stringOperation ;
+graph: literalValue '[[' shape+ ']]' ;
 shape: tripleElement prefixVar '[' (exp | variable) ']' '{' (predicateObject ';')* predicateObject? '}' ;
 predicateObject: predicate (objectElement | shapeLink | literalValue) ;
 objectElement: prefixVar? ('[' (exp | variable) (MATCHING variable)? ']' | STRINGOPERATOR) (XMLSCHEMADATATYPE | LANGTAG)? ;

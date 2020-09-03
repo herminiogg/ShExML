@@ -23,6 +23,10 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     case m: Matchers => variableMap += ((m.name, m))
     case a: AutoIncrement => variableMap += ((a.name, a))
     case s: Shape => variableMap += ((s.shapeName, s))
+    case g: Graph => {
+      g.shapes.foreach(doVisit(_, optionalArgument))
+      variableMap += ((g.graphName, g))
+    }
     case default => super.visit(default, optionalArgument)
   }
 

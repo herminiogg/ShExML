@@ -42,7 +42,7 @@ class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreato
   private val mappingLauncher = new MappingLauncher()
   private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://example.com/"
-  private val output = doTranslation(result, prefix)
+  private val output = doTranslation(result, prefix).getDefaultModel
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", XSDDatatype.XSDstring)))

@@ -1,10 +1,11 @@
 package es.weso.visitor
 import es.weso.ast._
+import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.{Model, Statement}
 
 import scala.collection.mutable
 
-class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends RDFGeneratorVisitor(output, varTable) {
+class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult]) extends RDFGeneratorVisitor(dataset, varTable) {
 
   private val mapPrefix = "http://mapping.example.com/"
   private val rmlPrefix = "http://semweb.mmlab.be/ns/rml#"
@@ -17,15 +18,21 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
   private val predicateObjectIndex = (1 to Int.MaxValue).iterator
   private val mappingIndex = (1 to Int.MaxValue).iterator
   private val joinIndex = (1 to Int.MaxValue).iterator
+  private val mapGraphIndex = (1 to Int.MaxValue).iterator
+
+  val output = dataset.getDefaultModel
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
-    case Shape(shapeName, shapePrefix, action, predicateObjects) => {
+    case Shape(shapeName, shapePrefix, action, predicateObjects, holdingGraph) => {
       output.setNsPrefix("map", mapPrefix)
       output.setNsPrefix("rml", rmlPrefix)
       output.setNsPrefix("ql", qlPrefix)
       output.setNsPrefix("rr", rrPrefix)
-      val actionTriples = doVisit(action, Map("rmlType" -> "subject", "prefix" -> shapePrefix)).asInstanceOf[List[RMLMap]].filter(_.logicalSource.nonEmpty)
+      val arguments = if(holdingGraph.isEmpty)
+        Map("rmlType" -> "subject", "prefix" -> shapePrefix)
+      else Map("rmlType" -> "subject", "prefix" -> shapePrefix, "graph" -> holdingGraph.get)
+      val actionTriples = doVisit(action, arguments).asInstanceOf[List[RMLMap]].filter(_.logicalSource.nonEmpty)
       val predicateObjectTriples = predicateObjects.map(po => doVisit(po, optionalArgument).asInstanceOf[List[RMLMap]])
       actionTriples.map(at => {
         val sourceID = at.logicalSource.head.getSubject.getURI
@@ -41,7 +48,7 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
         })
         output.add(at.logicalSource.toArray)
         val mapID = mapPrefix + "m_" + mappingIndex.next
-        output.add(createStatement(mapID, rdfPrefix + "type", rmlPrefix + "TriplesMap"))
+        output.add(createStatement(mapID, rdfPrefix + "type", rrPrefix + "TriplesMap"))
         output.add(createStatement(mapID, rmlPrefix + "logicalSource", at.logicalSource.head.getSubject.getURI))
         output.add(createStatement(mapID, rrPrefix + "subjectMap", at.objectMap.head.getSubject.getURI))
         filteredPredicateObjects.foreach(_.predicateObjectMap.foreach(s => {
@@ -136,10 +143,20 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
           } else if(fieldQuery != null) {
             val subjectMapID = mapPrefix + "s_" + subjectIndex.next
             val prefix = arguments.get("prefix").filterNot(_ == "_:").map(_.asInstanceOf[String]).map(prefixTable(_)).getOrElse("_:")
+            val holdingGraph = arguments.get("graph").map(_.asInstanceOf[Graph].graphName)
             val bnode = if(arguments.getOrElse("prefix", "").equals("_:"))
               List(createStatement(subjectMapID, rrPrefix + "termType", rrPrefix + "BlankNode"),
                 createStatementWithLiteral(subjectMapID, rrPrefix + "template", "{" + fieldQuery.query + "}"))
-            else List(createStatementWithLiteral(subjectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"))
+            else if(holdingGraph.isEmpty)
+              List(createStatementWithLiteral(subjectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"))
+            else {
+              val graphMapIndexID = mapPrefix + mapGraphIndex.next
+              output.add(createStatement(graphMapIndexID, rdfPrefix + "type", rrPrefix + "GraphMap"))
+              output.add(createStatement(graphMapIndexID, rrPrefix + "constant", prefixTable(holdingGraph.get.prefix) + holdingGraph.get.name))
+              List(
+                createStatementWithLiteral(subjectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"),
+                createStatement(subjectMapID, rrPrefix + "graphMap", graphMapIndexID))
+            }
             val subjectMap = List(
               createStatement(subjectMapID, rdfPrefix + "type", rrPrefix + "SubjectMap")
             ) ::: bnode
@@ -190,7 +207,7 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val mappingID = mapPrefix + "m_" + mappingIndex.next
       val subjectID = mapPrefix + "s_" + subjectIndex.next
       val mapping = List(
-        createStatement(mappingID, rdfPrefix + "type", rmlPrefix + "TriplesMap"),
+        createStatement(mappingID, rdfPrefix + "type", rrPrefix + "TriplesMap"),
         createStatement(mappingID, rmlPrefix + "logicalSource", leftMap.logicalSource.head.getSubject.getURI),
         createStatement(mappingID, rrPrefix + "subjectMap", subjectID)
       )
@@ -278,7 +295,7 @@ class RMLGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       val objectMap = List(
         createStatement(objectMapID, rdfPrefix + "type", rrPrefix + "ObjectMap"),
         createStatementWithLiteral(objectMapID, rrPrefix + "template", fullPrefix + value),
-        createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "Constant")
+        createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "IRI")
       )
       List(RMLMap(Nil, objectMap, Nil, Nil))
     }
