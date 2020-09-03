@@ -6,9 +6,10 @@ package es.weso.ast
   */
 sealed trait AST
 
-case class ShExML(declaration: List[Declaration], shape: List[Shape]) extends AST
+case class ShExML(declaration: List[Declaration], graph: List[Graph], shape: List[Shape]) extends AST
 case class Declaration(declarationStatement: DeclarationStatement) extends AST
-case class Shape(shapeName: ShapeVar, shapePrefix: String, action: ExpOrVar, predicateObjects: List[PredicateObject]) extends VarResult
+case class Graph(graphName: GraphVar, shapes: List[Shape]) extends VarResult
+case class Shape(shapeName: ShapeVar, shapePrefix: String, action: ExpOrVar, predicateObjects: List[PredicateObject], holdingGraph: Option[Graph]) extends VarResult
 
 
 sealed trait DeclarationStatement extends AST
@@ -52,6 +53,7 @@ sealed trait ExpOrVar extends AST
 sealed trait Variable extends ExpOrVar
 case class Var(name: String) extends Variable with VarOrIteratorQuery
 case class ShapeVar(name: String) extends Variable
+case class GraphVar(prefix: String, name: String) extends Variable
 
 case class LiteralObject(prefix: Var, value: String) extends ObjectOrShapeLink
 case class LiteralObjectValue(value: String) extends ObjectOrShapeLink

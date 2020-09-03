@@ -9,14 +9,16 @@ abstract class DefaultVisitor[A, B] {
 
   def visit(ast: AST, optionalArgument: A): B = ast match {
 
-    case ShExML(declarations, shapes) => {
+    case ShExML(declarations, graphs, shapes) => {
       declarations.foreach(doVisit(_, optionalArgument))
-      shapes.map(doVisit(_, optionalArgument)).head
+      val firstGraph = graphs.map(doVisit(_, optionalArgument)).headOption
+      val firstShape = shapes.map(doVisit(_, optionalArgument)).headOption
+      if(firstGraph.isEmpty) firstShape.get else firstGraph.get
     }
 
     case Declaration(declarationStatement) => doVisit(declarationStatement, optionalArgument)
 
-    case Shape(shapeName, _, action, predicateObjects) => {
+    case Shape(shapeName, _, action, predicateObjects, _) => {
       doVisit(shapeName, optionalArgument)
       predicateObjects.foreach(doVisit(_, optionalArgument))
       doVisit(action, optionalArgument)

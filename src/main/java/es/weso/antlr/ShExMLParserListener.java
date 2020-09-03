@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.7.2
+// Generated from ShExMLParser.g4 by ANTLR 4.8
 
 package es.weso.antlr;
 
@@ -229,6 +229,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitRightUnionOption(ShExMLParser.RightUnionOptionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#graph}.
+	 * @param ctx the parse tree
+	 */
+	void enterGraph(ShExMLParser.GraphContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#graph}.
+	 * @param ctx the parse tree
+	 */
+	void exitGraph(ShExMLParser.GraphContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#shape}.
 	 * @param ctx the parse tree

@@ -39,7 +39,7 @@ class MultipleElementIteratorExpressionTest extends FunSuite with Matchers with 
     """.stripMargin
 
   private val mappingLauncher = new MappingLauncher()
-  private val output = mappingLauncher.launchMapping(example)
+  private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 
   test("Shape 1 is translated correctly") {

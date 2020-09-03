@@ -7,8 +7,11 @@ import es.weso.ast._
 import es.weso.parser.ASTCreatorVisitor
 import es.weso.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
+import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.rdf.model.{Model, ModelFactory}
+import org.apache.jena.riot.{Lang, RDFDataMgr, RDFLanguages}
 
+import collection.JavaConverters._
 import scala.collection.mutable
 
 /**
@@ -17,13 +20,16 @@ import scala.collection.mutable
 class MappingLauncher {
 
   def launchMapping(mappingCode: String, lang: String): String = {
-    val model = launchMapping(mappingCode)
+    val dataset = launchMapping(mappingCode)
     val outputStream = new ByteArrayOutputStream()
-    model.write(outputStream, lang)
+    val langValue = RDFLanguages.nameToLang(lang)
+    if(RDFLanguages.isQuads(langValue))
+      RDFDataMgr.write(outputStream, dataset, langValue)
+    else RDFDataMgr.write(outputStream, dataset.getDefaultModel, langValue)
     outputStream.toString
   }
 
-  def launchMapping(mappingCode: String): Model = {
+  def launchMapping(mappingCode: String): Dataset = {
     val lexer = createLexer(mappingCode)
     val parser = createParser(lexer)
     val ast = createAST(parser)
@@ -36,9 +42,9 @@ class MappingLauncher {
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
-    val model = generateResultingRML(ast, varTable)
+    val dataset = generateResultingRML(ast, varTable)
     val outputStream = new ByteArrayOutputStream()
-    model.write(outputStream, "TURTLE")
+    dataset.getDefaultModel.write(outputStream, "TURTLE")
     outputStream.toString
   }
 
@@ -62,17 +68,17 @@ class MappingLauncher {
     varTable
   }
 
-  private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Model = {
-    val output = ModelFactory.createDefaultModel()
-    new RDFGeneratorVisitor(output, varTable).doVisit(ast, null)
+  private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {
+    val dataset = DatasetFactory.create()
+    new RDFGeneratorVisitor(dataset, varTable).doVisit(ast, null)
     //val in = new ByteArrayInputStream(output.toString().getBytes)
     //val model = ModelFactory.createDefaultModel()
     //model.read(in, null, "TURTLE")
-    output
+    dataset
   }
 
-  private def generateResultingRML(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Model = {
-    val output = ModelFactory.createDefaultModel()
+  private def generateResultingRML(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {
+    val output = DatasetFactory.create()
     new RMLGeneratorVisitor(output, varTable).visit(ast, null)
     output
   }
