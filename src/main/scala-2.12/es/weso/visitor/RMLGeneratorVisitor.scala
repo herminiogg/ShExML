@@ -5,13 +5,15 @@ import org.apache.jena.rdf.model.{Model, Statement}
 
 import scala.collection.mutable
 
-class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult]) extends RDFGeneratorVisitor(dataset, varTable) {
+class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], username: String, password: String)
+  extends RDFGeneratorVisitor(dataset, varTable, username, password) with JdbcDriverRegistry {
 
   private val mapPrefix = "http://mapping.example.com/"
   private val rmlPrefix = "http://semweb.mmlab.be/ns/rml#"
   private val qlPrefix = "http://semweb.mmlab.be/ns/ql#"
   private val rrPrefix = "http://www.w3.org/ns/r2rml#"
   private val rdfPrefix = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  private val d2rqPrefix = "http://www.wiwiss.fu-berlin.de/suhl/bizer/D2RQ/0.1#"
   private val subjectIndex = (1 to Int.MaxValue).iterator
   private val predicateIndex = (1 to Int.MaxValue).iterator
   private val objectIndex = (1 to Int.MaxValue).iterator
@@ -19,6 +21,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   private val mappingIndex = (1 to Int.MaxValue).iterator
   private val joinIndex = (1 to Int.MaxValue).iterator
   private val mapGraphIndex = (1 to Int.MaxValue).iterator
+  private val dbIndex = (1 to Int.MaxValue).iterator
 
   val output = dataset.getDefaultModel
 
@@ -29,6 +32,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       output.setNsPrefix("rml", rmlPrefix)
       output.setNsPrefix("ql", qlPrefix)
       output.setNsPrefix("rr", rrPrefix)
+      output.setNsPrefix("d2rq", d2rqPrefix)
       val arguments = if(holdingGraph.isEmpty)
         Map("rmlType" -> "subject", "prefix" -> shapePrefix)
       else Map("rmlType" -> "subject", "prefix" -> shapePrefix, "graph" -> holdingGraph.get)
@@ -65,7 +69,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       varTable(firstVar) match {
         case u: Union => doVisit(u, arguments + ("composedVar" -> composedVar))
         case i: IteratorQuery => List(doVisit(i, arguments + ("composedVar" -> composedVar)))
-        case source: URL => {
+        case source: IRI => {
           val iterator = composedVar match {
             case IteratorQuery(iteratorVar, _) =>
               if(varTable.get(iteratorVar).isDefined && iteratorVar.name.contains(".")) {
@@ -78,19 +82,38 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case v: Var => transformNestedIterator(varTable(v).asInstanceOf[QueryClause], v)
           }
           val logicalSourceName = mapPrefix + composedVar.hashCode.abs
-          val referenceFormulation = iterator match {
-            case JsonPath(_) => "JSONPath"
-            case XmlPath(_) => "XPath"
-            case CSVPerRow(_) => "CSV"
+          val logicalSource = iterator match {
+            case SqlQuery(query) => {
+              val dbSubjectID = mapPrefix + "db_" + dbIndex.next()
+              val datasource = List(
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].url)),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDSN", source.asInstanceOf[JdbcURL].url),
+                // user and password to be inputted here
+              )
+              val logicalSource = List(
+                createStatement(logicalSourceName, rdfPrefix + "type", rmlPrefix + "LogicalSource"),
+                createStatementWithLiteral(logicalSourceName, rmlPrefix + "SQLQuery", query),
+                createStatement(logicalSourceName, rmlPrefix + "source", dbSubjectID),
+              )
+              logicalSource ::: datasource
+            }
+            case _ => {
+              val referenceFormulation = iterator match {
+                case JsonPath(_) => "JSONPath"
+                case XmlPath(_) => "XPath"
+                case CSVPerRow(_) => "CSV"
+              }
+              val iteratorStatement = if(iterator.isInstanceOf[JsonPath] | iterator.isInstanceOf[XmlPath])
+                List(createStatementWithLiteral(logicalSourceName, rmlPrefix + "iterator", iterator.query))
+              else Nil
+              List(
+                createStatement(logicalSourceName, rdfPrefix + "type", rmlPrefix + "LogicalSource"),
+                createStatementWithLiteral(logicalSourceName, rmlPrefix + "source", source.asInstanceOf[URL].url),
+                createStatement(logicalSourceName, rmlPrefix + "referenceFormulation", qlPrefix + referenceFormulation)
+              ) ::: iteratorStatement
+            }
           }
-          val iteratorStatement = if(iterator.isInstanceOf[JsonPath] | iterator.isInstanceOf[XmlPath])
-            List(createStatementWithLiteral(logicalSourceName, rmlPrefix + "iterator", iterator.query))
-          else Nil
-          val logicalSource = List(
-            createStatement(logicalSourceName, rdfPrefix + "type", rmlPrefix + "LogicalSource"),
-            createStatementWithLiteral(logicalSourceName, rmlPrefix + "source", source.url),
-            createStatement(logicalSourceName, rmlPrefix + "referenceFormulation", qlPrefix + referenceFormulation)
-          ) ::: iteratorStatement
+
           val fieldQuery = composedVar match {
             case v: Var => varTable(v) match {
               case f: FieldQuery => f
@@ -357,10 +380,12 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       case JsonPath(jsonQuery) => JsonPath(jsonQuery + "." + query)
       case XmlPath(xpathQuery) => XmlPath(xpathQuery + "/" + query)
       case CSVPerRow(_) => CSVPerRow(query)
+      case SqlQuery(_) => SqlQuery(query)
     }
     case j: JsonPath => j
     case x: XmlPath => x
     case c: CSVPerRow => c
+    case s: SqlQuery => s
   }
 
   private def mergeQueries(leftQuery: QueryClause, rightQuery: QueryClause): QueryClause = rightQuery match {

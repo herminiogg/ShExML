@@ -30,6 +30,10 @@ libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.7.27"
 
 libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.6"
 
+libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.32.3.2"
+
+libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.21"
+
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case x => MergeStrategy.first

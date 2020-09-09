@@ -34,7 +34,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitSource(ctx: SourceContext): AST = {
-    val url = URL(ctx.URL().getText)
+    val url = if(ctx.URL != null) URL(ctx.URL().getText) else JdbcURL(ctx.JDBC_URL().getText)
     val name = createVar(ctx.variable())
     Source(name, url)
   }
@@ -46,8 +46,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitQueryClause(ctx: QueryClauseContext): AST = {
-    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART().getText)
-    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART().getText)
+    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART(0).getText)
+    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART(0).getText)
+    else if(ctx.SQL() != null) SqlQuery(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "))
     else CSVPerRow("")
   }
 

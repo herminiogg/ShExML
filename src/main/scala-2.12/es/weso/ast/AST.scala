@@ -15,7 +15,7 @@ case class Shape(shapeName: ShapeVar, shapePrefix: String, action: ExpOrVar, pre
 sealed trait DeclarationStatement extends AST
 
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
-case class Source(name: Var, filePath: URL) extends DeclarationStatement
+case class Source(name: Var, path: IRI) extends DeclarationStatement
 case class Query(name: Var, queryClause: QueryClause) extends DeclarationStatement
 case class Iterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
@@ -35,6 +35,9 @@ sealed trait QueryClause extends VarResult {
 case class JsonPath(query: String) extends QueryClause
 case class XmlPath(query: String) extends QueryClause
 case class CSVPerRow(query: String) extends QueryClause
+sealed trait Sql extends QueryClause
+case class SqlQuery(query: String) extends Sql
+case class SqlColumn(query: String, column: String) extends Sql
 case class FieldQuery(query: String) extends QueryClause
 
 
@@ -76,7 +79,9 @@ sealed trait Iterators extends AST {
   def iterators: List[NestedIterator]
 }
 
-case class URL(url: String) extends VarResult
+sealed trait IRI extends VarResult
+case class URL(url: String) extends IRI
+case class JdbcURL(url: String) extends IRI
 case class ReplacedStrings(strings: List[String]) extends AST
 case class ComposedVariable(variables: List[Var]) extends AST
 case class MatcherList(matchers: List[Matcher]) extends AST

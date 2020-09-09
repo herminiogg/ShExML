@@ -17,7 +17,7 @@ import scala.collection.mutable
 /**
   * Created by herminio on 15/2/18.
   */
-class MappingLauncher {
+class MappingLauncher(val username: String = "", val password: String = "") {
 
   def launchMapping(mappingCode: String, lang: String): String = {
     val dataset = launchMapping(mappingCode)
@@ -70,7 +70,7 @@ class MappingLauncher {
 
   private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {
     val dataset = DatasetFactory.create()
-    new RDFGeneratorVisitor(dataset, varTable).doVisit(ast, null)
+    new RDFGeneratorVisitor(dataset, varTable, username, password).doVisit(ast, null)
     //val in = new ByteArrayInputStream(output.toString().getBytes)
     //val model = ModelFactory.createDefaultModel()
     //model.read(in, null, "TURTLE")
@@ -79,7 +79,7 @@ class MappingLauncher {
 
   private def generateResultingRML(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {
     val output = DatasetFactory.create()
-    new RMLGeneratorVisitor(output, varTable).visit(ast, null)
+    new RMLGeneratorVisitor(output, varTable, username, password).visit(ast, null)
     output
   }
 
