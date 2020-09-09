@@ -10,20 +10,24 @@ class FilmsMySQLTest extends FunSuite with Matchers with RDFStatementCreator {
       |PREFIX : <http://example.com/>
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
+      |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
       |SOURCE films_database <jdbc:mysql://localhost:3306/films>
       |ITERATOR films_iterator <sql: SELECT * FROM films;> {
       |    FIELD id <id>
       |    FIELD name <name>
       |    FIELD year <year>
       |    FIELD country <country>
+      |    FIELD director <director>
       |}
       |
       |EXPRESSION films <films_database.films_iterator>
       |
       |:Films :[films.id] {
-      |    schema:name [films.name] ;
-      |    :year dbr:[films.year] ;
-      |    schema:country dbr:[films.country] ;
+      |    :type :Film ;
+      |    :name [films.name] @en ;
+      |    :year [films.year] xs:gYear ;
+      |    :country [films.country] ;
+      |    :director [films.director] ;
       |}
     """.stripMargin
 
