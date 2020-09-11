@@ -86,14 +86,19 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case SqlQuery(query) => {
               val dbSubjectID = mapPrefix + "db_" + dbIndex.next()
               val datasource = List(
+                createStatementWithLiteral(dbSubjectID, rdfPrefix + "type", d2rqPrefix + "Database"),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].url)),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDSN", source.asInstanceOf[JdbcURL].url),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "username", username),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "password", password)
                 // user and password to be inputted here
               )
               val logicalSource = List(
                 createStatement(logicalSourceName, rdfPrefix + "type", rmlPrefix + "LogicalSource"),
-                createStatementWithLiteral(logicalSourceName, rmlPrefix + "SQLQuery", query),
+                createStatementWithLiteral(logicalSourceName, rmlPrefix + "query", query),
                 createStatement(logicalSourceName, rmlPrefix + "source", dbSubjectID),
+                createStatement(logicalSourceName, rmlPrefix + "referenceFormulation", qlPrefix + "CSV"),
+                createStatement(logicalSourceName, rrPrefix + "sqlVersion", rrPrefix + "SQL2008")
               )
               logicalSource ::: datasource
             }

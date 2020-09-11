@@ -7,6 +7,7 @@ ITERATOR films_iterator <sql: SELECT * FROM films;> {
     FIELD name <name>
     FIELD year <year>
     FIELD country <country>
+    FIELD director <director>
 }
 
 EXPRESSION films <films_database.films_iterator>
@@ -15,4 +16,5 @@ EXPRESSION films <films_database.films_iterator>
     schema:name [films.name] ;
     :year dbr:[films.year] ;
     schema:country dbr:[films.country] ;
+    :director [films.director] ;
 }

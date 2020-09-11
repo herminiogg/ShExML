@@ -5,7 +5,7 @@ trait JdbcDriverRegistry {
   val jdbcDrivers = Map(
     "jdbc:sqlite" -> "org.sqlite.JDBC",
     "jdbc:oracle" -> "oracle.jdbc.OracleDriver",
-    "jdbc:mysql" -> "com.mysql.jdbc.Driver",
+    "jdbc:mysql" -> "com.mysql.cj.jdbc.Driver",
     "jdbc:postgresql" -> "org.postgresql.Driver",
     "jdbc:sqlserver" -> "com.microsoft.sqlserver.jdbc.SQLServerDriver",
     "jdbc:mariadb" -> "org.mariadb.jdbc.Driver",
