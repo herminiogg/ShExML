@@ -9,7 +9,7 @@ options{tokenVocab=ShExMLLexer;}
 shExML: decl* (shape | graph)* ;
 decl: (source | prefix | query | expression | matcher | iterator | autoincrement) ;
 prefix: PREFIX variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
-source: SOURCE variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
+source: SOURCE variable LESS_SYMBOL_QUERY (URL | JDBC_URL) GREATER_SYMBOL_QUERY ;
 iterator: ITERATOR variable LESS_SYMBOL_QUERY queryClause GREATER_SYMBOL_QUERY '{' field+ nestedIterator* '}' ;
 nestedIterator: ITERATOR variable LESS_SYMBOL_QUERY QUERY_PART GREATER_SYMBOL_QUERY '{' field+ nestedIterator* '}' ;
 field: FIELD variable LESS_SYMBOL_QUERY QUERY_PART GREATER_SYMBOL_QUERY ;
@@ -26,7 +26,7 @@ exp: union | join | stringOperation | iteratorQuery ;
 stringOperation: iteratorQuery ADD STRINGOPERATOR ADD iteratorQuery ;
 iteratorQuery: variable '.' composedVariable ;
 composedVariable: variable | variable '.' composedVariable ;
-queryClause: JSONPATH QUERY_PART | XMLPATH QUERY_PART | CSVPERROW ;
+queryClause: JSONPATH QUERY_PART | XMLPATH QUERY_PART | CSVPERROW | SQL QUERY_PART+ ;
 join: iteratorQuery UNION iteratorQuery JOIN iteratorQuery ;
 union: leftUnionOption UNION rightUnionOption ;
 leftUnionOption: iteratorQuery | stringOperation ;

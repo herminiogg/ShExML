@@ -45,6 +45,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
       case x: XmlPath => x
       case j: JsonPath => j
       case c: CSVPerRow => c
+      case s: Sql => s
     }
     val newOptionalArgument = Map(
       "variable" -> iteratorName,
