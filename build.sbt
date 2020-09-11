@@ -34,6 +34,12 @@ libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.32.3.2"
 
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.21"
 
+libraryDependencies += "org.postgresql" % "postgresql" % "42.2.16"
+
+libraryDependencies += "org.mariadb.jdbc" % "mariadb-java-client" % "2.6.2"
+
+libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "8.4.1.jre8"
+
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case x => MergeStrategy.first
