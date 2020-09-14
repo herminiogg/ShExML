@@ -1,62 +1,20 @@
 PREFIX : <http://example.com/>
 PREFIX dbr: <http://dbpedia.org/resource/>
 PREFIX schema: <http://schema.org/>
-SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/enhancement-%237/src/test/resources/filmsExpanded.xml>
-SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/enhancement-%237/src/test/resources/filmsExpanded.json>
-ITERATOR film_xml <xpath: //film> {
-    FIELD id <@id>
-    FIELD name <name>
-    FIELD year <year>
-    FIELD country <country>
-    FIELD directors <crew/directors/director>
-    FIELD screenwritters <crew//screenwritter>
-    FIELD music <crew/music>
-    FIELD photography <crew/photography>
-    ITERATOR actors <cast/actor> {
-        FIELD name <name>
-        FIELD role <role>
-        FIELD film <../../@id>
-    }
-    ITERATOR actresses <cast/actress> {
-        FIELD name <name>
-        FIELD role <role>
-        FIELD film <../../@id>
-    }
-}
-ITERATOR film_json <jsonpath: $.films[*]> {
+SOURCE films_database <jdbc:mysql://localhost:3306/films>
+ITERATOR films_iterator <sql: SELECT * FROM films;> {
     FIELD id <id>
     FIELD name <name>
     FIELD year <year>
     FIELD country <country>
-    FIELD directors <crew.director>
-    FIELD screenwritters <crew.screenwritter>
-    FIELD music <crew.music>
-    FIELD photography <crew.cinematography>
-    ITERATOR actors <cast[*]> {
-        FIELD name <name>
-        FIELD role <role>
-    }
+    FIELD director <director>
 }
-EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
+
+EXPRESSION films <films_database.films_iterator>
 
 :Films :[films.id] {
     schema:name [films.name] ;
     :year dbr:[films.year] ;
-    schema:2232-22 dbr:[films.country] ;
-    schema:director dbr:[films.directors] ;
-    :screenwritter dbr:[films.screenwritters] ;
-    schema:musicBy dbr:[films.music] ;
-    :cinematographer dbr:[films.photography] ;
-    schema:actor @:Actor ;
-    schema:actor @:Actress ;
-}
-
-:Actor dbr:[films.actors.name] {
-    :name [films.actors.name] ;
-    :appear_on :[films.actors.film] ;
-}
-
-:Actress dbr:[films.actresses.name] {
-    :name [films.actresses.name] ;
-    :appear_on :[films.actresses.film] ;
+    schema:country dbr:[films.country] ;
+    :director [films.director] ;
 }

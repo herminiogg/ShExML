@@ -9,14 +9,17 @@ abstract class DefaultUnitVisitor {
 
   def visit(ast: AST): Unit = ast match {
 
-    case ShExML(declarations, shapes) => {
+    case ShExML(declarations, graphs, shapes) => {
       declarations.foreach(doVisit)
+      graphs.foreach(doVisit)
       shapes.foreach(doVisit)
     }
 
     case Declaration(declarationStatement) => doVisit(declarationStatement)
 
-    case Shape(shapeName, _, action, predicateObjects) => {
+    case Graph(_, shapes) => shapes.foreach(doVisit)
+
+    case Shape(shapeName, _, action, predicateObjects, _) => {
       doVisit(shapeName)
       doVisit(action)
       predicateObjects.foreach(doVisit)

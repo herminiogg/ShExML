@@ -35,15 +35,21 @@ class Main extends Callable[Int] {
   @Option(names = Array("-m", "--mapping"), required = true, description = Array("Path to the file with the mappings"))
   private var file: String = ""
 
+  @Option(names = Array("-u", "--username"), description = Array("Username in case of using a database"))
+  private var username: String = ""
+
+  @Option(names = Array("-p", "--password"), description = Array("Password in case of using a database"))
+  private var password: String = ""
+
   override def call(): Int = {
     val fileHandler = scala.io.Source.fromFile(file)
     try {
       val fileContent = fileHandler.mkString
       val outputContent = if(rmlOutput) {
-        val mappingLauncher = new MappingLauncher()
+        val mappingLauncher = new MappingLauncher(username, password)
         mappingLauncher.launchRMLTranslation(fileContent)
       } else {
-        val mappingLauncher = new MappingLauncher()
+        val mappingLauncher = new MappingLauncher(username, password)
         mappingLauncher.launchMapping(fileContent, format)
       }
       if(output.isEmpty) println(outputContent) else {

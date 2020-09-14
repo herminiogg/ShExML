@@ -1,10 +1,9 @@
-package es.weso.shexml.rml
+package es.weso.shexml
 
-import es.weso.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.scalatest.{FunSuite, Matchers}
 
-class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with Matchers with RDFStatementCreator {
 
   private val example =
     """
@@ -13,6 +12,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
       |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
       |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
       |SOURCE films_csv_file <https://rawgit.com/herminiogg/ShExML/enhancement-%239/src/test/resources/films.csv>
+      |SOURCE films_db_connection <jdbc:sqlite:src/test/resources/films.sqlite>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD id <@id>
       |    FIELD name <name>
@@ -34,7 +34,15 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
       |    FIELD country <country>
       |    FIELD directors <director>
       |}
-      |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json UNION films_csv_file.film_csv>
+      |ITERATOR film_db <sql: SELECT * FROM films;> {
+      |    FIELD id <id>
+      |    FIELD name <name>
+      |    FIELD year <year>
+      |    FIELD country <country>
+      |    FIELD directors <director>
+      |}
+      |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json UNION films_csv_file.film_csv
+      |               UNION films_db_connection.film_db>
       |
       |:Films :[films.id] {
       |    :type :Film ;
@@ -46,9 +54,8 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
     """.stripMargin
 
   private val mappingLauncher = new MappingLauncher()
-  private val result = mappingLauncher.launchRMLTranslation(example)
+  private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
-  private val output = doTranslation(result, prefix).getDefaultModel
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))
@@ -98,6 +105,22 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
     assert(output.contains(createStatementWithLiteral(prefix, "6", "year", "2002", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "6", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "6", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
+  }
+
+  test("Shape 8 is translated correctly") {
+    assert(output.contains(createStatement(prefix, "8", "type", "Film")))
+    assert(output.contains(createStatementWithLiteral(prefix, "8", "name", "Tenet", "en")))
+    assert(output.contains(createStatementWithLiteral(prefix, "8", "year", "2020", XSDDatatype.XSDgYear)))
+    assert(output.contains(createStatementWithLiteral(prefix, "8", "country", "UK", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "8", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
+  }
+
+  test("Shape 9 is translated correctly") {
+    assert(output.contains(createStatement(prefix, "9", "type", "Film")))
+    assert(output.contains(createStatementWithLiteral(prefix, "9", "name", "Batman Begins", "en")))
+    assert(output.contains(createStatementWithLiteral(prefix, "9", "year", "2005", XSDDatatype.XSDgYear)))
+    assert(output.contains(createStatementWithLiteral(prefix, "9", "country", "USA", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "9", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
   }
 
 }

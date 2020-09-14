@@ -1,5 +1,6 @@
 package es.weso.visitor
 import java.io.{File, StringReader}
+import java.sql.DriverManager
 import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -12,27 +13,31 @@ import scala.collection.mutable
 import kantan.xpath.implicits._
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.apache.jena.rdf.model.{AnonId, Model, ModelFactory, ResourceFactory, Statement}
+import org.apache.jena.query.Dataset
+import org.apache.jena.rdf.model.{AnonId, Model, ModelFactory, Resource, ResourceFactory, Statement}
 
 import scala.util.Try
 
 /**
   * Created by herminio on 26/12/17.
   */
-class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Any, Any] {
+class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], username: String, password: String)
+  extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
   protected val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
-    case ShExML(declarations, shapes) => {
+    case ShExML(declarations, graphs, shapes) => {
       declarations.foreach(doVisit(_, optionalArgument))
+      val firstGraph = graphs.map(doVisit(_, optionalArgument)).headOption
       val linkedShapes = shapes.flatMap(_.predicateObjects.flatMap(_.objectOrShapeLink match {
         case ShapeLink(shapeVar) => List(shapeVar)
         case _ => List()
       }))
-      shapes.filterNot(s => linkedShapes.contains(s.shapeName)).map(doVisit(_, optionalArgument)).head
+      val firstShape = shapes.filterNot(s => linkedShapes.contains(s.shapeName)).map(doVisit(_, optionalArgument)).headOption
+      if(firstShape.isEmpty) firstGraph.get
     }
 
     case Declaration(declarationStatement) => {
@@ -42,10 +47,16 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
     case Prefix(variable, url) => {
       prefixTable += ((variable.name, url.url))
-      output.setNsPrefix(variable.name.replace(":", ""), url.url)
+      dataset.getDefaultModel.setNsPrefix(variable.name.replace(":", ""), url.url)
     }
 
-    case Shape(shapeName, shapePrefix, action, predicateObjects) => {
+    case Graph(graphName, shapes) => {
+      shapes.map(doVisit(_, optionalArgument))
+    }
+
+    case Shape(shapeName, shapePrefix, action, predicateObjects, holdingGraph) => {
+      val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
+      val output = if(holdingGraph.isEmpty) dataset.getDefaultModel else dataset.getNamedModel(graphName)
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
       val finalActions = for(a <- actions) yield {
@@ -194,7 +205,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
         val fileMap = Map("fileContent" -> fileContent)
         val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
         val varList = iteratorQueryToList(i)
-        if (varTable(varList.head).isInstanceOf[URL] && varList.size == 2) {
+        if (varTable(varList.head).isInstanceOf[IRI] && varList.size == 2) {
           val iteratorName = varList.tail.head.name
           val values = varTable.keys.filter {
             case Var(name) => name.contains(iteratorName)
@@ -308,24 +319,30 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     else
       List(new SourceHelper().getURLContent(url))
 
+    case JdbcURL(url) => List(url)
+
     case default => visit(default, optionalArgument)
+  }
+
+  protected def createGraph(statement: Statement): Resource = {
+    ResourceFactory.createStmtResource(statement)
   }
 
   protected def createStatement(s: String, p: String, o: String): Statement = {
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
     val obj = if(o.contains("_:"))
-      output.createResource(new AnonId(o.replace("_:", "")))
+      dataset.getDefaultModel.createResource(new AnonId(o.replace("_:", "")))
       else ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
   protected def createBNodeStatement(s: String, p: String, o: String): Statement = {
     val anonID = new AnonId(s)
-    val subject = output.createResource(anonID)
+    val subject = dataset.getDefaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
     val obj = if(o.contains("_:"))
-      output.createResource(new AnonId(o.replace("_:", "")))
+      dataset.getDefaultModel.createResource(new AnonId(o.replace("_:", "")))
       else ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
@@ -343,7 +360,7 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
 
   protected def createBNodeStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None, langTag: Option[String] = None): Statement = {
     val anonID = new AnonId(s)
-    val subject = output.createResource(anonID)
+    val subject = dataset.getDefaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
     val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
       .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
@@ -414,10 +431,12 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
       case j: JsonPath => JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
       case xp: XmlPath => XmlPath(xp.query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
       case csv: CSVPerRow => CSVPerRow(generateFinalQuery(xs, context + x.name + ".", csv).query)
+      case sql: Sql => SqlColumn(sql.query, generateFinalQuery(xs, context + x.name + ".", sql).query)
       case FieldQuery(query) => rootQuery match {
         case j: JsonPath => JsonPath(query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
         case xp: XmlPath => XmlPath(query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
         case csv: CSVPerRow => CSVPerRow(query)
+        case sql: Sql => SqlColumn(rootQuery.query, query)
       }
     }
   }
@@ -454,16 +473,40 @@ class RDFGeneratorVisitor(output: Model, varTable: mutable.HashMap[Variable, Var
     }
   }
 
-  protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContent: String): List[Result] = {
+  protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContentOrURL: String): List[Result] = {
     val query = generateFinalQuery(iteratorVars, "", null)
-    if(query.isInstanceOf[CSVPerRow]) doPerRowResults(query, fileContent)
-    else {
-      val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
-      val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContent)
-      queries.map(q => doVisit(q.query, middleArguments.+(
-        "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
-        .filter(_.results.nonEmpty)
+    query match {
+      case c: CSVPerRow => doPerRowResults(c, fileContentOrURL)
+      case s: SqlColumn => doSqlResults(s, fileContentOrURL)
+      case _ => {
+        val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
+        val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContentOrURL)
+        queries.map(q => doVisit(q.query, middleArguments.+(
+          "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
+          .filter(_.results.nonEmpty)
+      }
     }
+  }
+
+  private def doSqlResults(query: SqlColumn, dbURLConnection: String): List[Result] = {
+    val connection = connectToDB(dbURLConnection)
+    val statement = connection.prepareStatement(query.query)
+    val resultSet = statement.executeQuery()
+    val results = mutable.MutableList[String]()
+    while(resultSet.next()) {
+      results += resultSet.getString(query.column)
+    }
+    val composedResults = for (i <- results.indices) yield {
+      val id = (query.query + i).hashCode.toString
+      Result(id, List(id), List(results(i)), None, None)
+    }
+    connection.close()
+    composedResults.toList
+  }
+
+  private def connectToDB(dbURL: String) = {
+    Class.forName(lookForJdbcDriver(dbURL))
+    DriverManager.getConnection(dbURL, username, password)
   }
 
   private def doPerRowResults(query: QueryClause, fileContent: String): List[Result] = {

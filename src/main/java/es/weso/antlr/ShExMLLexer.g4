@@ -19,7 +19,9 @@ MATCHING: M A T C H I N G ;
 LESS_SYMBOL: '<' ;
 GREATER_SYMBOL: '>' ;
 BRACKET_LEFT: '[' ;
+DOUBLE_BRACKET_LEFT: '[[' ;
 BRACKET_RIGHT: ']' ;
+DOUBLE_BRACKET_RIGHT: ']]' ;
 PAREN_LEFT: '(' ;
 PAREN_RIGHT: ')' ;
 BRACE_LEFT: '{' ;
@@ -42,9 +44,11 @@ WS: [ \t\n\r] -> skip ;
 
 mode QUERY_CONTENT ;
 URL: ('http' | 'https' | 'file') '://' (LETTER | DIGIT | ALLOWED_CHARACTERS)* ;
+JDBC_URL: 'jdbc:' (LETTER | DIGIT)+ ':' (LETTER | DIGIT | ALLOWED_CHARACTERS)* ;
 JSONPATH: J S O N P A T H ':' ;
 XMLPATH: X P A T H ':' ;
 CSVPERROW: C S V P E R R O W ;
+SQL: S Q L ':' ;
 QUERY_PART: (LETTER | DIGIT | ALLOWED_CHARACTERS)+ ;
 GREATER_SYMBOL_QUERY: '>' -> mode(DEFAULT_MODE) ;
 WS_QUERY: [ \t\n\r] -> skip ;
@@ -77,7 +81,7 @@ fragment ALLOWEDTYPES: ('string' | 'boolean' | 'decimal' | 'integer' | 'double' 
     | 'nonPositiveInteger' | 'hexBinary' | 'base64Binary' | 'anyURI' | 'language' | 'normalizedString' | 'token'
     | 'NMTOKEN' | 'Name' | 'NCName') ;
 fragment ALLOWED_CHARACTERS: '[' | ']' | '*' | '_' | '/' | '\\' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
-        | '?' | '=' | '&' | '#' | '$' | ':' | '^' | '\'' ;
+        | '?' | '=' | '&' | '#' | '$' | ':' | '^' | '\'' | ';' ;
 fragment B:('b'|'B');
 fragment C:('c'|'C');
 fragment D:('d'|'D');

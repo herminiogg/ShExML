@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.7.2
+// Generated from ShExMLParser.g4 by ANTLR 4.8
 
 package es.weso.antlr;
 
@@ -167,6 +167,13 @@ public class ShExMLParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> impl
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public T visitRightUnionOption(ShExMLParser.RightUnionOptionContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitGraph(ShExMLParser.GraphContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.7.2
+// Generated from ShExMLParser.g4 by ANTLR 4.8
 
 package es.weso.antlr;
 
@@ -277,6 +277,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitRightUnionOption(ShExMLParser.RightUnionOptionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterGraph(ShExMLParser.GraphContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitGraph(ShExMLParser.GraphContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.7.2
+// Generated from ShExMLParser.g4 by ANTLR 4.8
 
 package es.weso.antlr;
 
@@ -144,6 +144,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitRightUnionOption(ShExMLParser.RightUnionOptionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#graph}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGraph(ShExMLParser.GraphContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#shape}.
 	 * @param ctx the parse tree

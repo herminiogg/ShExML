@@ -17,8 +17,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitShExML(ctx: ShExMLContext): AST = {
     val declarations = ctx.decl().asScala.map(visit(_).asInstanceOf[Declaration]).toList
+    val graphs = ctx.graph().asScala.map(visit(_).asInstanceOf[Graph]).toList
     val shapes = ctx.shape().asScala.map(visit(_).asInstanceOf[Shape]).toList
-    ShExML(declarations, shapes)
+    ShExML(declarations, graphs, shapes)
   }
 
   override def visitDecl(ctx: DeclContext): AST = {
@@ -33,7 +34,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitSource(ctx: SourceContext): AST = {
-    val url = URL(ctx.URL().getText)
+    val url = if(ctx.URL != null) URL(ctx.URL().getText) else JdbcURL(ctx.JDBC_URL().getText)
     val name = createVar(ctx.variable())
     Source(name, url)
   }
@@ -45,8 +46,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitQueryClause(ctx: QueryClauseContext): AST = {
-    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART().getText)
-    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART().getText)
+    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART(0).getText)
+    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART(0).getText)
+    else if(ctx.SQL() != null) SqlQuery(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "))
     else CSVPerRow("")
   }
 
@@ -166,12 +168,21 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     if(otherVariables != null) IteratorQuery(variable, otherVariables) else variable
   }
 
+  override def visitGraph(ctx: GraphContext): AST = {
+    val graphName = createGraphVar(ctx.literalValue)
+    val shapes = ctx.shape().asScala.map(visit(_).asInstanceOf[Shape]).toList
+    val dummyGraph = Graph(graphName, Nil)
+    val graphShapes = shapes.map(s =>
+      Shape(s.shapeName, s.shapePrefix, s.action, s.predicateObjects, Some(dummyGraph)))
+    Graph(graphName, graphShapes)
+  }
+
   override def visitShape(ctx: ShapeContext): AST = {
     val shapeName = createShapeVar(ctx.tripleElement)
     val shapePrefix = ctx.prefixVar().getText
     val action = if(ctx.exp() == null) createVar(ctx.variable()) else visit(ctx.exp()).asInstanceOf[Exp]
     val predicateObjects = ctx.predicateObject().asScala.map(visit(_).asInstanceOf[PredicateObject]).toList
-    Shape(shapeName, shapePrefix, action, predicateObjects)
+    Shape(shapeName, shapePrefix, action, predicateObjects, None)
   }
 
   override def visitPredicateObject(ctx: PredicateObjectContext): AST = {
@@ -226,6 +237,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   def createShapeVar(tripleElementContext: TripleElementContext): ShapeVar = {
     ShapeVar(tripleElementContext.getText.replaceAll("\\\\.|%2E", "."))
+  }
+
+  def createGraphVar(literalValueContext: LiteralValueContext): GraphVar = {
+    GraphVar(literalValueContext.prefixVar().getText,
+      literalValueContext.variable().getText.replaceAll("\\\\.|%2E", "."))
   }
 
   def getDeclarationContent(content: String): String = content.replaceAll("<>", "")
