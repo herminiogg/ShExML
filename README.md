@@ -37,19 +37,39 @@ sources to the files, iterators and fields (queries) to be applied over the file
 Then, the shapes are defined as in ShEx but using the previously defined expressions or composing them inside the
 square brackets. More complex example can be seen under the ````films.shexml```` file.
 
+## Features
+* XML support (using XPath queries)
+* JSON support (using JSONPath queries)
+* CSV and TSV support
+* Relational databases, with following included drivers
+    + MySQL
+    + SQLite
+    + PostgreSQL
+    + MariaDB
+    + SQLServer
+* Matchers
+* Joins
+* Named graphs
+* Autoincrement ids
+
 ## Usage
 
 ### CLI
 A command line interface is offered under the jar library with the following options available:
 ```
-Usage: ShExML [-hrV] [-f=<format>] -m=<file> [-o=<output>]
+Usage: ShExML [-hrV] [-f=<format>] -m=<file> [-o=<output>] [-p=<password>]
+              [-u=<username>]
 Map and merge heterogeneous data sources with a Shape Expressions based syntax
   -f, --format=<format>   Output format for RDF graph. Turtle, RDF/XML,
                             N-Triples, ...
   -h, --help              Show this help message and exit.
   -m, --mapping=<file>    Path to the file with the mappings
   -o, --output=<output>   Path where the output file should be created
+  -p, --password=<password>
+                          Password in case of using a database
   -r, --rml               Generate RML output
+  -u, --username=<username>
+                          Username in case of using a database
   -V, --version           Print version information and exit.
 ```
 Therefore, to execute the films example: ```java -jar shexml.jar -m films.shexml```
