@@ -1,5 +1,6 @@
-package es.weso.visitor
-import es.weso.ast._
+package es.weso.shexml.visitor
+
+import es.weso.shexml.ast.{AST, CSVPerRow, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, ObjectElement, Predicate, PredicateObject, QueryClause, Shape, ShapeVar, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.{Model, Statement}
 

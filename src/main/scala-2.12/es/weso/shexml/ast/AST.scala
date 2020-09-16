@@ -1,5 +1,4 @@
-package es.weso.ast
-
+package es.weso.shexml.ast
 
 /**
   * Created by herminio on 20/12/17.

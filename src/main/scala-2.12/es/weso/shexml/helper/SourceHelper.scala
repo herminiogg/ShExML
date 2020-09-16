@@ -1,4 +1,4 @@
-package es.weso.helper
+package es.weso.shexml.helper
 
 /**
   * Created by herminio on 21/2/18.
