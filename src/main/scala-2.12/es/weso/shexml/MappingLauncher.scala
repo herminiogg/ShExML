@@ -1,17 +1,15 @@
 package es.weso.shexml
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.io.ByteArrayOutputStream
 
-import es.weso.antlr.{ShExMLLexer, ShExMLParser}
-import es.weso.ast._
-import es.weso.parser.ASTCreatorVisitor
-import es.weso.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
+import es.weso.shexml.antlr.{ShExMLLexer, ShExMLParser}
+import es.weso.shexml.ast._
+import es.weso.shexml.parser.ASTCreatorVisitor
+import es.weso.shexml.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
-import org.apache.jena.rdf.model.{Model, ModelFactory}
-import org.apache.jena.riot.{Lang, RDFDataMgr, RDFLanguages}
+import org.apache.jena.riot.{RDFDataMgr, RDFLanguages}
 
-import collection.JavaConverters._
 import scala.collection.mutable
 
 /**

@@ -1,7 +1,7 @@
 lexer grammar ShExMLLexer;
 
 @header {
-package es.weso.antlr;
+package es.weso.shexml.antlr;
 }
 
 PREFIX: P R E F I X -> mode(DECLARATION_CONTENT) ;

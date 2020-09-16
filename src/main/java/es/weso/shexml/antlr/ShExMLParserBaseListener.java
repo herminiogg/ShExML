@@ -1,6 +1,6 @@
 // Generated from ShExMLParser.g4 by ANTLR 4.8
 
-package es.weso.antlr;
+package es.weso.shexml.antlr;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;

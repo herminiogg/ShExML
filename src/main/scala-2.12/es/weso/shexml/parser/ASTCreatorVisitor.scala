@@ -1,12 +1,10 @@
-package es.weso.parser
+package es.weso.shexml.parser
 
-import es.weso.antlr.ShExMLParserBaseVisitor
-import es.weso.antlr.ShExMLParser._
-import es.weso.ast._
-import es.weso.ast.URL
-import org.antlr.v4.runtime.tree.TerminalNode
-
+import es.weso.shexml.antlr.ShExMLParser._
 import scala.collection.JavaConverters._
+import es.weso.shexml.antlr.ShExMLParserBaseVisitor
+import es.weso.shexml.ast._
+import es.weso.shexml.ast.URL
 import scala.util.Try
 
 

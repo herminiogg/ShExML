@@ -1,12 +1,14 @@
-package es.weso.visitor
+package es.weso.shexml.visitor
+
 import java.io.{File, StringReader}
 import java.sql.DriverManager
 import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import es.weso.ast._
-import es.weso.helper.SourceHelper
+import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.helper.SourceHelper
+import es.weso.shexml.visitor
 import kantan.xpath.XPathCompiler
 
 import scala.collection.mutable
@@ -100,7 +102,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             Result(result.id, result.rootIds, results, result.dataType, result.langTag)
           })
           case ResultAutoIncrement(iterator, _, namespace, dataType, langTag) =>
-            ResultAutoIncrement(iterator, predicateResult.toString, namespace, dataType, langTag)
+            visitor.ResultAutoIncrement(iterator, predicateResult.toString, namespace, dataType, langTag)
         }
       else Nil
     }
@@ -128,7 +130,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           Result(result.id, result.rootIds, newResults, dataType, langTag)
         })
         case ResultAutoIncrement(iterator, predicate, _, _, _) =>
-          ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), dataType, langTag)
+          visitor.ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), dataType, langTag)
         case _ => result
       }
     }
@@ -290,7 +292,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case Matchers(_, matchers) => {
       val listToMatch = optionalArgument.asInstanceOf[List[Result]]
-      listToMatch.map(r => Result(r.id, r.rootIds, r.results.map(s => {
+      listToMatch.map(r => visitor.Result(r.id, r.rootIds, r.results.map(s => {
         matchers.matchers.foldLeft(s)((value, matcher) => doVisit(matcher, value).asInstanceOf[String])
       }), r.dataType, r.langTag))
     }
@@ -535,7 +537,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val colon = fileContent.count(_.equals(':'))
     val at = fileContent.count(_.equals('@'))
     val sharp = fileContent.count(_.equals('#'))
-    val map = Map(',' -> comma, ';' -> semicolon, '.' -> dot, ':' -> colon, '@' -> at, '#' -> sharp)
+    val tab = fileContent.count(_.equals('\t'))
+    val map = Map(',' -> comma, ';' -> semicolon, '.' -> dot, ':' -> colon, '@' -> at, '#' -> sharp, '\t' -> tab)
     map.foldLeft(',')((greater, count) => if(map(greater) < count._2) count._1 else greater)
   }
 
