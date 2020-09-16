@@ -537,7 +537,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val colon = fileContent.count(_.equals(':'))
     val at = fileContent.count(_.equals('@'))
     val sharp = fileContent.count(_.equals('#'))
-    val map = Map(',' -> comma, ';' -> semicolon, '.' -> dot, ':' -> colon, '@' -> at, '#' -> sharp)
+    val tab = fileContent.count(_.equals('\t'))
+    val map = Map(',' -> comma, ';' -> semicolon, '.' -> dot, ':' -> colon, '@' -> at, '#' -> sharp, '\t' -> tab)
     map.foldLeft(',')((greater, count) => if(map(greater) < count._2) count._1 else greater)
   }
 
