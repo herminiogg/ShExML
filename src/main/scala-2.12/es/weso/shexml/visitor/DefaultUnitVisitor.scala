@@ -1,6 +1,6 @@
-package es.weso.visitor
+package es.weso.shexml.visitor
 
-import es.weso.ast._
+import es.weso.shexml.ast.{AST, Declaration, Expression, Graph, Join, ObjectElement, PredicateObject, Query, ShExML, Shape, StringOperation, Union}
 
 /**
   * Created by herminio on 22/12/17.

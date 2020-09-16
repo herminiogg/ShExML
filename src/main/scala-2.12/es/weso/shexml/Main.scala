@@ -1,11 +1,10 @@
-package es.weso.main
+package es.weso.shexml
 
 import java.io.{File, PrintWriter}
 import java.util.concurrent.Callable
 
-import es.weso.shexml.MappingLauncher
 import picocli.CommandLine
-import picocli.CommandLine.{Command, Option, Parameters}
+import picocli.CommandLine.{Command, Option}
 
 /**
   * Created by herminio on 22/12/17.
@@ -18,7 +17,7 @@ object Main {
 
 }
 
-@Command(name = "ShExML", version = Array("v0.2.1"),
+@Command(name = "ShExML", version = Array("v0.2.2"),
   mixinStandardHelpOptions = true,
   description = Array("Map and merge heterogeneous data sources with a Shape Expressions based syntax"))
 class Main extends Callable[Int] {

@@ -1,7 +1,7 @@
 parser grammar ShExMLParser;
 
 @header {
-package es.weso.antlr;
+package es.weso.shexml.antlr;
 }
 
 options{tokenVocab=ShExMLLexer;}

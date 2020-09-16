@@ -1,6 +1,6 @@
-package es.weso.visitor
+package es.weso.shexml.visitor
 
-import es.weso.ast._
+import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Expression, Field, FieldQuery, Graph, Iterator, JsonPath, Matchers, NestedIterator, Prefix, Query, QueryClause, Shape, Source, Sql, Var, VarResult, Variable, XmlPath}
 
 import scala.collection.mutable
 

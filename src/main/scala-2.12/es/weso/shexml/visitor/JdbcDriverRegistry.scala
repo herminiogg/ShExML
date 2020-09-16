@@ -1,4 +1,4 @@
-package es.weso.visitor
+package es.weso.shexml.visitor
 
 trait JdbcDriverRegistry {
 
