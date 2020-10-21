@@ -1,6 +1,6 @@
 package es.weso.shexml.visitor
 
-import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Expression, Field, FieldQuery, Graph, Iterator, JsonPath, Matchers, NestedIterator, Prefix, Query, QueryClause, Shape, Source, Sql, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Expression, Field, FieldQuery, Graph, Iterator, JsonPath, Matchers, NestedIterator, Prefix, Query, QueryClause, QueryOrVar, Shape, Source, Sql, Var, VarResult, Variable, XmlPath}
 
 import scala.collection.mutable
 
@@ -30,7 +30,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     case default => super.visit(default, optionalArgument)
   }
 
-  def registerIterator(name: Var, value: QueryClause, fields: List[Field], iterators: List[NestedIterator], optionalArgument: Map[String, Any]) {
+  def registerIterator(name: Var, value: QueryOrVar, fields: List[Field], iterators: List[NestedIterator], optionalArgument: Map[String, Any]) {
     val iteratorName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable") + "." + name.name
     val finalValue = value match {
       case FieldQuery(query) => optionalArgument("type") match {
@@ -46,6 +46,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
       case j: JsonPath => j
       case c: CSVPerRow => c
       case s: Sql => s
+      case v: Var => getQueryFromVarTable(v)
     }
     val newOptionalArgument = Map(
       "variable" -> iteratorName,
@@ -53,6 +54,10 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     )
     fields.foreach(doVisit(_, newOptionalArgument))
     iterators.foreach(doVisit(_, newOptionalArgument))
+  }
+
+  private def getQueryFromVarTable(variable: Var): QueryClause = {
+    new QuerySearcher(variableMap).getQueryFromVarTable(variable)
   }
 
   override def doVisitDefault(): Unit = ???

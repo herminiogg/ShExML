@@ -38,9 +38,13 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitQuery(ctx: QueryContext): AST = {
-    val queryClause = visit(ctx.queryClause()).asInstanceOf[QueryClause]
+    val queryOrURL: QueryOrURL = if (ctx.URL() != null) {
+      URL(ctx.URL().getText)
+    } else {
+      visitQueryClause(ctx.queryClause()).asInstanceOf[QueryClause]
+    }
     val name = createVar(ctx.variable())
-    Query(name, queryClause)
+    Query(name, queryOrURL)
   }
 
   override def visitQueryClause(ctx: QueryClauseContext): AST = {
@@ -130,7 +134,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitIterator(ctx: IteratorContext): AST = {
-    val query = visit(ctx.queryClause()).asInstanceOf[QueryClause]
+    val query: QueryOrVar = if(ctx.queryClause() != null) {
+      visit(ctx.queryClause()).asInstanceOf[QueryClause]
+    } else {
+      Var(ctx.QUERY_PART().getText)
+    }
     val variable = createVar(ctx.variable())
     val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
     val iterators = ctx.nestedIterator().listIterator().asScala.map(visit(_).asInstanceOf[NestedIterator])
