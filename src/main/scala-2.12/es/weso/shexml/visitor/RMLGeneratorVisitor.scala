@@ -74,13 +74,13 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           val iterator = composedVar match {
             case IteratorQuery(iteratorVar, _) =>
               if(varTable.get(iteratorVar).isDefined && iteratorVar.name.contains(".")) {
-                val query = transformNestedIterator(varTable(iteratorVar).asInstanceOf[QueryClause], iteratorVar)
-                val rootQuery = varTable(Var(iteratorVar.name.splitAt(iteratorVar.name.lastIndexOf("."))._1)).asInstanceOf[QueryClause]
+                val query = transformNestedIterator(getQueryFromVarTable(iteratorVar), iteratorVar)
+                val rootQuery = getQueryFromVarTable(Var(iteratorVar.name.splitAt(iteratorVar.name.lastIndexOf("."))._1))
                 mergeQueries(rootQuery, query)
               } else if(varTable.get(iteratorVar).isDefined)
-                transformNestedIterator(varTable(iteratorVar).asInstanceOf[QueryClause], iteratorVar)
+                transformNestedIterator(getQueryFromVarTable(iteratorVar), iteratorVar)
               else return RMLMap(Nil, Nil, Nil, Nil)
-            case v: Var => transformNestedIterator(varTable(v).asInstanceOf[QueryClause], v)
+            case v: Var => transformNestedIterator(getQueryFromVarTable(v), v)
           }
           val logicalSourceName = mapPrefix + composedVar.hashCode.abs
           val logicalSource = iterator match {
@@ -382,7 +382,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def transformNestedIterator(queryClause: QueryClause, v: Var): QueryClause = queryClause match {
-    case FieldQuery(query) => varTable(Var(v.name.split('.').head)) match {
+    case FieldQuery(query) => getQueryFromVarTable(Var(v.name.split('.').head)) match {
       case JsonPath(jsonQuery) => JsonPath(jsonQuery + "." + query)
       case XmlPath(xpathQuery) => XmlPath(xpathQuery + "/" + query)
       case CSVPerRow(_) => CSVPerRow(query)
@@ -403,22 +403,26 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     iteratorQuery.composedVar match {
       case i: IteratorQuery => {
         val accIteratorQueryClause = iteratorQueryClause match {
-          case JsonPath(_) => JsonPath(varTable(Var(precedentVar.name + "." + i.firstVar.name)).asInstanceOf[QueryClause].query + ".")
-          case XmlPath(_) => XmlPath(varTable(Var(precedentVar.name + "." + i.firstVar.name)).asInstanceOf[QueryClause].query + "/")
+          case JsonPath(_) => JsonPath(getQueryFromVarTable(Var(precedentVar.name + "." + i.firstVar.name)).query + ".")
+          case XmlPath(_) => XmlPath(getQueryFromVarTable(Var(precedentVar.name + "." + i.firstVar.name)).query + "/")
         }
         getNestedIteratorFieldQuery(i, Var(precedentVar.name + "." + i.firstVar.name), accIteratorQueryClause)
       }
       case v: Var => varTable.get(Var(precedentVar.name + "." + v.name)) match {
         case Some(value) => value match {
           case fq: FieldQuery => iteratorQueryClause match {
-            case JsonPath(_) => Some(FieldQuery(varTable(precedentVar).asInstanceOf[QueryClause].query + "." + fq.query))
-            case XmlPath(_) => Some(FieldQuery(varTable(precedentVar).asInstanceOf[QueryClause].query + "/" + fq.query))
+            case JsonPath(_) => Some(FieldQuery(getQueryFromVarTable(precedentVar).query + "." + fq.query))
+            case XmlPath(_) => Some(FieldQuery(getQueryFromVarTable(precedentVar).query + "/" + fq.query))
           }
           case _ => None
         }
         case None => None
       }
     }
+  }
+
+  private def getQueryFromVarTable(variable: Var): QueryClause = {
+    new QuerySearcher(varTable).getQueryFromVarTable(variable)
   }
 
 }
