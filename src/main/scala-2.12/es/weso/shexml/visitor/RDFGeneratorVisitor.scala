@@ -6,7 +6,7 @@ import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
 import es.weso.shexml.visitor
 import kantan.xpath.XPathCompiler
@@ -428,8 +428,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   })
 
   protected def generateFinalQuery(varList: List[Var], context: String, rootQuery: QueryClause): QueryClause = varList match {
-    case x :: Nil => varTable(Var(context + x.name)).asInstanceOf[QueryClause]
-    case x :: xs => varTable(Var(context + x.name)).asInstanceOf[QueryClause] match {
+    case x :: Nil => getQueryFromVarTable(Var(context + x.name))
+    case x :: xs => getQueryFromVarTable(Var(context + x.name)) match {
       case j: JsonPath => JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
       case xp: XmlPath => XmlPath(xp.query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
       case csv: CSVPerRow => CSVPerRow(generateFinalQuery(xs, context + x.name + ".", csv).query)
@@ -447,7 +447,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     case x :: Nil => val results = {
       precedentQueries.map(q => {
         val optionalXPathEnd = if(q.isEmpty) "[*]" else ""
-        varTable(Var(varContext + x.name)) match {
+        getQueryFromVarTable(Var(varContext + x.name)) match {
           case JsonPath(query) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
           case XmlPath(query) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + optionalXPathEnd)
           case FieldQuery(query) => rootQuery match {
@@ -459,7 +459,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
     results.map(r => ResultWithIteratorQuery(r._1.id, r._1.rootIds, r._1.results, r._2))
     case x :: xs => {
-      val queries = precedentQueries.map(q => varTable(Var(varContext + x.name)) match {
+      val queries = precedentQueries.map(q => getQueryFromVarTable(Var(varContext + x.name)) match {
         case JsonPath(query) => JsonPath(q + query)
         case XmlPath(query) => XmlPath(q + query + "[*]")
       })
@@ -612,6 +612,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       case ra: ResultAutoIncrement => ra.results.size == maxSize._1
     }
     filterList.head
+  }
+
+  private def getQueryFromVarTable(variable: Var): QueryClause = {
+    new QuerySearcher(varTable).getQueryFromVarTable(variable)
   }
 
   override def doVisitDefault(): Any = Nil

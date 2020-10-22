@@ -1,8 +1,9 @@
 PREFIX : <http://example.com/>
 PREFIX dbr: <http://dbpedia.org/resource/>
 PREFIX schema: <http://schema.org/>
+QUERY query_film <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%2363/src/test/resources/filmQuery.sql>
 SOURCE films_database <jdbc:mysql://localhost:3306/films>
-ITERATOR films_iterator <sql: SELECT * FROM films;> {
+ITERATOR films_iterator <query_film> {
     FIELD id <id>
     FIELD name <name>
     FIELD year <year>

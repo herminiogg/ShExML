@@ -66,6 +66,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterQuery(ShExMLParser.QueryContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitQuery(ShExMLParser.QueryContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterIterator(ShExMLParser.IteratorContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -97,18 +109,6 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitField(ShExMLParser.FieldContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterQuery(ShExMLParser.QueryContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitQuery(ShExMLParser.QueryContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
