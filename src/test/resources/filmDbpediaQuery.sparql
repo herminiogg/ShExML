@@ -5,7 +5,6 @@ PREFIX dbr: <http://dbpedia.org/resource/>
 select distinct *
 where {
   ?item a dbo:Film ;
-        dbo:country ?country ;
         rdfs:label ?name ;
         dbo:director ?director .
 } LIMIT 100
