@@ -1,0 +1,10 @@
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+select distinct *
+where {
+  ?item a dbo:Film ;
+        dbo:country ?country ;
+        rdfs:label ?name ;
+        dbo:director ?director .
+} LIMIT 100
