@@ -1,6 +1,6 @@
 package es.weso.shexml.visitor
 
-import es.weso.shexml.ast.{JsonPath, QueryClause, SqlQuery, URL, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{JsonPath, QueryClause, SparqlQuery, SqlQuery, URL, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
 
 import scala.collection.mutable
@@ -36,6 +36,8 @@ class QuerySearcher(val varTable: mutable.HashMap[Variable, VarResult]) {
       JsonPath(fileContent)
     } else if(extension == "sql") {
       SqlQuery(fileContent)
+    } else if(extension == "sparql") {
+      SparqlQuery(fileContent)
     } else throw new Exception("File extension " + extension + " is not supported for queries")
   }
 

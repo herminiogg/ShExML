@@ -6,7 +6,7 @@ import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
 import es.weso.shexml.visitor
 import kantan.xpath.XPathCompiler
@@ -15,8 +15,10 @@ import scala.collection.mutable
 import kantan.xpath.implicits._
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.apache.jena.query.Dataset
+import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ResultSet}
 import org.apache.jena.rdf.model.{AnonId, Model, ModelFactory, Resource, ResourceFactory, Statement}
+import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.util.SplitIRI
 
 import scala.util.Try
 
@@ -28,6 +30,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
   protected val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
+  protected val queryResultCache = new QueryResultsCache()
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
@@ -314,7 +317,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       doVisit(shapeVar, optionalArgument)
     }
 
-    case URL(url) => if(url.contains('*') && url.startsWith("file://"))
+    case URL(url) => if(url.endsWith("/sparql") || url.endsWith(".ttl") || url.endsWith(".rdf")
+      || url.endsWith(".nt") || url.endsWith(".jsonld") || url.endsWith(".owl") || url.endsWith(".trig")
+      || url.endsWith(".nq") || url.endsWith(".trix") || url.endsWith(".trdf"))
+      List(url)
+    else if(url.contains('*') && url.startsWith("file://"))
       getAllFilesContents(url)
     else if(url.contains('*'))
       throw new Exception("* wildcard not allowed over remote files")
@@ -434,11 +441,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       case xp: XmlPath => XmlPath(xp.query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
       case csv: CSVPerRow => CSVPerRow(generateFinalQuery(xs, context + x.name + ".", csv).query)
       case sql: Sql => SqlColumn(sql.query, generateFinalQuery(xs, context + x.name + ".", sql).query)
+      case sp: Sparql => SparqlColumn(sp.query, generateFinalQuery(xs, context + x.name + ".", sp).query)
       case FieldQuery(query) => rootQuery match {
         case j: JsonPath => JsonPath(query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
         case xp: XmlPath => XmlPath(query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
         case csv: CSVPerRow => CSVPerRow(query)
         case sql: Sql => SqlColumn(rootQuery.query, query)
+        case sp: Sparql => SparqlColumn(rootQuery.query, query)
       }
     }
   }
@@ -480,6 +489,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     query match {
       case c: CSVPerRow => doPerRowResults(c, fileContentOrURL)
       case s: SqlColumn => doSqlResults(s, fileContentOrURL)
+      case sp: SparqlColumn => doSparqlResults(sp, fileContentOrURL)
       case _ => {
         val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
         val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContentOrURL)
@@ -490,19 +500,51 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
   }
 
-  private def doSqlResults(query: SqlColumn, dbURLConnection: String): List[Result] = {
-    val connection = connectToDB(dbURLConnection)
-    val statement = connection.prepareStatement(query.query)
-    val resultSet = statement.executeQuery()
-    val results = mutable.MutableList[String]()
-    while(resultSet.next()) {
-      results += resultSet.getString(query.column)
+  private def doSparqlResults(query: SparqlColumn, sparqlEndpointOrRDFLocation: String): List[Result] = {
+    val resultMap = queryResultCache.search(query.query, sparqlEndpointOrRDFLocation) match {
+      case Some(value) => value.asInstanceOf[Map[String, List[String]]]
+      case None => {
+        val jenaQuery = QueryFactory.create(query.query)
+        val queryExecution = if((sparqlEndpointOrRDFLocation.startsWith("http://")
+          || sparqlEndpointOrRDFLocation.startsWith("https://")
+          || sparqlEndpointOrRDFLocation.startsWith("file://"))
+          && !sparqlEndpointOrRDFLocation.endsWith("/sparql")) {
+          val model = RDFDataMgr.loadModel(sparqlEndpointOrRDFLocation)
+          QueryExecutionFactory.create(jenaQuery, model)
+        } else {
+          QueryExecutionFactory.sparqlService(sparqlEndpointOrRDFLocation, jenaQuery)
+        }
+        val resultSet = queryExecution.execSelect()
+        queryResultCache.save(query.query, sparqlEndpointOrRDFLocation, resultSet)
+        queryResultCache.search(query.query, sparqlEndpointOrRDFLocation).get.asInstanceOf[Map[String, List[String]]]
+      }
     }
+    val results = resultMap(query.column)
     val composedResults = for (i <- results.indices) yield {
       val id = (query.query + i).hashCode.toString
       Result(id, List(id), List(results(i)), None, None)
     }
-    connection.close()
+    composedResults.toList
+
+  }
+
+  private def doSqlResults(query: SqlColumn, dbURLConnection: String): List[Result] = {
+    val resultMap = queryResultCache.search(query.query, dbURLConnection) match {
+      case Some(value) => value.asInstanceOf[Map[String, List[String]]]
+      case None => {
+        val connection = connectToDB(dbURLConnection)
+        val statement = connection.prepareStatement(query.query)
+        val resultSet = statement.executeQuery()
+        queryResultCache.save(query.query, dbURLConnection, resultSet)
+        connection.close()
+        queryResultCache.search(query.query, dbURLConnection).get.asInstanceOf[Map[String, List[String]]]
+      }
+    }
+    val results = resultMap(query.column)
+    val composedResults = for (i <- results.indices) yield {
+      val id = (query.query + i).hashCode.toString
+      Result(id, List(id), List(results(i)), None, None)
+    }
     composedResults.toList
   }
 
@@ -620,6 +662,55 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   override def doVisitDefault(): Any = Nil
 
+}
+
+class QueryResultsCache() {
+  private val table = mutable.HashMap[Int, Object]()
+
+  def search(query: String, fileContent: String): Option[Object] = {
+    table.get((query + fileContent).hashCode)
+  }
+
+  def save(query: String, fileContent: String, resultContainer: Object): Unit = {
+    val id = (query + fileContent).hashCode
+    table += ((id, resultContainer))
+  }
+
+  def save(query: String, fileContent: String, resultSet: java.sql.ResultSet): Unit = {
+    val results = mutable.HashMap[String, List[String]]()
+    val columns = resultSet.getMetaData.getColumnCount
+    val columnsNames = (1 to columns).map(resultSet.getMetaData.getColumnName)
+    while(resultSet.next()) {
+      columnsNames.foreach(cn => {
+        results.get(cn) match {
+          case Some(oldValue) => results.update(cn, oldValue :+ resultSet.getString(cn))
+          case None => results += (cn -> List(resultSet.getString(cn)))
+        }
+      })
+    }
+    save(query, fileContent, results.toMap)
+  }
+
+  def save(query: String, fileContent: String, resultSet: ResultSet): Unit = {
+    val results = mutable.HashMap[String, List[String]]()
+    val columnsNames = resultSet.getResultVars
+    while(resultSet.hasNext) {
+      val row = resultSet.next()
+      columnsNames.forEach(cn => {
+        val rowResult = row.get(cn)
+        val value = if(rowResult.isLiteral) {
+          rowResult.asLiteral().getString
+        } else {
+          SplitIRI.localname(rowResult.asResource().getURI)
+        }
+        results.get(cn) match {
+          case Some(oldValue) => results.update(cn, oldValue :+ value)
+          case None => results += (cn -> List(value))
+        }
+      })
+      save(query, fileContent, results.toMap)
+    }
+  }
 }
 
 sealed trait Resultable {

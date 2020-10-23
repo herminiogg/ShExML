@@ -26,7 +26,7 @@ exp: union | join | stringOperation | iteratorQuery ;
 stringOperation: iteratorQuery ADD STRINGOPERATOR ADD iteratorQuery ;
 iteratorQuery: variable '.' composedVariable ;
 composedVariable: variable | variable '.' composedVariable ;
-queryClause: JSONPATH QUERY_PART | XMLPATH QUERY_PART | CSVPERROW | SQL QUERY_PART+ ;
+queryClause: JSONPATH QUERY_PART | XMLPATH QUERY_PART | CSVPERROW | SQL QUERY_PART+ | SPARQL QUERY_PART+ ;
 join: iteratorQuery UNION iteratorQuery JOIN iteratorQuery ;
 union: leftUnionOption UNION rightUnionOption ;
 leftUnionOption: iteratorQuery | stringOperation ;

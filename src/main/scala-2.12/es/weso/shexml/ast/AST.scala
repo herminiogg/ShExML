@@ -36,6 +36,9 @@ case class CSVPerRow(query: String) extends QueryClause
 sealed trait Sql extends QueryClause
 case class SqlQuery(query: String) extends Sql
 case class SqlColumn(query: String, column: String) extends Sql
+sealed trait Sparql extends QueryClause
+case class SparqlQuery(query: String) extends Sparql
+case class SparqlColumn(query: String, column: String) extends Sparql
 case class FieldQuery(query: String) extends QueryClause
 
 sealed trait Exp extends ExpOrVar with VarResult
