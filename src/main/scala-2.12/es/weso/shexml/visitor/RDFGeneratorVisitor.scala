@@ -17,6 +17,8 @@ import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ResultSet}
 import org.apache.jena.rdf.model.{AnonId, Model, ModelFactory, Resource, ResourceFactory, Statement}
+import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.util.SplitIRI
 
 import scala.util.Try
 
@@ -315,7 +317,9 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       doVisit(shapeVar, optionalArgument)
     }
 
-    case URL(url) => if(url.endsWith("sparql"))
+    case URL(url) => if(url.endsWith("/sparql") || url.endsWith(".ttl") || url.endsWith(".rdf")
+      || url.endsWith(".nt") || url.endsWith(".jsonld") || url.endsWith(".owl") || url.endsWith(".trig")
+      || url.endsWith(".nq") || url.endsWith(".trix") || url.endsWith(".trdf"))
       List(url)
     else if(url.contains('*') && url.startsWith("file://"))
       getAllFilesContents(url)
@@ -496,15 +500,23 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
   }
 
-  private def doSparqlResults(query: SparqlColumn, sparqlEndpoint: String): List[Result] = {
-    val resultMap = queryResultCache.search(query.query, sparqlEndpoint) match {
+  private def doSparqlResults(query: SparqlColumn, sparqlEndpointOrRDFLocation: String): List[Result] = {
+    val resultMap = queryResultCache.search(query.query, sparqlEndpointOrRDFLocation) match {
       case Some(value) => value.asInstanceOf[Map[String, List[String]]]
       case None => {
         val jenaQuery = QueryFactory.create(query.query)
-        val queryExecution = QueryExecutionFactory.sparqlService(sparqlEndpoint, jenaQuery)
+        val queryExecution = if((sparqlEndpointOrRDFLocation.startsWith("http://")
+          || sparqlEndpointOrRDFLocation.startsWith("https://")
+          || sparqlEndpointOrRDFLocation.startsWith("file://"))
+          && !sparqlEndpointOrRDFLocation.endsWith("/sparql")) {
+          val model = RDFDataMgr.loadModel(sparqlEndpointOrRDFLocation)
+          QueryExecutionFactory.create(jenaQuery, model)
+        } else {
+          QueryExecutionFactory.sparqlService(sparqlEndpointOrRDFLocation, jenaQuery)
+        }
         val resultSet = queryExecution.execSelect()
-        queryResultCache.save(query.query, sparqlEndpoint, resultSet)
-        queryResultCache.search(query.query, sparqlEndpoint).get.asInstanceOf[Map[String, List[String]]]
+        queryResultCache.save(query.query, sparqlEndpointOrRDFLocation, resultSet)
+        queryResultCache.search(query.query, sparqlEndpointOrRDFLocation).get.asInstanceOf[Map[String, List[String]]]
       }
     }
     val results = resultMap(query.column)
@@ -689,7 +701,7 @@ class QueryResultsCache() {
         val value = if(rowResult.isLiteral) {
           rowResult.asLiteral().getString
         } else {
-          rowResult.asResource().getLocalName
+          SplitIRI.localname(rowResult.asResource().getURI)
         }
         results.get(cn) match {
           case Some(oldValue) => results.update(cn, oldValue :+ value)
