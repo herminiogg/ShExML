@@ -25,6 +25,9 @@ class Main extends Callable[Int] {
   @Option(names = Array("-r", "--rml"), description = Array("Generate RML output"))
   private var rmlOutput: Boolean = false
 
+  @Option(names = Array("-s", "--shex"), description = Array("Generate ShEx validation"))
+  private var shexOutput: Boolean = false
+
   @Option(names = Array("-f", "--format"), description = Array("Output format for RDF graph. Turtle, RDF/XML, N-Triples, ..."))
   private var format: String = "Turtle"
 
@@ -44,11 +47,12 @@ class Main extends Callable[Int] {
     val fileHandler = scala.io.Source.fromFile(file)
     try {
       val fileContent = fileHandler.mkString
+      val mappingLauncher = new MappingLauncher(username, password)
       val outputContent = if(rmlOutput) {
-        val mappingLauncher = new MappingLauncher(username, password)
         mappingLauncher.launchRMLTranslation(fileContent)
+      } else if(shexOutput) {
+        mappingLauncher.launchShExGeneration(fileContent)
       } else {
-        val mappingLauncher = new MappingLauncher(username, password)
         mappingLauncher.launchMapping(fileContent, format)
       }
       if(output.isEmpty) println(outputContent) else {

@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream
 import es.weso.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import es.weso.shexml.ast._
 import es.weso.shexml.parser.ASTCreatorVisitor
+import es.weso.shexml.shex.{ShExGeneratorVisitor, ShExMLInferredCardinalitiesAndDatatypes, ShExPrinter}
 import es.weso.shexml.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
@@ -47,6 +48,17 @@ class MappingLauncher(val username: String = "", val password: String = "") {
     outputStream.toString
   }
 
+  def launchShExGeneration(mappingCode: String): String = {
+    val lexer = createLexer(mappingCode)
+    val parser = createParser(lexer)
+    val ast = createAST(parser)
+    val varTable = createVarTable(ast)
+    val inferencesTable = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
+    generateInferencesFromShExML(ast, varTable, inferencesTable)
+    val shex = new ShExGeneratorVisitor(inferencesTable.toList).doVisit(ast, null)
+    new ShExPrinter().print(shex)
+  }
+
   private def createLexer(mappingCode: String): ShExMLLexer = {
     new ShExMLLexer(CharStreams.fromString(mappingCode))
   }
@@ -80,6 +92,12 @@ class MappingLauncher(val username: String = "", val password: String = "") {
     val output = DatasetFactory.create()
     new RMLGeneratorVisitor(output, varTable, username, password).visit(ast, null)
     output
+  }
+
+  private def generateInferencesFromShExML(ast: AST, varTable: mutable.HashMap[Variable, VarResult],
+                                           inferences: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes]): Unit = {
+    val dataset = DatasetFactory.create()
+    new RDFGeneratorVisitor(dataset, varTable, username, password, inferences).doVisit(ast, null)
   }
 
 }

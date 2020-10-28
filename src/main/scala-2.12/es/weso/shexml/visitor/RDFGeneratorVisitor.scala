@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
 import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
+import es.weso.shexml.shex.ShExMLInferredCardinalitiesAndDatatypes
 import es.weso.shexml.visitor
 import kantan.xpath.XPathCompiler
 
@@ -25,7 +26,8 @@ import scala.util.Try
 /**
   * Created by herminio on 26/12/17.
   */
-class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], username: String, password: String)
+class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], username: String, password: String,
+                          shexInferredPropertiesTable: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes] = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes])
   extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
@@ -72,6 +74,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
           for(predicateObject <- predicateObjects) {
+            registerCardinalityAndDatatype(shapeName.name, predicateObject, result)
             if(shapePrefix == "_:") {
               if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
                 output.add(createBNodeStatement(action, predicateObject(0), normaliseURI(predicateObject(1))))
@@ -658,6 +661,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   private def getQueryFromVarTable(variable: Var): QueryClause = {
     new QuerySearcher(varTable).getQueryFromVarTable(variable)
+  }
+
+  private def registerCardinalityAndDatatype(shapeName: String, predicateObject: Array[String], result: Result) {
+    shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, result.dataType)
   }
 
   override def doVisitDefault(): Any = Nil
