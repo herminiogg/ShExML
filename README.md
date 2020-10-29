@@ -68,6 +68,7 @@ Map and merge heterogeneous data sources with a Shape Expressions based syntax
   -p, --password=<password>
                           Password in case of using a database
   -r, --rml               Generate RML output
+  -s, --shex              Generate ShEx validation
   -u, --username=<username>
                           Username in case of using a database
   -V, --version           Print version information and exit.
