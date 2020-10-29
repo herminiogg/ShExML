@@ -47,6 +47,13 @@ public class ShExMLParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> impl
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitQuery(ShExMLParser.QueryContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitIterator(ShExMLParser.IteratorContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
@@ -62,13 +69,6 @@ public class ShExMLParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> impl
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public T visitField(ShExMLParser.FieldContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitQuery(ShExMLParser.QueryContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

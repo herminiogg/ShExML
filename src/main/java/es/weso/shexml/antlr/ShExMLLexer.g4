@@ -6,7 +6,7 @@ package es.weso.shexml.antlr;
 
 PREFIX: P R E F I X -> mode(DECLARATION_CONTENT) ;
 SOURCE: S O U R C E -> mode(DECLARATION_CONTENT) ;
-QUERY: Q U E R Y ;
+QUERY: Q U E R Y -> mode(DECLARATION_CONTENT) ;
 ITERATOR: I T E R A T O R -> mode(DECLARATION_CONTENT) ;
 FIELD: F I E L D -> mode(DECLARATION_CONTENT) ;
 AUTOINCREMENT: A U T O I N C R E M E N T -> mode(AUTOINCREMENT_CONTENT);
@@ -49,7 +49,8 @@ JSONPATH: J S O N P A T H ':' ;
 XMLPATH: X P A T H ':' ;
 CSVPERROW: C S V P E R R O W ;
 SQL: S Q L ':' ;
-QUERY_PART: (LETTER | DIGIT | ALLOWED_CHARACTERS)+ ;
+SPARQL: S P A R Q L ':' ;
+QUERY_PART: (LETTER | DIGIT | ALLOWED_CHARACTERS | '}' | '{' | '"')+ ;
 GREATER_SYMBOL_QUERY: '>' -> mode(DEFAULT_MODE) ;
 WS_QUERY: [ \t\n\r] -> skip ;
 
@@ -81,7 +82,7 @@ fragment ALLOWEDTYPES: ('string' | 'boolean' | 'decimal' | 'integer' | 'double' 
     | 'nonPositiveInteger' | 'hexBinary' | 'base64Binary' | 'anyURI' | 'language' | 'normalizedString' | 'token'
     | 'NMTOKEN' | 'Name' | 'NCName') ;
 fragment ALLOWED_CHARACTERS: '[' | ']' | '*' | '_' | '/' | '\\' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
-        | '?' | '=' | '&' | '#' | '$' | ':' | '^' | '\'' | ';' ;
+        | '?' | '=' | '&' | '#' | '$' | ':' | '^' | '\'' | ';' | '\\<' | '\\>' ;
 fragment B:('b'|'B');
 fragment C:('c'|'C');
 fragment D:('d'|'D');

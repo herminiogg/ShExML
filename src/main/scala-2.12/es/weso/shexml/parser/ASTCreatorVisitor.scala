@@ -38,15 +38,21 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitQuery(ctx: QueryContext): AST = {
-    val queryClause = visit(ctx.queryClause()).asInstanceOf[QueryClause]
+    val queryOrURL: QueryOrURL = if (ctx.URL() != null) {
+      URL(ctx.URL().getText)
+    } else {
+      visitQueryClause(ctx.queryClause()).asInstanceOf[QueryClause]
+    }
     val name = createVar(ctx.variable())
-    Query(name, queryClause)
+    Query(name, queryOrURL)
   }
 
   override def visitQueryClause(ctx: QueryClauseContext): AST = {
     if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART(0).getText)
     else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART(0).getText)
     else if(ctx.SQL() != null) SqlQuery(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "))
+    else if(ctx.SPARQL() != null) SparqlQuery(ctx.QUERY_PART().asScala.map(_.getText)
+      .mkString(" ").replaceAll("\\\\<", "<").replaceAll("\\\\>", ">"))
     else CSVPerRow("")
   }
 
@@ -130,7 +136,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitIterator(ctx: IteratorContext): AST = {
-    val query = visit(ctx.queryClause()).asInstanceOf[QueryClause]
+    val query: QueryOrVar = if(ctx.queryClause() != null) {
+      visit(ctx.queryClause()).asInstanceOf[QueryClause]
+    } else {
+      Var(ctx.QUERY_PART().getText)
+    }
     val variable = createVar(ctx.variable())
     val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
     val iterators = ctx.nestedIterator().listIterator().asScala.map(visit(_).asInstanceOf[NestedIterator])

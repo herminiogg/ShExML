@@ -2,11 +2,13 @@ organization := "es.weso"
 
 name := "ShExML"
 
-version := "0.2.2"
+version := "0.2.3"
 
 scalaVersion := "2.12.4"
 
 resolvers += "jitpack" at "https://jitpack.io"
+
+resolvers += "binTray" at "https://dl.bintray.com/labra/maven/"
 
 libraryDependencies += "org.antlr" % "antlr4" % "4.8"
 
@@ -39,6 +41,12 @@ libraryDependencies += "org.postgresql" % "postgresql" % "42.2.16"
 libraryDependencies += "org.mariadb.jdbc" % "mariadb-java-client" % "2.6.2"
 
 libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "8.4.1.jre8"
+
+libraryDependencies += "es.weso" %% "shex" % "0.1.71" % "test"
+
+libraryDependencies += "es.weso" %% "srdf4j" % "0.1.76" % "test"
+
+libraryDependencies += "es.weso" %% "srdf" % "0.1.76" % "test"
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

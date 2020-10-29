@@ -1,12 +1,11 @@
 PREFIX : <http://example.com/>
 PREFIX dbr: <http://dbpedia.org/resource/>
 PREFIX schema: <http://schema.org/>
-SOURCE films_database <jdbc:mysql://localhost:3306/films>
-ITERATOR films_iterator <sql: SELECT * FROM films;> {
-    FIELD id <id>
+QUERY query_film <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%2349/src/test/resources/filmDbpediaQuery.sparql>
+SOURCE films_database <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%2349/src/test/resources/films.nt>
+ITERATOR films_iterator <query_film> {
+    FIELD id <item>
     FIELD name <name>
-    FIELD year <year>
-    FIELD country <country>
     FIELD director <director>
 }
 
@@ -14,7 +13,5 @@ EXPRESSION films <films_database.films_iterator>
 
 :Films :[films.id] {
     schema:name [films.name] ;
-    :year dbr:[films.year] ;
-    schema:country dbr:[films.country] ;
     :director [films.director] ;
 }

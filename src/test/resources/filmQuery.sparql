@@ -1,0 +1,14 @@
+PREFIX bd: <http://www.bigdata.com/rdf#>
+PREFIX wikibase: <http://wikiba.se/ontology#>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX wd: <http://www.wikidata.org/entity/>
+SELECT distinct ?item ?name ?year ?countryLabel ?directorLabel
+WHERE {
+    ?item wdt:P31 wd:Q11424 ;
+          wdt:P1476 ?name ;
+          wdt:P577 ?year ;
+          wdt:P495 ?country ;
+          wdt:P57 wd:Q25191 ;
+          wdt:P57 ?director ;
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+}

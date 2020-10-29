@@ -15,8 +15,8 @@ sealed trait DeclarationStatement extends AST
 
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
 case class Source(name: Var, path: IRI) extends DeclarationStatement
-case class Query(name: Var, queryClause: QueryClause) extends DeclarationStatement
-case class Iterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
+case class Query(name: Var, query: QueryOrURL) extends DeclarationStatement
+case class Iterator(name: Var, queryClause: QueryOrVar, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class Field(name: Var, queryClause: QueryClause) extends AST
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
@@ -26,8 +26,7 @@ case class AutoIncrement(name: Var, from: Int, to: Int, by: Int, precedentString
   override val iterator: scala.Iterator[Int] = scala.Iterator.range(from, to, by)
 }
 
-
-sealed trait QueryClause extends VarResult {
+sealed trait QueryClause extends QueryOrURL with QueryOrVar {
   val query: String
 }
 
@@ -37,8 +36,10 @@ case class CSVPerRow(query: String) extends QueryClause
 sealed trait Sql extends QueryClause
 case class SqlQuery(query: String) extends Sql
 case class SqlColumn(query: String, column: String) extends Sql
+sealed trait Sparql extends QueryClause
+case class SparqlQuery(query: String) extends Sparql
+case class SparqlColumn(query: String, column: String) extends Sparql
 case class FieldQuery(query: String) extends QueryClause
-
 
 sealed trait Exp extends ExpOrVar with VarResult
 sealed trait LeftUnion extends Exp
@@ -51,9 +52,11 @@ case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery) extends
 
 sealed trait VarOrIteratorQuery extends AST
 sealed trait ExpOrVar extends AST
+sealed trait QueryOrURL extends VarResult
+sealed trait QueryOrVar extends VarResult
 
 sealed trait Variable extends ExpOrVar
-case class Var(name: String) extends Variable with VarOrIteratorQuery
+case class Var(name: String) extends Variable with VarOrIteratorQuery with QueryOrVar
 case class ShapeVar(name: String) extends Variable
 case class GraphVar(prefix: String, name: String) extends Variable
 
@@ -73,13 +76,13 @@ case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 sealed trait VarResult extends AST
 sealed trait Iterators extends AST {
   def name: Var
-  def queryClause: QueryClause
+  def queryClause: QueryOrVar
   def fields: List[Field]
   def iterators: List[NestedIterator]
 }
 
 sealed trait IRI extends VarResult
-case class URL(url: String) extends IRI
+case class URL(url: String) extends IRI with QueryOrURL
 case class JdbcURL(url: String) extends IRI
 case class ReplacedStrings(strings: List[String]) extends AST
 case class ComposedVariable(variables: List[Var]) extends AST

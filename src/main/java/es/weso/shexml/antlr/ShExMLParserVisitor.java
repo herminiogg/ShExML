@@ -37,6 +37,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSource(ShExMLParser.SourceContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#query}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitQuery(ShExMLParser.QueryContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#iterator}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -54,12 +60,6 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitField(ShExMLParser.FieldContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#query}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitQuery(ShExMLParser.QueryContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#autoincrement}.
 	 * @param ctx the parse tree
