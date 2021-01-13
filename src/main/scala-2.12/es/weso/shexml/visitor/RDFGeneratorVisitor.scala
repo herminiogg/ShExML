@@ -219,7 +219,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case Var(name) => name.contains(iteratorName)
             case _ => false
           }.map {
-            case v: Var => v.name.replace(iteratorName, "") -> {
+            case v: Var => v.name.replaceFirst(iteratorName, "") -> {
               val vars = v.name.split("[.]").map(Var).toList
               if (vars.size > 1)
                 doIteratorQuery(vars, middleArguments, fileContent)
@@ -430,7 +430,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
       }
       case JsonPath(jsonpathQuery) => {
-        val indicedQuery = JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
+        val indicedQuery =
+          if(r.iteratorQuery.contains("[*]"))
+            JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
+          else
+            JsonPath(jsonpathQuery)
         val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
         iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
       }
@@ -478,7 +482,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val results = queries.map(doVisit(_, arguments).asInstanceOf[Result])
       val newQueries = queries.indices.map(iq => {
         results(iq).results.indices.map(ir => queries(iq) match {
-          case JsonPath(query) => query.replaceFirst("[*]", ir.toString) + "."
+          case JsonPath(query)  => query.replaceFirst("[*]", ir.toString) + "."
           case XmlPath(query) => query.replaceFirst("[*]", (ir + 1).toString) + "/"
         })
       }).toList
