@@ -70,8 +70,16 @@ case class Predicate(prefix: String, extension: String) extends AST
 sealed trait ObjectOrShapeLink extends AST
 
 case class ObjectElement(prefix: String, action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var],
-                         dataType: Option[String], langTag: Option[String]) extends ObjectOrShapeLink
+                         dataType: Option[DataType], langTag: Option[LangTag]) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
+
+sealed trait DataType extends AST
+case class DataTypeGeneration(prefix: String, action: ExpOrVar, matcher: Option[Var]) extends DataType
+case class DataTypeLiteral(value: String) extends DataType
+
+sealed trait LangTag extends AST
+case class LangTagGeneration(action: ExpOrVar, matcher: Option[Var]) extends LangTag
+case class LangTagLiteral(value: String) extends LangTag
 
 sealed trait VarResult extends AST
 sealed trait Iterators extends AST {
