@@ -270,6 +270,46 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitObjectElement(ShExMLParser.ObjectElementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#firstPartObjectElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterFirstPartObjectElement(ShExMLParser.FirstPartObjectElementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#firstPartObjectElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitFirstPartObjectElement(ShExMLParser.FirstPartObjectElementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#valueRetriever}.
+	 * @param ctx the parse tree
+	 */
+	void enterValueRetriever(ShExMLParser.ValueRetrieverContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#valueRetriever}.
+	 * @param ctx the parse tree
+	 */
+	void exitValueRetriever(ShExMLParser.ValueRetrieverContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#xmlschemadatatype}.
+	 * @param ctx the parse tree
+	 */
+	void enterXmlschemadatatype(ShExMLParser.XmlschemadatatypeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#xmlschemadatatype}.
+	 * @param ctx the parse tree
+	 */
+	void exitXmlschemadatatype(ShExMLParser.XmlschemadatatypeContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#langtag}.
+	 * @param ctx the parse tree
+	 */
+	void enterLangtag(ShExMLParser.LangtagContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#langtag}.
+	 * @param ctx the parse tree
+	 */
+	void exitLangtag(ShExMLParser.LangtagContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#shapeLink}.
 	 * @param ctx the parse tree
 	 */

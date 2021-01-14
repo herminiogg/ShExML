@@ -1,17 +1,20 @@
 PREFIX : <http://example.com/>
+PREFIX exPerson: <http://example.com/person/>
 PREFIX dbr: <http://dbpedia.org/resource/>
 PREFIX schema: <http://schema.org/>
-QUERY query_film <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%2349/src/test/resources/filmDbpediaQuery.sparql>
-SOURCE films_database <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%2349/src/test/resources/films.nt>
-ITERATOR films_iterator <query_film> {
-    FIELD id <item>
-    FIELD name <name>
-    FIELD director <director>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SOURCE people <https://raw.githubusercontent.com/kg-construct/mapping-challenges/main/challenges/language-map/input-1/input.json>
+ITERATOR person_iterator <jsonpath: $.persons[*]> {
+    FIELD firstname <firstname>
+    FIELD lastname <lastname>
+    FIELD lang <lang>
+    FIELD num <num>
+    FIELD dt <dt>
 }
 
-EXPRESSION films <films_database.films_iterator>
+EXPRESSION values <people.person_iterator>
 
-:Films :[films.id] {
-    schema:name [films.name] ;
-    :director [films.director] ;
+:Person exPerson:[values.firstname] {
+    :lastname [values.lastname] @[values.lang] ;
+    :num [values.num] [values.dt] ;
 }

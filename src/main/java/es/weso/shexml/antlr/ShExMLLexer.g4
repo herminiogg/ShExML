@@ -33,6 +33,7 @@ COMMA: ',' ;
 QUOTE: '"' ;
 AND: '&' | 'AND' ;
 A: ('a' | 'A');
+AT: '@' ;
 STRING_OR_VAR: (LETTER | DIGIT | '_' | '-' | '\\.' | '%2E')+ ;
 URI_VAR: (LETTER | DIGIT | '_' | '\\.' | '%2E')* ':' ;
 STRINGOPERATOR: '"' (LETTER | DIGIT | ALLOWED_CHARACTERS | ' ')+ '"' ;

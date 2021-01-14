@@ -6,7 +6,7 @@ import java.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
 import es.weso.shexml.shex.ShExMLInferredCardinalitiesAndDatatypes
 import es.weso.shexml.visitor
@@ -129,14 +129,32 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
       }
+      val dataTypeResult = dataType.map(doVisit(_, optionalArgument))
+      val langTagResult = langTag.map(doVisit(_, optionalArgument))
       result match {
         case _: List[Result] =>
           matchedResultList.asInstanceOf[List[Result]].map(result => {
           val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
-          Result(result.id, result.rootIds, newResults, dataType, langTag)
+          val dataTypeValue = dataTypeResult.map({
+            case dataTypeResults: List[Result] => dataTypeResults.filter(_.id == result.id).head.results.head
+            case value: String => value
+          })
+          val langTagValue = langTagResult.map({
+            case langTagResults: List[Result] => langTagResults.filter(_.id == result.id).head.results.head
+            case value: String => value
+          })
+          Result(result.id, result.rootIds, newResults, dataTypeValue, langTagValue)
         })
         case ResultAutoIncrement(iterator, predicate, _, _, _) =>
-          visitor.ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), dataType, langTag)
+          val dataTypeValue = dataTypeResult.map({
+            case _: List[Result] => throw new Exception("Autoincrement values cannot have a generated dataType")
+            case value: String => value
+          })
+          val langTagValue = langTagResult.map({
+            case _: List[Result] => throw new Exception("Autoincrement values cannot have a generated langTag")
+            case value: String => value
+          })
+          visitor.ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), dataTypeValue, langTagValue)
         case _ => result
       }
     }
@@ -314,6 +332,39 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case LiteralObjectValue(value) => {
       List(Result("", Nil, List(value), None, None))
+    }
+
+    case DataTypeGeneration(prefix, action, matcher) => {
+      val result = doVisit(action, optionalArgument)
+      val matchedResultList = matcher match {
+        case Some(matcherVar) => doVisit(matcherVar, result)
+        case None => result
+      }
+      result match {
+        case _: List[Result] =>
+          matchedResultList.asInstanceOf[List[Result]].map(result => {
+            val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
+            Result(result.id, result.rootIds, newResults, None, None)
+          })
+        case _ => result
+      }
+    }
+
+    case LangTagGeneration(action, matcher) => {
+      val result = doVisit(action, optionalArgument)
+      val matchedResultList = matcher match {
+        case Some(matcherVar) => doVisit(matcherVar, result)
+        case None => result
+      }
+      matchedResultList
+    }
+
+    case DataTypeLiteral(value) => {
+      value
+    }
+
+    case LangTagLiteral(value) => {
+      value
     }
 
     case ShapeLink(shapeVar) => {
