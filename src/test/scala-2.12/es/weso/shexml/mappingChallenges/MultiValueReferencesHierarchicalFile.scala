@@ -51,8 +51,8 @@ class MultiValueReferencesHierarchicalFile extends FunSuite with Matchers with R
   private val prefix = "http://example.com/"
 
   test("Lab shape is correctly translated") {
-    assert(output.contains(createStatement(prefix, "AmazingLab1", "hasArticle", "article1")))
-    assert(output.contains(createStatement(prefix, "AmazingLab1", "hasArticle", "article2")))
+    assert(output.contains(createStatement(prefix, "AmazingLab1", "hasArticles", "article1")))
+    assert(output.contains(createStatement(prefix, "AmazingLab1", "hasArticles", "article2")))
     assert(output.contains(createStatement(prefix, "AmazingLab1", "hasMembers", "Alice")))
     assert(output.contains(createStatement(prefix, "AmazingLab1", "hasMembers", "Bob")))
     assert(output.contains(createStatement(prefix, "AmazingLab1", "hasMembers", "Claire")))
@@ -69,7 +69,7 @@ class MultiValueReferencesHierarchicalFile extends FunSuite with Matchers with R
     assert(output.contains(createStatement(prefix, "Alice", "hasAffiliation", "Company2")))
     assert(output.contains(createStatement(prefix, "Bob", "hasAffiliation", "Uni3")))
     assert(output.contains(createStatement(prefix, "Bob", "hasAffiliation", "Company4")))
-    assert(output.contains(createStatement(prefix, "Claire", "hasAffiliation", "Uni6")))
+    assert(output.contains(createStatement(prefix, "Claire", "hasAffiliation", "Uni5")))
     assert(output.contains(createStatement(prefix, "Claire", "hasAffiliation", "Company6")))
   }
 
