@@ -18,7 +18,7 @@ case class Source(name: Var, path: IRI) extends DeclarationStatement
 case class Query(name: Var, query: QueryOrURL) extends DeclarationStatement
 case class Iterator(name: Var, queryClause: QueryOrVar, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
-case class Field(name: Var, queryClause: QueryClause) extends AST
+case class Field(name: Var, queryClause: QueryClause, pushed: Boolean, popped: Boolean) extends AST
 case class Expression(name: Var, exp: Exp) extends DeclarationStatement
 case class Matcher(replacedStrings: ReplacedStrings, replacement: String) extends AST
 case class Matchers(name: Var, matchers: MatcherList) extends DeclarationStatement with VarResult
@@ -28,6 +28,8 @@ case class AutoIncrement(name: Var, from: Int, to: Int, by: Int, precedentString
 
 sealed trait QueryClause extends QueryOrURL with QueryOrVar {
   val query: String
+  val pushed: Boolean = false
+  val popped: Boolean = false
 }
 
 case class JsonPath(query: String) extends QueryClause
@@ -39,7 +41,7 @@ case class SqlColumn(query: String, column: String) extends Sql
 sealed trait Sparql extends QueryClause
 case class SparqlQuery(query: String) extends Sparql
 case class SparqlColumn(query: String, column: String) extends Sparql
-case class FieldQuery(query: String) extends QueryClause
+case class FieldQuery(query: String, override val pushed: Boolean = false, override val popped: Boolean = false) extends QueryClause
 
 sealed trait Exp extends ExpOrVar with VarResult
 sealed trait LeftUnion extends Exp
