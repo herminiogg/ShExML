@@ -32,6 +32,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
   protected val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
+  protected val pushedQueries = mutable.HashMap[String, QueryClause]()
   protected val queryResultCache = new QueryResultsCache()
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
@@ -495,18 +496,34 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected def generateFinalQuery(varList: List[Var], context: String, rootQuery: QueryClause): QueryClause = varList match {
     case x :: Nil => getQueryFromVarTable(Var(context + x.name))
     case x :: xs => getQueryFromVarTable(Var(context + x.name)) match {
-      case j: JsonPath => JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
+      case j: JsonPath => {
+        val constructedQuery = JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
+        getQueryFromVarTable(Var(context + varList.map(_.name).mkString("."))) match {
+          case f: FieldQuery => {
+            if(f.pushed) {
+              pushedQueries += ((varList.takeRight(1).head.name, constructedQuery))
+            }
+            if(f.popped) {
+              pushedQueries.getOrElse(f.query, constructedQuery)
+            } else {
+              constructedQuery
+            }
+          }
+          case _ => constructedQuery
+        }
+      }
       case xp: XmlPath => XmlPath(xp.query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
       case csv: CSVPerRow => CSVPerRow(generateFinalQuery(xs, context + x.name + ".", csv).query)
       case sql: Sql => SqlColumn(sql.query, generateFinalQuery(xs, context + x.name + ".", sql).query)
       case sp: Sparql => SparqlColumn(sp.query, generateFinalQuery(xs, context + x.name + ".", sp).query)
-      case FieldQuery(query) => rootQuery match {
-        case j: JsonPath => JsonPath(query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
-        case xp: XmlPath => XmlPath(query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
-        case csv: CSVPerRow => CSVPerRow(query)
-        case sql: Sql => SqlColumn(rootQuery.query, query)
-        case sp: Sparql => SparqlColumn(rootQuery.query, query)
-      }
+      case FieldQuery(query, pushed, popped) => rootQuery match {
+          case j: JsonPath => JsonPath(query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
+          case xp: XmlPath => XmlPath(query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
+          case csv: CSVPerRow => CSVPerRow(query)
+          case sql: Sql => SqlColumn(rootQuery.query, query)
+          case sp: Sparql => SparqlColumn(rootQuery.query, query)
+        }
+
     }
   }
 
@@ -517,7 +534,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         getQueryFromVarTable(Var(varContext + x.name)) match {
           case JsonPath(query) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
           case XmlPath(query) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + optionalXPathEnd)
-          case FieldQuery(query) => rootQuery match {
+          case FieldQuery(query, _, _) => rootQuery match {
             case JsonPath(_) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
             case XmlPath(_) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + optionalXPathEnd)
           }
@@ -543,6 +560,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContentOrURL: String): List[Result] = {
+    generateFinalQuery(iteratorVars, "", null) //to generate pushed vars, this can be improved for performance
     val query = generateFinalQuery(iteratorVars, "", null)
     query match {
       case c: CSVPerRow => doPerRowResults(c, fileContentOrURL)

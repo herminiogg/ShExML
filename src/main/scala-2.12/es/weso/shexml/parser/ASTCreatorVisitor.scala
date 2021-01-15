@@ -156,9 +156,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitField(ctx: FieldContext): AST = {
-    val fieldQuery = FieldQuery(ctx.QUERY_PART().getText)
+    val pushed = ctx.PUSHED_FIELD() != null
+    val popped = ctx.POPPED_FIELD() != null
+    val fieldQuery = FieldQuery(ctx.QUERY_PART().getText, pushed, popped)
     val variable = createVar(ctx.variable())
-    Field(variable, fieldQuery)
+    Field(variable, fieldQuery, pushed, popped)
   }
 
   override def visitIteratorQuery(ctx: IteratorQueryContext): AST = {

@@ -391,7 +391,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def transformNestedIterator(queryClause: QueryClause, v: Var): QueryClause = queryClause match {
-    case FieldQuery(query) => getQueryFromVarTable(Var(v.name.split('.').head)) match {
+    case FieldQuery(query, _, _) => getQueryFromVarTable(Var(v.name.split('.').head)) match {
       case JsonPath(jsonQuery) => JsonPath(jsonQuery + "." + query)
       case XmlPath(xpathQuery) => XmlPath(xpathQuery + "/" + query)
       case CSVPerRow(_) => CSVPerRow(query)

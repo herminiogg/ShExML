@@ -16,7 +16,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     case Expression(name, value) => variableMap += ((name, value))
     case Iterator(name, value, fields, iterators) => registerIterator(name, value, fields, iterators, optionalArgument)
     case NestedIterator(name, value, fields, iterators) => registerIterator(name, value, fields, iterators, optionalArgument)
-    case Field(name, value) => {
+    case Field(name, value, _, _) => {
       val fieldName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable") + "." + name.name
       variableMap += ((Var(fieldName), value))
     }
@@ -33,7 +33,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
   def registerIterator(name: Var, value: QueryOrVar, fields: List[Field], iterators: List[NestedIterator], optionalArgument: Map[String, Any]) {
     val iteratorName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable") + "." + name.name
     val finalValue = value match {
-      case FieldQuery(query) => optionalArgument("type") match {
+      case FieldQuery(query, pushed, popped) => optionalArgument("type") match {
         case XmlPath(_) => XmlPath(query)
         case JsonPath(_) => JsonPath(query)
       }
@@ -41,7 +41,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     }
     variableMap += ((Var(iteratorName), finalValue))
     val topIteratorType = value match {
-      case FieldQuery(_) => optionalArgument("type").asInstanceOf[QueryClause]
+      case FieldQuery(_, _, _) => optionalArgument("type").asInstanceOf[QueryClause]
       case x: XmlPath => x
       case j: JsonPath => j
       case c: CSVPerRow => c
