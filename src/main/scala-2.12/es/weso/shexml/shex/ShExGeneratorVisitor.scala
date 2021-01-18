@@ -1,6 +1,6 @@
 package es.weso.shexml.shex
 
-import es.weso.shexml.ast.{Declaration, ShExML}
+import es.weso.shexml.ast.{DataTypeLiteral, Declaration, ShExML}
 import es.weso.shexml.visitor.DefaultVisitor
 
 import scala.collection.immutable.HashMap
@@ -62,7 +62,10 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       val shexDatatype = literalValue match {
         case Some(_) if langTag.isDefined => "rdf:langString"
         case None => dataType match {
-          case Some(value) => value
+          case Some(value) => value match {
+            case dt: DataTypeLiteral => dt.value
+            case _ => "" //change for generated datatype
+          }
           case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xs:string")
         }
       }

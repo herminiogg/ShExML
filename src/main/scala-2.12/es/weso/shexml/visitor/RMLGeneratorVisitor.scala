@@ -1,6 +1,6 @@
 package es.weso.shexml.visitor
 
-import es.weso.shexml.ast.{AST, CSVPerRow, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LiteralObject, LiteralObjectValue, ObjectElement, Predicate, PredicateObject, QueryClause, Shape, ShapeVar, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{AST, CSVPerRow, DataTypeGeneration, DataTypeLiteral, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, ObjectElement, Predicate, PredicateObject, QueryClause, Shape, ShapeVar, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.{Model, Statement}
 
@@ -152,10 +152,19 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               ) ::: termType
               RMLMap(logicalSource, objectMap, Nil, Nil)
             } else {
-              val datatypePrefix = arguments.get("dataType").map(d => prefixTable(d.toString.split(":")(0) + ":"))
-              val datatype = arguments.get("dataType").map(d => d.toString.split(":")(1))
+              val datatypePrefix = arguments.get("dataType").map({
+                case dt: DataTypeLiteral => prefixTable(dt.value.split(":")(0) + ":")
+                case _: DataTypeGeneration => throw new Exception("DataType generation from data not supported in RML")
+              })
+              val datatype = arguments.get("dataType").map({
+                case dt: DataTypeLiteral => dt.value.split(":")(1)
+                case _: DataTypeGeneration => throw new Exception("DataType generation from data not supported in RML")
+              })
               val datatypeURI = datatypePrefix.map(_ + datatype.get)
-              val langTag = arguments.get("langTag").map(_.asInstanceOf[String])
+              val langTag = arguments.get("langTag").map({
+                case lt: LangTagLiteral => lt.value
+                case _: LangTagGeneration => throw new Exception("LangTag generation from data not supported in RML")
+              })
               val datatypeStatement =
                 if(datatypeURI.isDefined) List(createStatement(objectMapID, rrPrefix + "datatype", datatypeURI.get))
                 else List()
@@ -382,7 +391,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def transformNestedIterator(queryClause: QueryClause, v: Var): QueryClause = queryClause match {
-    case FieldQuery(query) => getQueryFromVarTable(Var(v.name.split('.').head)) match {
+    case FieldQuery(query, _, _) => getQueryFromVarTable(Var(v.name.split('.').head)) match {
       case JsonPath(jsonQuery) => JsonPath(jsonQuery + "." + query)
       case XmlPath(xpathQuery) => XmlPath(xpathQuery + "/" + query)
       case CSVPerRow(_) => CSVPerRow(query)

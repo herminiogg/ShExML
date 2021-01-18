@@ -19,17 +19,18 @@ public class ShExMLParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		PREFIX=1, SOURCE=2, QUERY=3, ITERATOR=4, FIELD=5, AUTOINCREMENT=6, EXPRESSION=7, 
-		UNION=8, JOIN=9, MATCHER=10, AS=11, MATCHING=12, LESS_SYMBOL=13, GREATER_SYMBOL=14, 
-		BRACKET_LEFT=15, DOUBLE_BRACKET_LEFT=16, BRACKET_RIGHT=17, DOUBLE_BRACKET_RIGHT=18, 
-		PAREN_LEFT=19, PAREN_RIGHT=20, BRACE_LEFT=21, BRACE_RIGHT=22, SEMICOLON=23, 
-		DOT=24, ADD=25, COMMA=26, QUOTE=27, AND=28, A=29, STRING_OR_VAR=30, URI_VAR=31, 
-		STRINGOPERATOR=32, XMLSCHEMADATATYPE=33, SHAPELINK=34, LANGTAG=35, COMMENT=36, 
-		WS=37, URL=38, JDBC_URL=39, JSONPATH=40, XMLPATH=41, CSVPERROW=42, SQL=43, 
-		SPARQL=44, QUERY_PART=45, GREATER_SYMBOL_QUERY=46, WS_QUERY=47, LESS_SYMBOL_QUERY=48, 
-		STRING_OR_VAR_QUERY=49, URI_VAR_QUERY=50, WS_DECLARATION=51, LESS_SYMBOL_AUTOINCREMENT=52, 
-		TO=53, BY=54, ADD_AUTOINCREMENT=55, DIGITS=56, STRING_OR_VAR_AUTOINCREMENT=57, 
-		STRINGOPERATOR_AUTOINCREMENT=58, GREATER_SYMBOL_AUTOINCREMENT=59, WS_AUTOINCREMENT=60;
+		PREFIX=1, SOURCE=2, QUERY=3, ITERATOR=4, FIELD=5, PUSHED_FIELD=6, POPPED_FIELD=7, 
+		AUTOINCREMENT=8, EXPRESSION=9, UNION=10, JOIN=11, MATCHER=12, AS=13, MATCHING=14, 
+		LESS_SYMBOL=15, GREATER_SYMBOL=16, BRACKET_LEFT=17, DOUBLE_BRACKET_LEFT=18, 
+		BRACKET_RIGHT=19, DOUBLE_BRACKET_RIGHT=20, PAREN_LEFT=21, PAREN_RIGHT=22, 
+		BRACE_LEFT=23, BRACE_RIGHT=24, SEMICOLON=25, DOT=26, ADD=27, COMMA=28, 
+		QUOTE=29, AND=30, A=31, AT=32, STRING_OR_VAR=33, URI_VAR=34, STRINGOPERATOR=35, 
+		XMLSCHEMADATATYPE=36, SHAPELINK=37, LANGTAG=38, COMMENT=39, WS=40, URL=41, 
+		JDBC_URL=42, JSONPATH=43, XMLPATH=44, CSVPERROW=45, SQL=46, SPARQL=47, 
+		QUERY_PART=48, GREATER_SYMBOL_QUERY=49, WS_QUERY=50, LESS_SYMBOL_QUERY=51, 
+		STRING_OR_VAR_QUERY=52, URI_VAR_QUERY=53, WS_DECLARATION=54, LESS_SYMBOL_AUTOINCREMENT=55, 
+		TO=56, BY=57, ADD_AUTOINCREMENT=58, DIGITS=59, STRING_OR_VAR_AUTOINCREMENT=60, 
+		STRINGOPERATOR_AUTOINCREMENT=61, GREATER_SYMBOL_AUTOINCREMENT=62, WS_AUTOINCREMENT=63;
 	public static final int
 		RULE_shExML = 0, RULE_decl = 1, RULE_prefix = 2, RULE_source = 3, RULE_query = 4, 
 		RULE_iterator = 5, RULE_nestedIterator = 6, RULE_field = 7, RULE_autoincrement = 8, 
@@ -37,15 +38,18 @@ public class ShExMLParser extends Parser {
 		RULE_exp = 13, RULE_stringOperation = 14, RULE_iteratorQuery = 15, RULE_composedVariable = 16, 
 		RULE_queryClause = 17, RULE_join = 18, RULE_union = 19, RULE_leftUnionOption = 20, 
 		RULE_rightUnionOption = 21, RULE_graph = 22, RULE_shape = 23, RULE_predicateObject = 24, 
-		RULE_objectElement = 25, RULE_shapeLink = 26, RULE_predicate = 27, RULE_literalValue = 28, 
-		RULE_tripleElement = 29, RULE_prefixVar = 30, RULE_variable = 31;
+		RULE_objectElement = 25, RULE_firstPartObjectElement = 26, RULE_valueRetriever = 27, 
+		RULE_xmlschemadatatype = 28, RULE_langtag = 29, RULE_shapeLink = 30, RULE_predicate = 31, 
+		RULE_literalValue = 32, RULE_tripleElement = 33, RULE_prefixVar = 34, 
+		RULE_variable = 35;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"shExML", "decl", "prefix", "source", "query", "iterator", "nestedIterator", 
 			"field", "autoincrement", "expression", "matcher", "matchers", "replacedStrings", 
 			"exp", "stringOperation", "iteratorQuery", "composedVariable", "queryClause", 
 			"join", "union", "leftUnionOption", "rightUnionOption", "graph", "shape", 
-			"predicateObject", "objectElement", "shapeLink", "predicate", "literalValue", 
+			"predicateObject", "objectElement", "firstPartObjectElement", "valueRetriever", 
+			"xmlschemadatatype", "langtag", "shapeLink", "predicate", "literalValue", 
 			"tripleElement", "prefixVar", "variable"
 		};
 	}
@@ -54,24 +58,25 @@ public class ShExMLParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
-			null, null, null, "'['", "'[['", "']'", "']]'", "'('", "')'", "'{'", 
-			"'}'", "';'", "'.'", null, "','", "'\"'"
+			null, null, null, null, null, "'['", "'[['", "']'", "']]'", "'('", "')'", 
+			"'{'", "'}'", "';'", "'.'", null, "','", "'\"'", null, null, "'@'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "PREFIX", "SOURCE", "QUERY", "ITERATOR", "FIELD", "AUTOINCREMENT", 
-			"EXPRESSION", "UNION", "JOIN", "MATCHER", "AS", "MATCHING", "LESS_SYMBOL", 
-			"GREATER_SYMBOL", "BRACKET_LEFT", "DOUBLE_BRACKET_LEFT", "BRACKET_RIGHT", 
-			"DOUBLE_BRACKET_RIGHT", "PAREN_LEFT", "PAREN_RIGHT", "BRACE_LEFT", "BRACE_RIGHT", 
-			"SEMICOLON", "DOT", "ADD", "COMMA", "QUOTE", "AND", "A", "STRING_OR_VAR", 
-			"URI_VAR", "STRINGOPERATOR", "XMLSCHEMADATATYPE", "SHAPELINK", "LANGTAG", 
-			"COMMENT", "WS", "URL", "JDBC_URL", "JSONPATH", "XMLPATH", "CSVPERROW", 
-			"SQL", "SPARQL", "QUERY_PART", "GREATER_SYMBOL_QUERY", "WS_QUERY", "LESS_SYMBOL_QUERY", 
-			"STRING_OR_VAR_QUERY", "URI_VAR_QUERY", "WS_DECLARATION", "LESS_SYMBOL_AUTOINCREMENT", 
-			"TO", "BY", "ADD_AUTOINCREMENT", "DIGITS", "STRING_OR_VAR_AUTOINCREMENT", 
-			"STRINGOPERATOR_AUTOINCREMENT", "GREATER_SYMBOL_AUTOINCREMENT", "WS_AUTOINCREMENT"
+			null, "PREFIX", "SOURCE", "QUERY", "ITERATOR", "FIELD", "PUSHED_FIELD", 
+			"POPPED_FIELD", "AUTOINCREMENT", "EXPRESSION", "UNION", "JOIN", "MATCHER", 
+			"AS", "MATCHING", "LESS_SYMBOL", "GREATER_SYMBOL", "BRACKET_LEFT", "DOUBLE_BRACKET_LEFT", 
+			"BRACKET_RIGHT", "DOUBLE_BRACKET_RIGHT", "PAREN_LEFT", "PAREN_RIGHT", 
+			"BRACE_LEFT", "BRACE_RIGHT", "SEMICOLON", "DOT", "ADD", "COMMA", "QUOTE", 
+			"AND", "A", "AT", "STRING_OR_VAR", "URI_VAR", "STRINGOPERATOR", "XMLSCHEMADATATYPE", 
+			"SHAPELINK", "LANGTAG", "COMMENT", "WS", "URL", "JDBC_URL", "JSONPATH", 
+			"XMLPATH", "CSVPERROW", "SQL", "SPARQL", "QUERY_PART", "GREATER_SYMBOL_QUERY", 
+			"WS_QUERY", "LESS_SYMBOL_QUERY", "STRING_OR_VAR_QUERY", "URI_VAR_QUERY", 
+			"WS_DECLARATION", "LESS_SYMBOL_AUTOINCREMENT", "TO", "BY", "ADD_AUTOINCREMENT", 
+			"DIGITS", "STRING_OR_VAR_AUTOINCREMENT", "STRINGOPERATOR_AUTOINCREMENT", 
+			"GREATER_SYMBOL_AUTOINCREMENT", "WS_AUTOINCREMENT"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -170,43 +175,43 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(67);
+			setState(75);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PREFIX) | (1L << SOURCE) | (1L << QUERY) | (1L << ITERATOR) | (1L << AUTOINCREMENT) | (1L << EXPRESSION) | (1L << MATCHER))) != 0)) {
 				{
 				{
-				setState(64);
+				setState(72);
 				decl();
 				}
 				}
-				setState(69);
+				setState(77);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(74);
+			setState(82);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << LESS_SYMBOL) | (1L << A) | (1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY) | (1L << STRING_OR_VAR_AUTOINCREMENT))) != 0)) {
 				{
-				setState(72);
+				setState(80);
 				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
 				case 1:
 					{
-					setState(70);
+					setState(78);
 					shape();
 					}
 					break;
 				case 2:
 					{
-					setState(71);
+					setState(79);
 					graph();
 					}
 					break;
 				}
 				}
-				setState(76);
+				setState(84);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -270,48 +275,48 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(84);
+			setState(92);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case SOURCE:
 				{
-				setState(77);
+				setState(85);
 				source();
 				}
 				break;
 			case PREFIX:
 				{
-				setState(78);
+				setState(86);
 				prefix();
 				}
 				break;
 			case QUERY:
 				{
-				setState(79);
+				setState(87);
 				query();
 				}
 				break;
 			case EXPRESSION:
 				{
-				setState(80);
+				setState(88);
 				expression();
 				}
 				break;
 			case MATCHER:
 				{
-				setState(81);
+				setState(89);
 				matcher();
 				}
 				break;
 			case ITERATOR:
 				{
-				setState(82);
+				setState(90);
 				iterator();
 				}
 				break;
 			case AUTOINCREMENT:
 				{
-				setState(83);
+				setState(91);
 				autoincrement();
 				}
 				break;
@@ -364,15 +369,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(86);
+			setState(94);
 			match(PREFIX);
-			setState(87);
+			setState(95);
 			variable();
-			setState(88);
+			setState(96);
 			match(LESS_SYMBOL_QUERY);
-			setState(89);
+			setState(97);
 			match(URL);
-			setState(90);
+			setState(98);
 			match(GREATER_SYMBOL_QUERY);
 			}
 		}
@@ -422,13 +427,13 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(92);
+			setState(100);
 			match(SOURCE);
-			setState(93);
+			setState(101);
 			variable();
-			setState(94);
+			setState(102);
 			match(LESS_SYMBOL_QUERY);
-			setState(95);
+			setState(103);
 			_la = _input.LA(1);
 			if ( !(_la==URL || _la==JDBC_URL) ) {
 			_errHandler.recoverInline(this);
@@ -438,7 +443,7 @@ public class ShExMLParser extends Parser {
 				_errHandler.reportMatch(this);
 				consume();
 			}
-			setState(96);
+			setState(104);
 			match(GREATER_SYMBOL_QUERY);
 			}
 		}
@@ -489,18 +494,18 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(98);
+			setState(106);
 			match(QUERY);
-			setState(99);
+			setState(107);
 			variable();
-			setState(100);
+			setState(108);
 			match(LESS_SYMBOL_QUERY);
-			setState(103);
+			setState(111);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case URL:
 				{
-				setState(101);
+				setState(109);
 				match(URL);
 				}
 				break;
@@ -510,14 +515,14 @@ public class ShExMLParser extends Parser {
 			case SQL:
 			case SPARQL:
 				{
-				setState(102);
+				setState(110);
 				queryClause();
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			setState(105);
+			setState(113);
 			match(GREATER_SYMBOL_QUERY);
 			}
 		}
@@ -583,13 +588,13 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(107);
+			setState(115);
 			match(ITERATOR);
-			setState(108);
+			setState(116);
 			variable();
-			setState(109);
+			setState(117);
 			match(LESS_SYMBOL_QUERY);
-			setState(112);
+			setState(120);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case JSONPATH:
@@ -598,52 +603,52 @@ public class ShExMLParser extends Parser {
 			case SQL:
 			case SPARQL:
 				{
-				setState(110);
+				setState(118);
 				queryClause();
 				}
 				break;
 			case QUERY_PART:
 				{
-				setState(111);
+				setState(119);
 				match(QUERY_PART);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			setState(114);
+			setState(122);
 			match(GREATER_SYMBOL_QUERY);
-			setState(115);
+			setState(123);
 			match(BRACE_LEFT);
-			setState(117); 
+			setState(125); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(116);
+				setState(124);
 				field();
 				}
 				}
-				setState(119); 
+				setState(127); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( _la==FIELD );
-			setState(124);
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FIELD) | (1L << PUSHED_FIELD) | (1L << POPPED_FIELD))) != 0) );
+			setState(132);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==ITERATOR) {
 				{
 				{
-				setState(121);
+				setState(129);
 				nestedIterator();
 				}
 				}
-				setState(126);
+				setState(134);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(127);
+			setState(135);
 			match(BRACE_RIGHT);
 			}
 		}
@@ -706,47 +711,47 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(129);
+			setState(137);
 			match(ITERATOR);
-			setState(130);
+			setState(138);
 			variable();
-			setState(131);
+			setState(139);
 			match(LESS_SYMBOL_QUERY);
-			setState(132);
+			setState(140);
 			match(QUERY_PART);
-			setState(133);
+			setState(141);
 			match(GREATER_SYMBOL_QUERY);
-			setState(134);
+			setState(142);
 			match(BRACE_LEFT);
-			setState(136); 
+			setState(144); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(135);
+				setState(143);
 				field();
 				}
 				}
-				setState(138); 
+				setState(146); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( _la==FIELD );
-			setState(143);
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FIELD) | (1L << PUSHED_FIELD) | (1L << POPPED_FIELD))) != 0) );
+			setState(151);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==ITERATOR) {
 				{
 				{
-				setState(140);
+				setState(148);
 				nestedIterator();
 				}
 				}
-				setState(145);
+				setState(153);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(146);
+			setState(154);
 			match(BRACE_RIGHT);
 			}
 		}
@@ -762,13 +767,15 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class FieldContext extends ParserRuleContext {
-		public TerminalNode FIELD() { return getToken(ShExMLParser.FIELD, 0); }
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
 		public TerminalNode LESS_SYMBOL_QUERY() { return getToken(ShExMLParser.LESS_SYMBOL_QUERY, 0); }
 		public TerminalNode QUERY_PART() { return getToken(ShExMLParser.QUERY_PART, 0); }
 		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
+		public TerminalNode FIELD() { return getToken(ShExMLParser.FIELD, 0); }
+		public TerminalNode PUSHED_FIELD() { return getToken(ShExMLParser.PUSHED_FIELD, 0); }
+		public TerminalNode POPPED_FIELD() { return getToken(ShExMLParser.POPPED_FIELD, 0); }
 		public FieldContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -791,18 +798,27 @@ public class ShExMLParser extends Parser {
 	public final FieldContext field() throws RecognitionException {
 		FieldContext _localctx = new FieldContext(_ctx, getState());
 		enterRule(_localctx, 14, RULE_field);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(148);
-			match(FIELD);
-			setState(149);
+			setState(156);
+			_la = _input.LA(1);
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FIELD) | (1L << PUSHED_FIELD) | (1L << POPPED_FIELD))) != 0)) ) {
+			_errHandler.recoverInline(this);
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
+				consume();
+			}
+			setState(157);
 			variable();
-			setState(150);
+			setState(158);
 			match(LESS_SYMBOL_QUERY);
-			setState(151);
+			setState(159);
 			match(QUERY_PART);
-			setState(152);
+			setState(160);
 			match(GREATER_SYMBOL_QUERY);
 			}
 		}
@@ -864,63 +880,63 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(154);
+			setState(162);
 			match(AUTOINCREMENT);
-			setState(155);
+			setState(163);
 			variable();
-			setState(156);
+			setState(164);
 			match(LESS_SYMBOL_AUTOINCREMENT);
-			setState(159);
+			setState(167);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==STRINGOPERATOR_AUTOINCREMENT) {
 				{
-				setState(157);
+				setState(165);
 				match(STRINGOPERATOR_AUTOINCREMENT);
-				setState(158);
+				setState(166);
 				match(ADD_AUTOINCREMENT);
 				}
 			}
 
-			setState(161);
+			setState(169);
 			match(DIGITS);
-			setState(164);
+			setState(172);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==TO) {
 				{
-				setState(162);
+				setState(170);
 				match(TO);
-				setState(163);
+				setState(171);
 				match(DIGITS);
 				}
 			}
 
-			setState(168);
+			setState(176);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==BY) {
 				{
-				setState(166);
+				setState(174);
 				match(BY);
-				setState(167);
+				setState(175);
 				match(DIGITS);
 				}
 			}
 
-			setState(172);
+			setState(180);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==ADD_AUTOINCREMENT) {
 				{
-				setState(170);
+				setState(178);
 				match(ADD_AUTOINCREMENT);
-				setState(171);
+				setState(179);
 				match(STRINGOPERATOR_AUTOINCREMENT);
 				}
 			}
 
-			setState(174);
+			setState(182);
 			match(GREATER_SYMBOL_AUTOINCREMENT);
 			}
 		}
@@ -970,15 +986,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(176);
+			setState(184);
 			match(EXPRESSION);
-			setState(177);
+			setState(185);
 			variable();
-			setState(178);
+			setState(186);
 			match(LESS_SYMBOL);
-			setState(179);
+			setState(187);
 			exp();
-			setState(180);
+			setState(188);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -1028,15 +1044,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(182);
+			setState(190);
 			match(MATCHER);
-			setState(183);
+			setState(191);
 			variable();
-			setState(184);
+			setState(192);
 			match(LESS_SYMBOL);
-			setState(185);
+			setState(193);
 			matchers(0);
-			setState(186);
+			setState(194);
 			match(GREATER_SYMBOL);
 			}
 		}
@@ -1098,11 +1114,11 @@ public class ShExMLParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(189);
+			setState(197);
 			replacedStrings();
-			setState(190);
+			setState(198);
 			match(AS);
-			setState(191);
+			setState(199);
 			_la = _input.LA(1);
 			if ( !(_la==STRING_OR_VAR || _la==STRINGOPERATOR) ) {
 			_errHandler.recoverInline(this);
@@ -1114,7 +1130,7 @@ public class ShExMLParser extends Parser {
 			}
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(201);
+			setState(209);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,14,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -1125,15 +1141,15 @@ public class ShExMLParser extends Parser {
 					{
 					_localctx = new MatchersContext(_parentctx, _parentState);
 					pushNewRecursionContext(_localctx, _startState, RULE_matchers);
-					setState(193);
+					setState(201);
 					if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-					setState(194);
+					setState(202);
 					match(AND);
-					setState(195);
+					setState(203);
 					replacedStrings();
-					setState(196);
+					setState(204);
 					match(AS);
-					setState(197);
+					setState(205);
 					_la = _input.LA(1);
 					if ( !(_la==STRING_OR_VAR || _la==STRINGOPERATOR) ) {
 					_errHandler.recoverInline(this);
@@ -1146,7 +1162,7 @@ public class ShExMLParser extends Parser {
 					}
 					} 
 				}
-				setState(203);
+				setState(211);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,14,_ctx);
 			}
@@ -1194,13 +1210,13 @@ public class ShExMLParser extends Parser {
 		enterRule(_localctx, 24, RULE_replacedStrings);
 		int _la;
 		try {
-			setState(208);
+			setState(216);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(204);
+				setState(212);
 				_la = _input.LA(1);
 				if ( !(_la==STRING_OR_VAR || _la==STRINGOPERATOR) ) {
 				_errHandler.recoverInline(this);
@@ -1210,16 +1226,16 @@ public class ShExMLParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(205);
+				setState(213);
 				match(COMMA);
-				setState(206);
+				setState(214);
 				replacedStrings();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(207);
+				setState(215);
 				_la = _input.LA(1);
 				if ( !(_la==STRING_OR_VAR || _la==STRINGOPERATOR) ) {
 				_errHandler.recoverInline(this);
@@ -1280,34 +1296,34 @@ public class ShExMLParser extends Parser {
 		ExpContext _localctx = new ExpContext(_ctx, getState());
 		enterRule(_localctx, 26, RULE_exp);
 		try {
-			setState(214);
+			setState(222);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(210);
+				setState(218);
 				union();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(211);
+				setState(219);
 				join();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(212);
+				setState(220);
 				stringOperation();
 				}
 				break;
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(213);
+				setState(221);
 				iteratorQuery();
 				}
 				break;
@@ -1361,15 +1377,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(216);
+			setState(224);
 			iteratorQuery();
-			setState(217);
+			setState(225);
 			match(ADD);
-			setState(218);
+			setState(226);
 			match(STRINGOPERATOR);
-			setState(219);
+			setState(227);
 			match(ADD);
-			setState(220);
+			setState(228);
 			iteratorQuery();
 			}
 		}
@@ -1417,11 +1433,11 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(222);
+			setState(230);
 			variable();
-			setState(223);
+			setState(231);
 			match(DOT);
-			setState(224);
+			setState(232);
 			composedVariable();
 			}
 		}
@@ -1467,24 +1483,24 @@ public class ShExMLParser extends Parser {
 		ComposedVariableContext _localctx = new ComposedVariableContext(_ctx, getState());
 		enterRule(_localctx, 32, RULE_composedVariable);
 		try {
-			setState(231);
+			setState(239);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(226);
+				setState(234);
 				variable();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(227);
+				setState(235);
 				variable();
-				setState(228);
+				setState(236);
 				match(DOT);
-				setState(229);
+				setState(237);
 				composedVariable();
 				}
 				break;
@@ -1535,50 +1551,50 @@ public class ShExMLParser extends Parser {
 		enterRule(_localctx, 34, RULE_queryClause);
 		int _la;
 		try {
-			setState(250);
+			setState(258);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case JSONPATH:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(233);
+				setState(241);
 				match(JSONPATH);
-				setState(234);
+				setState(242);
 				match(QUERY_PART);
 				}
 				break;
 			case XMLPATH:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(235);
+				setState(243);
 				match(XMLPATH);
-				setState(236);
+				setState(244);
 				match(QUERY_PART);
 				}
 				break;
 			case CSVPERROW:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(237);
+				setState(245);
 				match(CSVPERROW);
 				}
 				break;
 			case SQL:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(238);
+				setState(246);
 				match(SQL);
-				setState(240); 
+				setState(248); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				do {
 					{
 					{
-					setState(239);
+					setState(247);
 					match(QUERY_PART);
 					}
 					}
-					setState(242); 
+					setState(250); 
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				} while ( _la==QUERY_PART );
@@ -1587,19 +1603,19 @@ public class ShExMLParser extends Parser {
 			case SPARQL:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(244);
+				setState(252);
 				match(SPARQL);
-				setState(246); 
+				setState(254); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				do {
 					{
 					{
-					setState(245);
+					setState(253);
 					match(QUERY_PART);
 					}
 					}
-					setState(248); 
+					setState(256); 
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				} while ( _la==QUERY_PART );
@@ -1654,15 +1670,15 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(252);
+			setState(260);
 			iteratorQuery();
-			setState(253);
+			setState(261);
 			match(UNION);
-			setState(254);
+			setState(262);
 			iteratorQuery();
-			setState(255);
+			setState(263);
 			match(JOIN);
-			setState(256);
+			setState(264);
 			iteratorQuery();
 			}
 		}
@@ -1710,11 +1726,11 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(258);
+			setState(266);
 			leftUnionOption();
-			setState(259);
+			setState(267);
 			match(UNION);
-			setState(260);
+			setState(268);
 			rightUnionOption();
 			}
 		}
@@ -1759,20 +1775,20 @@ public class ShExMLParser extends Parser {
 		LeftUnionOptionContext _localctx = new LeftUnionOptionContext(_ctx, getState());
 		enterRule(_localctx, 40, RULE_leftUnionOption);
 		try {
-			setState(264);
+			setState(272);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,21,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(262);
+				setState(270);
 				iteratorQuery();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(263);
+				setState(271);
 				stringOperation();
 				}
 				break;
@@ -1822,27 +1838,27 @@ public class ShExMLParser extends Parser {
 		RightUnionOptionContext _localctx = new RightUnionOptionContext(_ctx, getState());
 		enterRule(_localctx, 42, RULE_rightUnionOption);
 		try {
-			setState(269);
+			setState(277);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,22,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(266);
+				setState(274);
 				iteratorQuery();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(267);
+				setState(275);
 				union();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(268);
+				setState(276);
 				stringOperation();
 				}
 				break;
@@ -1897,25 +1913,25 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(271);
+			setState(279);
 			literalValue();
-			setState(272);
+			setState(280);
 			match(DOUBLE_BRACKET_LEFT);
-			setState(274); 
+			setState(282); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(273);
+				setState(281);
 				shape();
 				}
 				}
-				setState(276); 
+				setState(284); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << LESS_SYMBOL) | (1L << A) | (1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY) | (1L << STRING_OR_VAR_AUTOINCREMENT))) != 0) );
-			setState(278);
+			setState(286);
 			match(DOUBLE_BRACKET_RIGHT);
 			}
 		}
@@ -1984,61 +2000,61 @@ public class ShExMLParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(280);
+			setState(288);
 			tripleElement();
-			setState(281);
+			setState(289);
 			prefixVar();
-			setState(282);
+			setState(290);
 			match(BRACKET_LEFT);
-			setState(285);
+			setState(293);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,24,_ctx) ) {
 			case 1:
 				{
-				setState(283);
+				setState(291);
 				exp();
 				}
 				break;
 			case 2:
 				{
-				setState(284);
+				setState(292);
 				variable();
 				}
 				break;
 			}
-			setState(287);
+			setState(295);
 			match(BRACKET_RIGHT);
-			setState(288);
+			setState(296);
 			match(BRACE_LEFT);
-			setState(294);
+			setState(302);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,25,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(289);
+					setState(297);
 					predicateObject();
-					setState(290);
+					setState(298);
 					match(SEMICOLON);
 					}
 					} 
 				}
-				setState(296);
+				setState(304);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,25,_ctx);
 			}
-			setState(298);
+			setState(306);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << A) | (1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY) | (1L << STRING_OR_VAR_AUTOINCREMENT))) != 0)) {
 				{
-				setState(297);
+				setState(305);
 				predicateObject();
 				}
 			}
 
-			setState(300);
+			setState(308);
 			match(BRACE_RIGHT);
 			}
 		}
@@ -2091,26 +2107,26 @@ public class ShExMLParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(302);
+			setState(310);
 			predicate();
-			setState(306);
+			setState(314);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,27,_ctx) ) {
 			case 1:
 				{
-				setState(303);
+				setState(311);
 				objectElement();
 				}
 				break;
 			case 2:
 				{
-				setState(304);
+				setState(312);
 				shapeLink();
 				}
 				break;
 			case 3:
 				{
-				setState(305);
+				setState(313);
 				literalValue();
 				}
 				break;
@@ -2129,24 +2145,15 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static class ObjectElementContext extends ParserRuleContext {
-		public TerminalNode BRACKET_LEFT() { return getToken(ShExMLParser.BRACKET_LEFT, 0); }
-		public TerminalNode BRACKET_RIGHT() { return getToken(ShExMLParser.BRACKET_RIGHT, 0); }
-		public TerminalNode STRINGOPERATOR() { return getToken(ShExMLParser.STRINGOPERATOR, 0); }
-		public PrefixVarContext prefixVar() {
-			return getRuleContext(PrefixVarContext.class,0);
+		public FirstPartObjectElementContext firstPartObjectElement() {
+			return getRuleContext(FirstPartObjectElementContext.class,0);
 		}
-		public ExpContext exp() {
-			return getRuleContext(ExpContext.class,0);
+		public XmlschemadatatypeContext xmlschemadatatype() {
+			return getRuleContext(XmlschemadatatypeContext.class,0);
 		}
-		public List<VariableContext> variable() {
-			return getRuleContexts(VariableContext.class);
+		public LangtagContext langtag() {
+			return getRuleContext(LangtagContext.class,0);
 		}
-		public VariableContext variable(int i) {
-			return getRuleContext(VariableContext.class,i);
-		}
-		public TerminalNode XMLSCHEMADATATYPE() { return getToken(ShExMLParser.XMLSCHEMADATATYPE, 0); }
-		public TerminalNode LANGTAG() { return getToken(ShExMLParser.LANGTAG, 0); }
-		public TerminalNode MATCHING() { return getToken(ShExMLParser.MATCHING, 0); }
 		public ObjectElementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2169,86 +2176,330 @@ public class ShExMLParser extends Parser {
 	public final ObjectElementContext objectElement() throws RecognitionException {
 		ObjectElementContext _localctx = new ObjectElementContext(_ctx, getState());
 		enterRule(_localctx, 50, RULE_objectElement);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(316);
+			firstPartObjectElement();
+			setState(319);
+			_errHandler.sync(this);
+			switch (_input.LA(1)) {
+			case BRACKET_LEFT:
+			case STRING_OR_VAR:
+			case URI_VAR:
+			case STRINGOPERATOR:
+			case XMLSCHEMADATATYPE:
+			case URL:
+			case STRING_OR_VAR_QUERY:
+			case URI_VAR_QUERY:
+			case STRING_OR_VAR_AUTOINCREMENT:
+				{
+				setState(317);
+				xmlschemadatatype();
+				}
+				break;
+			case AT:
+			case LANGTAG:
+				{
+				setState(318);
+				langtag();
+				}
+				break;
+			case BRACE_RIGHT:
+			case SEMICOLON:
+				break;
+			default:
+				break;
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class FirstPartObjectElementContext extends ParserRuleContext {
+		public ValueRetrieverContext valueRetriever() {
+			return getRuleContext(ValueRetrieverContext.class,0);
+		}
+		public PrefixVarContext prefixVar() {
+			return getRuleContext(PrefixVarContext.class,0);
+		}
+		public FirstPartObjectElementContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_firstPartObjectElement; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterFirstPartObjectElement(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitFirstPartObjectElement(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitFirstPartObjectElement(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final FirstPartObjectElementContext firstPartObjectElement() throws RecognitionException {
+		FirstPartObjectElementContext _localctx = new FirstPartObjectElementContext(_ctx, getState());
+		enterRule(_localctx, 52, RULE_firstPartObjectElement);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(309);
+			setState(322);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << URL) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY) | (1L << STRING_OR_VAR_AUTOINCREMENT))) != 0)) {
 				{
-				setState(308);
+				setState(321);
 				prefixVar();
 				}
 			}
 
-			setState(323);
+			setState(324);
+			valueRetriever();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class ValueRetrieverContext extends ParserRuleContext {
+		public TerminalNode BRACKET_LEFT() { return getToken(ShExMLParser.BRACKET_LEFT, 0); }
+		public TerminalNode BRACKET_RIGHT() { return getToken(ShExMLParser.BRACKET_RIGHT, 0); }
+		public TerminalNode STRINGOPERATOR() { return getToken(ShExMLParser.STRINGOPERATOR, 0); }
+		public ExpContext exp() {
+			return getRuleContext(ExpContext.class,0);
+		}
+		public List<VariableContext> variable() {
+			return getRuleContexts(VariableContext.class);
+		}
+		public VariableContext variable(int i) {
+			return getRuleContext(VariableContext.class,i);
+		}
+		public TerminalNode MATCHING() { return getToken(ShExMLParser.MATCHING, 0); }
+		public ValueRetrieverContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_valueRetriever; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterValueRetriever(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitValueRetriever(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitValueRetriever(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final ValueRetrieverContext valueRetriever() throws RecognitionException {
+		ValueRetrieverContext _localctx = new ValueRetrieverContext(_ctx, getState());
+		enterRule(_localctx, 54, RULE_valueRetriever);
+		int _la;
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(338);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case BRACKET_LEFT:
 				{
-				setState(311);
+				setState(326);
 				match(BRACKET_LEFT);
-				setState(314);
+				setState(329);
 				_errHandler.sync(this);
-				switch ( getInterpreter().adaptivePredict(_input,29,_ctx) ) {
+				switch ( getInterpreter().adaptivePredict(_input,30,_ctx) ) {
 				case 1:
 					{
-					setState(312);
+					setState(327);
 					exp();
 					}
 					break;
 				case 2:
 					{
-					setState(313);
+					setState(328);
 					variable();
 					}
 					break;
 				}
-				setState(318);
+				setState(333);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==MATCHING) {
 					{
-					setState(316);
+					setState(331);
 					match(MATCHING);
-					setState(317);
+					setState(332);
 					variable();
 					}
 				}
 
-				setState(320);
+				setState(335);
 				match(BRACKET_RIGHT);
 				}
 				break;
 			case STRINGOPERATOR:
 				{
-				setState(322);
+				setState(337);
 				match(STRINGOPERATOR);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			setState(326);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if (_la==XMLSCHEMADATATYPE || _la==LANGTAG) {
-				{
-				setState(325);
-				_la = _input.LA(1);
-				if ( !(_la==XMLSCHEMADATATYPE || _la==LANGTAG) ) {
-				_errHandler.recoverInline(this);
-				}
-				else {
-					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-					_errHandler.reportMatch(this);
-					consume();
-				}
-				}
 			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
 
+	public static class XmlschemadatatypeContext extends ParserRuleContext {
+		public TerminalNode XMLSCHEMADATATYPE() { return getToken(ShExMLParser.XMLSCHEMADATATYPE, 0); }
+		public FirstPartObjectElementContext firstPartObjectElement() {
+			return getRuleContext(FirstPartObjectElementContext.class,0);
+		}
+		public XmlschemadatatypeContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_xmlschemadatatype; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterXmlschemadatatype(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitXmlschemadatatype(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitXmlschemadatatype(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final XmlschemadatatypeContext xmlschemadatatype() throws RecognitionException {
+		XmlschemadatatypeContext _localctx = new XmlschemadatatypeContext(_ctx, getState());
+		enterRule(_localctx, 56, RULE_xmlschemadatatype);
+		try {
+			setState(342);
+			_errHandler.sync(this);
+			switch (_input.LA(1)) {
+			case XMLSCHEMADATATYPE:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(340);
+				match(XMLSCHEMADATATYPE);
+				}
+				break;
+			case BRACKET_LEFT:
+			case STRING_OR_VAR:
+			case URI_VAR:
+			case STRINGOPERATOR:
+			case URL:
+			case STRING_OR_VAR_QUERY:
+			case URI_VAR_QUERY:
+			case STRING_OR_VAR_AUTOINCREMENT:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(341);
+				firstPartObjectElement();
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class LangtagContext extends ParserRuleContext {
+		public TerminalNode LANGTAG() { return getToken(ShExMLParser.LANGTAG, 0); }
+		public TerminalNode AT() { return getToken(ShExMLParser.AT, 0); }
+		public ValueRetrieverContext valueRetriever() {
+			return getRuleContext(ValueRetrieverContext.class,0);
+		}
+		public LangtagContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_langtag; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).enterLangtag(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof ShExMLParserListener ) ((ShExMLParserListener)listener).exitLangtag(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof ShExMLParserVisitor ) return ((ShExMLParserVisitor<? extends T>)visitor).visitLangtag(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final LangtagContext langtag() throws RecognitionException {
+		LangtagContext _localctx = new LangtagContext(_ctx, getState());
+		enterRule(_localctx, 58, RULE_langtag);
+		try {
+			setState(347);
+			_errHandler.sync(this);
+			switch (_input.LA(1)) {
+			case LANGTAG:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(344);
+				match(LANGTAG);
+				}
+				break;
+			case AT:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(345);
+				match(AT);
+				setState(346);
+				valueRetriever();
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2285,11 +2536,11 @@ public class ShExMLParser extends Parser {
 
 	public final ShapeLinkContext shapeLink() throws RecognitionException {
 		ShapeLinkContext _localctx = new ShapeLinkContext(_ctx, getState());
-		enterRule(_localctx, 52, RULE_shapeLink);
+		enterRule(_localctx, 60, RULE_shapeLink);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(328);
+			setState(349);
 			match(SHAPELINK);
 			}
 		}
@@ -2330,11 +2581,11 @@ public class ShExMLParser extends Parser {
 
 	public final PredicateContext predicate() throws RecognitionException {
 		PredicateContext _localctx = new PredicateContext(_ctx, getState());
-		enterRule(_localctx, 54, RULE_predicate);
+		enterRule(_localctx, 62, RULE_predicate);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(332);
+			setState(353);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case STRING_OR_VAR:
@@ -2344,13 +2595,13 @@ public class ShExMLParser extends Parser {
 			case URI_VAR_QUERY:
 			case STRING_OR_VAR_AUTOINCREMENT:
 				{
-				setState(330);
+				setState(351);
 				literalValue();
 				}
 				break;
 			case A:
 				{
-				setState(331);
+				setState(352);
 				match(A);
 				}
 				break;
@@ -2398,13 +2649,13 @@ public class ShExMLParser extends Parser {
 
 	public final LiteralValueContext literalValue() throws RecognitionException {
 		LiteralValueContext _localctx = new LiteralValueContext(_ctx, getState());
-		enterRule(_localctx, 56, RULE_literalValue);
+		enterRule(_localctx, 64, RULE_literalValue);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(334);
+			setState(355);
 			prefixVar();
-			setState(335);
+			setState(356);
 			variable();
 			}
 		}
@@ -2449,9 +2700,9 @@ public class ShExMLParser extends Parser {
 
 	public final TripleElementContext tripleElement() throws RecognitionException {
 		TripleElementContext _localctx = new TripleElementContext(_ctx, getState());
-		enterRule(_localctx, 58, RULE_tripleElement);
+		enterRule(_localctx, 66, RULE_tripleElement);
 		try {
-			setState(342);
+			setState(363);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case A:
@@ -2463,18 +2714,18 @@ public class ShExMLParser extends Parser {
 			case STRING_OR_VAR_AUTOINCREMENT:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(337);
+				setState(358);
 				predicate();
 				}
 				break;
 			case LESS_SYMBOL:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(338);
+				setState(359);
 				match(LESS_SYMBOL);
-				setState(339);
+				setState(360);
 				variable();
-				setState(340);
+				setState(361);
 				match(GREATER_SYMBOL);
 				}
 				break;
@@ -2519,9 +2770,9 @@ public class ShExMLParser extends Parser {
 
 	public final PrefixVarContext prefixVar() throws RecognitionException {
 		PrefixVarContext _localctx = new PrefixVarContext(_ctx, getState());
-		enterRule(_localctx, 60, RULE_prefixVar);
+		enterRule(_localctx, 68, RULE_prefixVar);
 		try {
-			setState(346);
+			setState(367);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case STRING_OR_VAR:
@@ -2531,14 +2782,14 @@ public class ShExMLParser extends Parser {
 			case STRING_OR_VAR_AUTOINCREMENT:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(344);
+				setState(365);
 				variable();
 				}
 				break;
 			case URL:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(345);
+				setState(366);
 				match(URL);
 				}
 				break;
@@ -2584,12 +2835,12 @@ public class ShExMLParser extends Parser {
 
 	public final VariableContext variable() throws RecognitionException {
 		VariableContext _localctx = new VariableContext(_ctx, getState());
-		enterRule(_localctx, 62, RULE_variable);
+		enterRule(_localctx, 70, RULE_variable);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(348);
+			setState(369);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << STRING_OR_VAR) | (1L << URI_VAR) | (1L << STRING_OR_VAR_QUERY) | (1L << URI_VAR_QUERY) | (1L << STRING_OR_VAR_AUTOINCREMENT))) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -2628,128 +2879,135 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3>\u0161\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3A\u0176\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
 		"\4\32\t\32\4\33\t\33\4\34\t\34\4\35\t\35\4\36\t\36\4\37\t\37\4 \t \4!"+
-		"\t!\3\2\7\2D\n\2\f\2\16\2G\13\2\3\2\3\2\7\2K\n\2\f\2\16\2N\13\2\3\3\3"+
-		"\3\3\3\3\3\3\3\3\3\3\3\5\3W\n\3\3\4\3\4\3\4\3\4\3\4\3\4\3\5\3\5\3\5\3"+
-		"\5\3\5\3\5\3\6\3\6\3\6\3\6\3\6\5\6j\n\6\3\6\3\6\3\7\3\7\3\7\3\7\3\7\5"+
-		"\7s\n\7\3\7\3\7\3\7\6\7x\n\7\r\7\16\7y\3\7\7\7}\n\7\f\7\16\7\u0080\13"+
-		"\7\3\7\3\7\3\b\3\b\3\b\3\b\3\b\3\b\3\b\6\b\u008b\n\b\r\b\16\b\u008c\3"+
-		"\b\7\b\u0090\n\b\f\b\16\b\u0093\13\b\3\b\3\b\3\t\3\t\3\t\3\t\3\t\3\t\3"+
-		"\n\3\n\3\n\3\n\3\n\5\n\u00a2\n\n\3\n\3\n\3\n\5\n\u00a7\n\n\3\n\3\n\5\n"+
-		"\u00ab\n\n\3\n\3\n\5\n\u00af\n\n\3\n\3\n\3\13\3\13\3\13\3\13\3\13\3\13"+
-		"\3\f\3\f\3\f\3\f\3\f\3\f\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\7"+
-		"\r\u00ca\n\r\f\r\16\r\u00cd\13\r\3\16\3\16\3\16\3\16\5\16\u00d3\n\16\3"+
-		"\17\3\17\3\17\3\17\5\17\u00d9\n\17\3\20\3\20\3\20\3\20\3\20\3\20\3\21"+
-		"\3\21\3\21\3\21\3\22\3\22\3\22\3\22\3\22\5\22\u00ea\n\22\3\23\3\23\3\23"+
-		"\3\23\3\23\3\23\3\23\6\23\u00f3\n\23\r\23\16\23\u00f4\3\23\3\23\6\23\u00f9"+
-		"\n\23\r\23\16\23\u00fa\5\23\u00fd\n\23\3\24\3\24\3\24\3\24\3\24\3\24\3"+
-		"\25\3\25\3\25\3\25\3\26\3\26\5\26\u010b\n\26\3\27\3\27\3\27\5\27\u0110"+
-		"\n\27\3\30\3\30\3\30\6\30\u0115\n\30\r\30\16\30\u0116\3\30\3\30\3\31\3"+
-		"\31\3\31\3\31\3\31\5\31\u0120\n\31\3\31\3\31\3\31\3\31\3\31\7\31\u0127"+
-		"\n\31\f\31\16\31\u012a\13\31\3\31\5\31\u012d\n\31\3\31\3\31\3\32\3\32"+
-		"\3\32\3\32\5\32\u0135\n\32\3\33\5\33\u0138\n\33\3\33\3\33\3\33\5\33\u013d"+
-		"\n\33\3\33\3\33\5\33\u0141\n\33\3\33\3\33\3\33\5\33\u0146\n\33\3\33\5"+
-		"\33\u0149\n\33\3\34\3\34\3\35\3\35\5\35\u014f\n\35\3\36\3\36\3\36\3\37"+
-		"\3\37\3\37\3\37\3\37\5\37\u0159\n\37\3 \3 \5 \u015d\n \3!\3!\3!\2\3\30"+
-		"\"\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@\2"+
-		"\6\3\2()\4\2  \"\"\4\2##%%\5\2 !\63\64;;\2\u0170\2E\3\2\2\2\4V\3\2\2\2"+
-		"\6X\3\2\2\2\b^\3\2\2\2\nd\3\2\2\2\fm\3\2\2\2\16\u0083\3\2\2\2\20\u0096"+
-		"\3\2\2\2\22\u009c\3\2\2\2\24\u00b2\3\2\2\2\26\u00b8\3\2\2\2\30\u00be\3"+
-		"\2\2\2\32\u00d2\3\2\2\2\34\u00d8\3\2\2\2\36\u00da\3\2\2\2 \u00e0\3\2\2"+
-		"\2\"\u00e9\3\2\2\2$\u00fc\3\2\2\2&\u00fe\3\2\2\2(\u0104\3\2\2\2*\u010a"+
-		"\3\2\2\2,\u010f\3\2\2\2.\u0111\3\2\2\2\60\u011a\3\2\2\2\62\u0130\3\2\2"+
-		"\2\64\u0137\3\2\2\2\66\u014a\3\2\2\28\u014e\3\2\2\2:\u0150\3\2\2\2<\u0158"+
-		"\3\2\2\2>\u015c\3\2\2\2@\u015e\3\2\2\2BD\5\4\3\2CB\3\2\2\2DG\3\2\2\2E"+
-		"C\3\2\2\2EF\3\2\2\2FL\3\2\2\2GE\3\2\2\2HK\5\60\31\2IK\5.\30\2JH\3\2\2"+
-		"\2JI\3\2\2\2KN\3\2\2\2LJ\3\2\2\2LM\3\2\2\2M\3\3\2\2\2NL\3\2\2\2OW\5\b"+
-		"\5\2PW\5\6\4\2QW\5\n\6\2RW\5\24\13\2SW\5\26\f\2TW\5\f\7\2UW\5\22\n\2V"+
-		"O\3\2\2\2VP\3\2\2\2VQ\3\2\2\2VR\3\2\2\2VS\3\2\2\2VT\3\2\2\2VU\3\2\2\2"+
-		"W\5\3\2\2\2XY\7\3\2\2YZ\5@!\2Z[\7\62\2\2[\\\7(\2\2\\]\7\60\2\2]\7\3\2"+
-		"\2\2^_\7\4\2\2_`\5@!\2`a\7\62\2\2ab\t\2\2\2bc\7\60\2\2c\t\3\2\2\2de\7"+
-		"\5\2\2ef\5@!\2fi\7\62\2\2gj\7(\2\2hj\5$\23\2ig\3\2\2\2ih\3\2\2\2jk\3\2"+
-		"\2\2kl\7\60\2\2l\13\3\2\2\2mn\7\6\2\2no\5@!\2or\7\62\2\2ps\5$\23\2qs\7"+
-		"/\2\2rp\3\2\2\2rq\3\2\2\2st\3\2\2\2tu\7\60\2\2uw\7\27\2\2vx\5\20\t\2w"+
-		"v\3\2\2\2xy\3\2\2\2yw\3\2\2\2yz\3\2\2\2z~\3\2\2\2{}\5\16\b\2|{\3\2\2\2"+
-		"}\u0080\3\2\2\2~|\3\2\2\2~\177\3\2\2\2\177\u0081\3\2\2\2\u0080~\3\2\2"+
-		"\2\u0081\u0082\7\30\2\2\u0082\r\3\2\2\2\u0083\u0084\7\6\2\2\u0084\u0085"+
-		"\5@!\2\u0085\u0086\7\62\2\2\u0086\u0087\7/\2\2\u0087\u0088\7\60\2\2\u0088"+
-		"\u008a\7\27\2\2\u0089\u008b\5\20\t\2\u008a\u0089\3\2\2\2\u008b\u008c\3"+
-		"\2\2\2\u008c\u008a\3\2\2\2\u008c\u008d\3\2\2\2\u008d\u0091\3\2\2\2\u008e"+
-		"\u0090\5\16\b\2\u008f\u008e\3\2\2\2\u0090\u0093\3\2\2\2\u0091\u008f\3"+
-		"\2\2\2\u0091\u0092\3\2\2\2\u0092\u0094\3\2\2\2\u0093\u0091\3\2\2\2\u0094"+
-		"\u0095\7\30\2\2\u0095\17\3\2\2\2\u0096\u0097\7\7\2\2\u0097\u0098\5@!\2"+
-		"\u0098\u0099\7\62\2\2\u0099\u009a\7/\2\2\u009a\u009b\7\60\2\2\u009b\21"+
-		"\3\2\2\2\u009c\u009d\7\b\2\2\u009d\u009e\5@!\2\u009e\u00a1\7\66\2\2\u009f"+
-		"\u00a0\7<\2\2\u00a0\u00a2\79\2\2\u00a1\u009f\3\2\2\2\u00a1\u00a2\3\2\2"+
-		"\2\u00a2\u00a3\3\2\2\2\u00a3\u00a6\7:\2\2\u00a4\u00a5\7\67\2\2\u00a5\u00a7"+
-		"\7:\2\2\u00a6\u00a4\3\2\2\2\u00a6\u00a7\3\2\2\2\u00a7\u00aa\3\2\2\2\u00a8"+
-		"\u00a9\78\2\2\u00a9\u00ab\7:\2\2\u00aa\u00a8\3\2\2\2\u00aa\u00ab\3\2\2"+
-		"\2\u00ab\u00ae\3\2\2\2\u00ac\u00ad\79\2\2\u00ad\u00af\7<\2\2\u00ae\u00ac"+
-		"\3\2\2\2\u00ae\u00af\3\2\2\2\u00af\u00b0\3\2\2\2\u00b0\u00b1\7=\2\2\u00b1"+
-		"\23\3\2\2\2\u00b2\u00b3\7\t\2\2\u00b3\u00b4\5@!\2\u00b4\u00b5\7\17\2\2"+
-		"\u00b5\u00b6\5\34\17\2\u00b6\u00b7\7\20\2\2\u00b7\25\3\2\2\2\u00b8\u00b9"+
-		"\7\f\2\2\u00b9\u00ba\5@!\2\u00ba\u00bb\7\17\2\2\u00bb\u00bc\5\30\r\2\u00bc"+
-		"\u00bd\7\20\2\2\u00bd\27\3\2\2\2\u00be\u00bf\b\r\1\2\u00bf\u00c0\5\32"+
-		"\16\2\u00c0\u00c1\7\r\2\2\u00c1\u00c2\t\3\2\2\u00c2\u00cb\3\2\2\2\u00c3"+
-		"\u00c4\f\3\2\2\u00c4\u00c5\7\36\2\2\u00c5\u00c6\5\32\16\2\u00c6\u00c7"+
-		"\7\r\2\2\u00c7\u00c8\t\3\2\2\u00c8\u00ca\3\2\2\2\u00c9\u00c3\3\2\2\2\u00ca"+
-		"\u00cd\3\2\2\2\u00cb\u00c9\3\2\2\2\u00cb\u00cc\3\2\2\2\u00cc\31\3\2\2"+
-		"\2\u00cd\u00cb\3\2\2\2\u00ce\u00cf\t\3\2\2\u00cf\u00d0\7\34\2\2\u00d0"+
-		"\u00d3\5\32\16\2\u00d1\u00d3\t\3\2\2\u00d2\u00ce\3\2\2\2\u00d2\u00d1\3"+
-		"\2\2\2\u00d3\33\3\2\2\2\u00d4\u00d9\5(\25\2\u00d5\u00d9\5&\24\2\u00d6"+
-		"\u00d9\5\36\20\2\u00d7\u00d9\5 \21\2\u00d8\u00d4\3\2\2\2\u00d8\u00d5\3"+
-		"\2\2\2\u00d8\u00d6\3\2\2\2\u00d8\u00d7\3\2\2\2\u00d9\35\3\2\2\2\u00da"+
-		"\u00db\5 \21\2\u00db\u00dc\7\33\2\2\u00dc\u00dd\7\"\2\2\u00dd\u00de\7"+
-		"\33\2\2\u00de\u00df\5 \21\2\u00df\37\3\2\2\2\u00e0\u00e1\5@!\2\u00e1\u00e2"+
-		"\7\32\2\2\u00e2\u00e3\5\"\22\2\u00e3!\3\2\2\2\u00e4\u00ea\5@!\2\u00e5"+
-		"\u00e6\5@!\2\u00e6\u00e7\7\32\2\2\u00e7\u00e8\5\"\22\2\u00e8\u00ea\3\2"+
-		"\2\2\u00e9\u00e4\3\2\2\2\u00e9\u00e5\3\2\2\2\u00ea#\3\2\2\2\u00eb\u00ec"+
-		"\7*\2\2\u00ec\u00fd\7/\2\2\u00ed\u00ee\7+\2\2\u00ee\u00fd\7/\2\2\u00ef"+
-		"\u00fd\7,\2\2\u00f0\u00f2\7-\2\2\u00f1\u00f3\7/\2\2\u00f2\u00f1\3\2\2"+
-		"\2\u00f3\u00f4\3\2\2\2\u00f4\u00f2\3\2\2\2\u00f4\u00f5\3\2\2\2\u00f5\u00fd"+
-		"\3\2\2\2\u00f6\u00f8\7.\2\2\u00f7\u00f9\7/\2\2\u00f8\u00f7\3\2\2\2\u00f9"+
-		"\u00fa\3\2\2\2\u00fa\u00f8\3\2\2\2\u00fa\u00fb\3\2\2\2\u00fb\u00fd\3\2"+
-		"\2\2\u00fc\u00eb\3\2\2\2\u00fc\u00ed\3\2\2\2\u00fc\u00ef\3\2\2\2\u00fc"+
-		"\u00f0\3\2\2\2\u00fc\u00f6\3\2\2\2\u00fd%\3\2\2\2\u00fe\u00ff\5 \21\2"+
-		"\u00ff\u0100\7\n\2\2\u0100\u0101\5 \21\2\u0101\u0102\7\13\2\2\u0102\u0103"+
-		"\5 \21\2\u0103\'\3\2\2\2\u0104\u0105\5*\26\2\u0105\u0106\7\n\2\2\u0106"+
-		"\u0107\5,\27\2\u0107)\3\2\2\2\u0108\u010b\5 \21\2\u0109\u010b\5\36\20"+
-		"\2\u010a\u0108\3\2\2\2\u010a\u0109\3\2\2\2\u010b+\3\2\2\2\u010c\u0110"+
-		"\5 \21\2\u010d\u0110\5(\25\2\u010e\u0110\5\36\20\2\u010f\u010c\3\2\2\2"+
-		"\u010f\u010d\3\2\2\2\u010f\u010e\3\2\2\2\u0110-\3\2\2\2\u0111\u0112\5"+
-		":\36\2\u0112\u0114\7\22\2\2\u0113\u0115\5\60\31\2\u0114\u0113\3\2\2\2"+
-		"\u0115\u0116\3\2\2\2\u0116\u0114\3\2\2\2\u0116\u0117\3\2\2\2\u0117\u0118"+
-		"\3\2\2\2\u0118\u0119\7\24\2\2\u0119/\3\2\2\2\u011a\u011b\5<\37\2\u011b"+
-		"\u011c\5> \2\u011c\u011f\7\21\2\2\u011d\u0120\5\34\17\2\u011e\u0120\5"+
-		"@!\2\u011f\u011d\3\2\2\2\u011f\u011e\3\2\2\2\u0120\u0121\3\2\2\2\u0121"+
-		"\u0122\7\23\2\2\u0122\u0128\7\27\2\2\u0123\u0124\5\62\32\2\u0124\u0125"+
-		"\7\31\2\2\u0125\u0127\3\2\2\2\u0126\u0123\3\2\2\2\u0127\u012a\3\2\2\2"+
-		"\u0128\u0126\3\2\2\2\u0128\u0129\3\2\2\2\u0129\u012c\3\2\2\2\u012a\u0128"+
-		"\3\2\2\2\u012b\u012d\5\62\32\2\u012c\u012b\3\2\2\2\u012c\u012d\3\2\2\2"+
-		"\u012d\u012e\3\2\2\2\u012e\u012f\7\30\2\2\u012f\61\3\2\2\2\u0130\u0134"+
-		"\58\35\2\u0131\u0135\5\64\33\2\u0132\u0135\5\66\34\2\u0133\u0135\5:\36"+
-		"\2\u0134\u0131\3\2\2\2\u0134\u0132\3\2\2\2\u0134\u0133\3\2\2\2\u0135\63"+
-		"\3\2\2\2\u0136\u0138\5> \2\u0137\u0136\3\2\2\2\u0137\u0138\3\2\2\2\u0138"+
-		"\u0145\3\2\2\2\u0139\u013c\7\21\2\2\u013a\u013d\5\34\17\2\u013b\u013d"+
-		"\5@!\2\u013c\u013a\3\2\2\2\u013c\u013b\3\2\2\2\u013d\u0140\3\2\2\2\u013e"+
-		"\u013f\7\16\2\2\u013f\u0141\5@!\2\u0140\u013e\3\2\2\2\u0140\u0141\3\2"+
-		"\2\2\u0141\u0142\3\2\2\2\u0142\u0143\7\23\2\2\u0143\u0146\3\2\2\2\u0144"+
-		"\u0146\7\"\2\2\u0145\u0139\3\2\2\2\u0145\u0144\3\2\2\2\u0146\u0148\3\2"+
-		"\2\2\u0147\u0149\t\4\2\2\u0148\u0147\3\2\2\2\u0148\u0149\3\2\2\2\u0149"+
-		"\65\3\2\2\2\u014a\u014b\7$\2\2\u014b\67\3\2\2\2\u014c\u014f\5:\36\2\u014d"+
-		"\u014f\7\37\2\2\u014e\u014c\3\2\2\2\u014e\u014d\3\2\2\2\u014f9\3\2\2\2"+
-		"\u0150\u0151\5> \2\u0151\u0152\5@!\2\u0152;\3\2\2\2\u0153\u0159\58\35"+
-		"\2\u0154\u0155\7\17\2\2\u0155\u0156\5@!\2\u0156\u0157\7\20\2\2\u0157\u0159"+
-		"\3\2\2\2\u0158\u0153\3\2\2\2\u0158\u0154\3\2\2\2\u0159=\3\2\2\2\u015a"+
-		"\u015d\5@!\2\u015b\u015d\7(\2\2\u015c\u015a\3\2\2\2\u015c\u015b\3\2\2"+
-		"\2\u015d?\3\2\2\2\u015e\u015f\t\5\2\2\u015fA\3\2\2\2&EJLViry~\u008c\u0091"+
-		"\u00a1\u00a6\u00aa\u00ae\u00cb\u00d2\u00d8\u00e9\u00f4\u00fa\u00fc\u010a"+
-		"\u010f\u0116\u011f\u0128\u012c\u0134\u0137\u013c\u0140\u0145\u0148\u014e"+
-		"\u0158\u015c";
+		"\t!\4\"\t\"\4#\t#\4$\t$\4%\t%\3\2\7\2L\n\2\f\2\16\2O\13\2\3\2\3\2\7\2"+
+		"S\n\2\f\2\16\2V\13\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3_\n\3\3\4\3\4\3\4"+
+		"\3\4\3\4\3\4\3\5\3\5\3\5\3\5\3\5\3\5\3\6\3\6\3\6\3\6\3\6\5\6r\n\6\3\6"+
+		"\3\6\3\7\3\7\3\7\3\7\3\7\5\7{\n\7\3\7\3\7\3\7\6\7\u0080\n\7\r\7\16\7\u0081"+
+		"\3\7\7\7\u0085\n\7\f\7\16\7\u0088\13\7\3\7\3\7\3\b\3\b\3\b\3\b\3\b\3\b"+
+		"\3\b\6\b\u0093\n\b\r\b\16\b\u0094\3\b\7\b\u0098\n\b\f\b\16\b\u009b\13"+
+		"\b\3\b\3\b\3\t\3\t\3\t\3\t\3\t\3\t\3\n\3\n\3\n\3\n\3\n\5\n\u00aa\n\n\3"+
+		"\n\3\n\3\n\5\n\u00af\n\n\3\n\3\n\5\n\u00b3\n\n\3\n\3\n\5\n\u00b7\n\n\3"+
+		"\n\3\n\3\13\3\13\3\13\3\13\3\13\3\13\3\f\3\f\3\f\3\f\3\f\3\f\3\r\3\r\3"+
+		"\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\7\r\u00d2\n\r\f\r\16\r\u00d5\13\r\3"+
+		"\16\3\16\3\16\3\16\5\16\u00db\n\16\3\17\3\17\3\17\3\17\5\17\u00e1\n\17"+
+		"\3\20\3\20\3\20\3\20\3\20\3\20\3\21\3\21\3\21\3\21\3\22\3\22\3\22\3\22"+
+		"\3\22\5\22\u00f2\n\22\3\23\3\23\3\23\3\23\3\23\3\23\3\23\6\23\u00fb\n"+
+		"\23\r\23\16\23\u00fc\3\23\3\23\6\23\u0101\n\23\r\23\16\23\u0102\5\23\u0105"+
+		"\n\23\3\24\3\24\3\24\3\24\3\24\3\24\3\25\3\25\3\25\3\25\3\26\3\26\5\26"+
+		"\u0113\n\26\3\27\3\27\3\27\5\27\u0118\n\27\3\30\3\30\3\30\6\30\u011d\n"+
+		"\30\r\30\16\30\u011e\3\30\3\30\3\31\3\31\3\31\3\31\3\31\5\31\u0128\n\31"+
+		"\3\31\3\31\3\31\3\31\3\31\7\31\u012f\n\31\f\31\16\31\u0132\13\31\3\31"+
+		"\5\31\u0135\n\31\3\31\3\31\3\32\3\32\3\32\3\32\5\32\u013d\n\32\3\33\3"+
+		"\33\3\33\5\33\u0142\n\33\3\34\5\34\u0145\n\34\3\34\3\34\3\35\3\35\3\35"+
+		"\5\35\u014c\n\35\3\35\3\35\5\35\u0150\n\35\3\35\3\35\3\35\5\35\u0155\n"+
+		"\35\3\36\3\36\5\36\u0159\n\36\3\37\3\37\3\37\5\37\u015e\n\37\3 \3 \3!"+
+		"\3!\5!\u0164\n!\3\"\3\"\3\"\3#\3#\3#\3#\3#\5#\u016e\n#\3$\3$\5$\u0172"+
+		"\n$\3%\3%\3%\2\3\30&\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60"+
+		"\62\64\668:<>@BDFH\2\6\3\2+,\3\2\7\t\4\2##%%\5\2#$\66\67>>\2\u0184\2M"+
+		"\3\2\2\2\4^\3\2\2\2\6`\3\2\2\2\bf\3\2\2\2\nl\3\2\2\2\fu\3\2\2\2\16\u008b"+
+		"\3\2\2\2\20\u009e\3\2\2\2\22\u00a4\3\2\2\2\24\u00ba\3\2\2\2\26\u00c0\3"+
+		"\2\2\2\30\u00c6\3\2\2\2\32\u00da\3\2\2\2\34\u00e0\3\2\2\2\36\u00e2\3\2"+
+		"\2\2 \u00e8\3\2\2\2\"\u00f1\3\2\2\2$\u0104\3\2\2\2&\u0106\3\2\2\2(\u010c"+
+		"\3\2\2\2*\u0112\3\2\2\2,\u0117\3\2\2\2.\u0119\3\2\2\2\60\u0122\3\2\2\2"+
+		"\62\u0138\3\2\2\2\64\u013e\3\2\2\2\66\u0144\3\2\2\28\u0154\3\2\2\2:\u0158"+
+		"\3\2\2\2<\u015d\3\2\2\2>\u015f\3\2\2\2@\u0163\3\2\2\2B\u0165\3\2\2\2D"+
+		"\u016d\3\2\2\2F\u0171\3\2\2\2H\u0173\3\2\2\2JL\5\4\3\2KJ\3\2\2\2LO\3\2"+
+		"\2\2MK\3\2\2\2MN\3\2\2\2NT\3\2\2\2OM\3\2\2\2PS\5\60\31\2QS\5.\30\2RP\3"+
+		"\2\2\2RQ\3\2\2\2SV\3\2\2\2TR\3\2\2\2TU\3\2\2\2U\3\3\2\2\2VT\3\2\2\2W_"+
+		"\5\b\5\2X_\5\6\4\2Y_\5\n\6\2Z_\5\24\13\2[_\5\26\f\2\\_\5\f\7\2]_\5\22"+
+		"\n\2^W\3\2\2\2^X\3\2\2\2^Y\3\2\2\2^Z\3\2\2\2^[\3\2\2\2^\\\3\2\2\2^]\3"+
+		"\2\2\2_\5\3\2\2\2`a\7\3\2\2ab\5H%\2bc\7\65\2\2cd\7+\2\2de\7\63\2\2e\7"+
+		"\3\2\2\2fg\7\4\2\2gh\5H%\2hi\7\65\2\2ij\t\2\2\2jk\7\63\2\2k\t\3\2\2\2"+
+		"lm\7\5\2\2mn\5H%\2nq\7\65\2\2or\7+\2\2pr\5$\23\2qo\3\2\2\2qp\3\2\2\2r"+
+		"s\3\2\2\2st\7\63\2\2t\13\3\2\2\2uv\7\6\2\2vw\5H%\2wz\7\65\2\2x{\5$\23"+
+		"\2y{\7\62\2\2zx\3\2\2\2zy\3\2\2\2{|\3\2\2\2|}\7\63\2\2}\177\7\31\2\2~"+
+		"\u0080\5\20\t\2\177~\3\2\2\2\u0080\u0081\3\2\2\2\u0081\177\3\2\2\2\u0081"+
+		"\u0082\3\2\2\2\u0082\u0086\3\2\2\2\u0083\u0085\5\16\b\2\u0084\u0083\3"+
+		"\2\2\2\u0085\u0088\3\2\2\2\u0086\u0084\3\2\2\2\u0086\u0087\3\2\2\2\u0087"+
+		"\u0089\3\2\2\2\u0088\u0086\3\2\2\2\u0089\u008a\7\32\2\2\u008a\r\3\2\2"+
+		"\2\u008b\u008c\7\6\2\2\u008c\u008d\5H%\2\u008d\u008e\7\65\2\2\u008e\u008f"+
+		"\7\62\2\2\u008f\u0090\7\63\2\2\u0090\u0092\7\31\2\2\u0091\u0093\5\20\t"+
+		"\2\u0092\u0091\3\2\2\2\u0093\u0094\3\2\2\2\u0094\u0092\3\2\2\2\u0094\u0095"+
+		"\3\2\2\2\u0095\u0099\3\2\2\2\u0096\u0098\5\16\b\2\u0097\u0096\3\2\2\2"+
+		"\u0098\u009b\3\2\2\2\u0099\u0097\3\2\2\2\u0099\u009a\3\2\2\2\u009a\u009c"+
+		"\3\2\2\2\u009b\u0099\3\2\2\2\u009c\u009d\7\32\2\2\u009d\17\3\2\2\2\u009e"+
+		"\u009f\t\3\2\2\u009f\u00a0\5H%\2\u00a0\u00a1\7\65\2\2\u00a1\u00a2\7\62"+
+		"\2\2\u00a2\u00a3\7\63\2\2\u00a3\21\3\2\2\2\u00a4\u00a5\7\n\2\2\u00a5\u00a6"+
+		"\5H%\2\u00a6\u00a9\79\2\2\u00a7\u00a8\7?\2\2\u00a8\u00aa\7<\2\2\u00a9"+
+		"\u00a7\3\2\2\2\u00a9\u00aa\3\2\2\2\u00aa\u00ab\3\2\2\2\u00ab\u00ae\7="+
+		"\2\2\u00ac\u00ad\7:\2\2\u00ad\u00af\7=\2\2\u00ae\u00ac\3\2\2\2\u00ae\u00af"+
+		"\3\2\2\2\u00af\u00b2\3\2\2\2\u00b0\u00b1\7;\2\2\u00b1\u00b3\7=\2\2\u00b2"+
+		"\u00b0\3\2\2\2\u00b2\u00b3\3\2\2\2\u00b3\u00b6\3\2\2\2\u00b4\u00b5\7<"+
+		"\2\2\u00b5\u00b7\7?\2\2\u00b6\u00b4\3\2\2\2\u00b6\u00b7\3\2\2\2\u00b7"+
+		"\u00b8\3\2\2\2\u00b8\u00b9\7@\2\2\u00b9\23\3\2\2\2\u00ba\u00bb\7\13\2"+
+		"\2\u00bb\u00bc\5H%\2\u00bc\u00bd\7\21\2\2\u00bd\u00be\5\34\17\2\u00be"+
+		"\u00bf\7\22\2\2\u00bf\25\3\2\2\2\u00c0\u00c1\7\16\2\2\u00c1\u00c2\5H%"+
+		"\2\u00c2\u00c3\7\21\2\2\u00c3\u00c4\5\30\r\2\u00c4\u00c5\7\22\2\2\u00c5"+
+		"\27\3\2\2\2\u00c6\u00c7\b\r\1\2\u00c7\u00c8\5\32\16\2\u00c8\u00c9\7\17"+
+		"\2\2\u00c9\u00ca\t\4\2\2\u00ca\u00d3\3\2\2\2\u00cb\u00cc\f\3\2\2\u00cc"+
+		"\u00cd\7 \2\2\u00cd\u00ce\5\32\16\2\u00ce\u00cf\7\17\2\2\u00cf\u00d0\t"+
+		"\4\2\2\u00d0\u00d2\3\2\2\2\u00d1\u00cb\3\2\2\2\u00d2\u00d5\3\2\2\2\u00d3"+
+		"\u00d1\3\2\2\2\u00d3\u00d4\3\2\2\2\u00d4\31\3\2\2\2\u00d5\u00d3\3\2\2"+
+		"\2\u00d6\u00d7\t\4\2\2\u00d7\u00d8\7\36\2\2\u00d8\u00db\5\32\16\2\u00d9"+
+		"\u00db\t\4\2\2\u00da\u00d6\3\2\2\2\u00da\u00d9\3\2\2\2\u00db\33\3\2\2"+
+		"\2\u00dc\u00e1\5(\25\2\u00dd\u00e1\5&\24\2\u00de\u00e1\5\36\20\2\u00df"+
+		"\u00e1\5 \21\2\u00e0\u00dc\3\2\2\2\u00e0\u00dd\3\2\2\2\u00e0\u00de\3\2"+
+		"\2\2\u00e0\u00df\3\2\2\2\u00e1\35\3\2\2\2\u00e2\u00e3\5 \21\2\u00e3\u00e4"+
+		"\7\35\2\2\u00e4\u00e5\7%\2\2\u00e5\u00e6\7\35\2\2\u00e6\u00e7\5 \21\2"+
+		"\u00e7\37\3\2\2\2\u00e8\u00e9\5H%\2\u00e9\u00ea\7\34\2\2\u00ea\u00eb\5"+
+		"\"\22\2\u00eb!\3\2\2\2\u00ec\u00f2\5H%\2\u00ed\u00ee\5H%\2\u00ee\u00ef"+
+		"\7\34\2\2\u00ef\u00f0\5\"\22\2\u00f0\u00f2\3\2\2\2\u00f1\u00ec\3\2\2\2"+
+		"\u00f1\u00ed\3\2\2\2\u00f2#\3\2\2\2\u00f3\u00f4\7-\2\2\u00f4\u0105\7\62"+
+		"\2\2\u00f5\u00f6\7.\2\2\u00f6\u0105\7\62\2\2\u00f7\u0105\7/\2\2\u00f8"+
+		"\u00fa\7\60\2\2\u00f9\u00fb\7\62\2\2\u00fa\u00f9\3\2\2\2\u00fb\u00fc\3"+
+		"\2\2\2\u00fc\u00fa\3\2\2\2\u00fc\u00fd\3\2\2\2\u00fd\u0105\3\2\2\2\u00fe"+
+		"\u0100\7\61\2\2\u00ff\u0101\7\62\2\2\u0100\u00ff\3\2\2\2\u0101\u0102\3"+
+		"\2\2\2\u0102\u0100\3\2\2\2\u0102\u0103\3\2\2\2\u0103\u0105\3\2\2\2\u0104"+
+		"\u00f3\3\2\2\2\u0104\u00f5\3\2\2\2\u0104\u00f7\3\2\2\2\u0104\u00f8\3\2"+
+		"\2\2\u0104\u00fe\3\2\2\2\u0105%\3\2\2\2\u0106\u0107\5 \21\2\u0107\u0108"+
+		"\7\f\2\2\u0108\u0109\5 \21\2\u0109\u010a\7\r\2\2\u010a\u010b\5 \21\2\u010b"+
+		"\'\3\2\2\2\u010c\u010d\5*\26\2\u010d\u010e\7\f\2\2\u010e\u010f\5,\27\2"+
+		"\u010f)\3\2\2\2\u0110\u0113\5 \21\2\u0111\u0113\5\36\20\2\u0112\u0110"+
+		"\3\2\2\2\u0112\u0111\3\2\2\2\u0113+\3\2\2\2\u0114\u0118\5 \21\2\u0115"+
+		"\u0118\5(\25\2\u0116\u0118\5\36\20\2\u0117\u0114\3\2\2\2\u0117\u0115\3"+
+		"\2\2\2\u0117\u0116\3\2\2\2\u0118-\3\2\2\2\u0119\u011a\5B\"\2\u011a\u011c"+
+		"\7\24\2\2\u011b\u011d\5\60\31\2\u011c\u011b\3\2\2\2\u011d\u011e\3\2\2"+
+		"\2\u011e\u011c\3\2\2\2\u011e\u011f\3\2\2\2\u011f\u0120\3\2\2\2\u0120\u0121"+
+		"\7\26\2\2\u0121/\3\2\2\2\u0122\u0123\5D#\2\u0123\u0124\5F$\2\u0124\u0127"+
+		"\7\23\2\2\u0125\u0128\5\34\17\2\u0126\u0128\5H%\2\u0127\u0125\3\2\2\2"+
+		"\u0127\u0126\3\2\2\2\u0128\u0129\3\2\2\2\u0129\u012a\7\25\2\2\u012a\u0130"+
+		"\7\31\2\2\u012b\u012c\5\62\32\2\u012c\u012d\7\33\2\2\u012d\u012f\3\2\2"+
+		"\2\u012e\u012b\3\2\2\2\u012f\u0132\3\2\2\2\u0130\u012e\3\2\2\2\u0130\u0131"+
+		"\3\2\2\2\u0131\u0134\3\2\2\2\u0132\u0130\3\2\2\2\u0133\u0135\5\62\32\2"+
+		"\u0134\u0133\3\2\2\2\u0134\u0135\3\2\2\2\u0135\u0136\3\2\2\2\u0136\u0137"+
+		"\7\32\2\2\u0137\61\3\2\2\2\u0138\u013c\5@!\2\u0139\u013d\5\64\33\2\u013a"+
+		"\u013d\5> \2\u013b\u013d\5B\"\2\u013c\u0139\3\2\2\2\u013c\u013a\3\2\2"+
+		"\2\u013c\u013b\3\2\2\2\u013d\63\3\2\2\2\u013e\u0141\5\66\34\2\u013f\u0142"+
+		"\5:\36\2\u0140\u0142\5<\37\2\u0141\u013f\3\2\2\2\u0141\u0140\3\2\2\2\u0141"+
+		"\u0142\3\2\2\2\u0142\65\3\2\2\2\u0143\u0145\5F$\2\u0144\u0143\3\2\2\2"+
+		"\u0144\u0145\3\2\2\2\u0145\u0146\3\2\2\2\u0146\u0147\58\35\2\u0147\67"+
+		"\3\2\2\2\u0148\u014b\7\23\2\2\u0149\u014c\5\34\17\2\u014a\u014c\5H%\2"+
+		"\u014b\u0149\3\2\2\2\u014b\u014a\3\2\2\2\u014c\u014f\3\2\2\2\u014d\u014e"+
+		"\7\20\2\2\u014e\u0150\5H%\2\u014f\u014d\3\2\2\2\u014f\u0150\3\2\2\2\u0150"+
+		"\u0151\3\2\2\2\u0151\u0152\7\25\2\2\u0152\u0155\3\2\2\2\u0153\u0155\7"+
+		"%\2\2\u0154\u0148\3\2\2\2\u0154\u0153\3\2\2\2\u01559\3\2\2\2\u0156\u0159"+
+		"\7&\2\2\u0157\u0159\5\66\34\2\u0158\u0156\3\2\2\2\u0158\u0157\3\2\2\2"+
+		"\u0159;\3\2\2\2\u015a\u015e\7(\2\2\u015b\u015c\7\"\2\2\u015c\u015e\58"+
+		"\35\2\u015d\u015a\3\2\2\2\u015d\u015b\3\2\2\2\u015e=\3\2\2\2\u015f\u0160"+
+		"\7\'\2\2\u0160?\3\2\2\2\u0161\u0164\5B\"\2\u0162\u0164\7!\2\2\u0163\u0161"+
+		"\3\2\2\2\u0163\u0162\3\2\2\2\u0164A\3\2\2\2\u0165\u0166\5F$\2\u0166\u0167"+
+		"\5H%\2\u0167C\3\2\2\2\u0168\u016e\5@!\2\u0169\u016a\7\21\2\2\u016a\u016b"+
+		"\5H%\2\u016b\u016c\7\22\2\2\u016c\u016e\3\2\2\2\u016d\u0168\3\2\2\2\u016d"+
+		"\u0169\3\2\2\2\u016eE\3\2\2\2\u016f\u0172\5H%\2\u0170\u0172\7+\2\2\u0171"+
+		"\u016f\3\2\2\2\u0171\u0170\3\2\2\2\u0172G\3\2\2\2\u0173\u0174\t\5\2\2"+
+		"\u0174I\3\2\2\2(MRT^qz\u0081\u0086\u0094\u0099\u00a9\u00ae\u00b2\u00b6"+
+		"\u00d3\u00da\u00e0\u00f1\u00fc\u0102\u0104\u0112\u0117\u011e\u0127\u0130"+
+		"\u0134\u013c\u0141\u0144\u014b\u014f\u0154\u0158\u015d\u0163\u016d\u0171";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
