@@ -181,6 +181,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitValueRetriever(ShExMLParser.ValueRetrieverContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#rdfCollection}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRdfCollection(ShExMLParser.RdfCollectionContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#xmlschemadatatype}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

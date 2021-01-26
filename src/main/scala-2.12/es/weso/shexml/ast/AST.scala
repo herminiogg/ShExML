@@ -72,7 +72,7 @@ case class Predicate(prefix: String, extension: String) extends AST
 sealed trait ObjectOrShapeLink extends AST
 
 case class ObjectElement(prefix: String, action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var],
-                         dataType: Option[DataType], langTag: Option[LangTag]) extends ObjectOrShapeLink
+                         dataType: Option[DataType], langTag: Option[LangTag], rdfCollection: Option[RDFCollection]) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 
 sealed trait DataType extends AST
@@ -97,3 +97,9 @@ case class JdbcURL(url: String) extends IRI
 case class ReplacedStrings(strings: List[String]) extends AST
 case class ComposedVariable(variables: List[Var]) extends AST
 case class MatcherList(matchers: List[Matcher]) extends AST
+
+sealed trait RDFCollection extends AST
+case class RDFList() extends RDFCollection
+case class RDFBag() extends RDFCollection
+case class RDFAlt() extends RDFCollection
+case class RDFSeq() extends RDFCollection
