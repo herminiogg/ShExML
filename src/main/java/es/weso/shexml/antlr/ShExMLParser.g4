@@ -36,7 +36,8 @@ shape: tripleElement prefixVar '[' (exp | variable) ']' '{' (predicateObject ';'
 predicateObject: predicate (objectElement | shapeLink | literalValue) ;
 objectElement: firstPartObjectElement (xmlschemadatatype | langtag)? ;
 firstPartObjectElement: prefixVar? valueRetriever ;
-valueRetriever: ('[' (exp | variable) (MATCHING variable)? ']' | STRINGOPERATOR) ;
+valueRetriever: ('[' (exp | variable) (MATCHING variable)? (AS rdfCollection)? ']' | STRINGOPERATOR) ;
+rdfCollection: RDFLIST | RDFBAG | RDFSEQ | RDFALT ;
 xmlschemadatatype: XMLSCHEMADATATYPE | firstPartObjectElement ;
 langtag: LANGTAG | '@' valueRetriever ;
 shapeLink: SHAPELINK ;

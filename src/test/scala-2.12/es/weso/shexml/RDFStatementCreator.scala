@@ -1,7 +1,7 @@
 package es.weso.shexml
 
 import org.apache.jena.datatypes.RDFDatatype
-import org.apache.jena.rdf.model.{AnonId, Model, ResourceFactory, Statement}
+import org.apache.jena.rdf.model.{AnonId, Model, Resource, ResourceFactory, Statement}
 
 /**
   * Created by herminio on 21/2/18.
@@ -13,6 +13,12 @@ trait RDFStatementCreator {
     val predicate = ResourceFactory.createProperty(prefix + p)
     val obj = ResourceFactory.createResource(prefix + o)
     ResourceFactory.createStatement(subject, predicate, obj)
+  }
+
+  def createStatementWithResource(prefix: String, s: String, p: String, o: Resource): Statement = {
+    val subject = ResourceFactory.createResource(prefix + s)
+    val predicate = ResourceFactory.createProperty(prefix + p)
+    ResourceFactory.createStatement(subject, predicate, o)
   }
 
   def createStatementWithLiteral(prefix: String, s: String, p: String, o: String, xsdType: RDFDatatype): Statement = {

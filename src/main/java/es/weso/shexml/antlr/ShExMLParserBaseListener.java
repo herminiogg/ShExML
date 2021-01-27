@@ -354,6 +354,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterRdfCollection(ShExMLParser.RdfCollectionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRdfCollection(ShExMLParser.RdfCollectionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterXmlschemadatatype(ShExMLParser.XmlschemadatatypeContext ctx) { }
 	/**
 	 * {@inheritDoc}

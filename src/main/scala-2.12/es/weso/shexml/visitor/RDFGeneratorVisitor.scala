@@ -4,9 +4,10 @@ import java.io.{File, StringReader}
 import java.sql.DriverManager
 import java.util
 
+import collection.JavaConverters._
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
 import es.weso.shexml.shex.ShExMLInferredCardinalitiesAndDatatypes
 import es.weso.shexml.visitor
@@ -17,7 +18,7 @@ import kantan.xpath.implicits._
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ResultSet}
-import org.apache.jena.rdf.model.{AnonId, Model, ModelFactory, Resource, ResourceFactory, Statement}
+import org.apache.jena.rdf.model.{AnonId, Model, ModelFactory, RDFNode, Resource, ResourceFactory, Statement}
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
 
@@ -34,6 +35,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
   protected val pushedQueries = mutable.HashMap[String, QueryClause]()
   protected val queryResultCache = new QueryResultsCache()
+  protected val alreadyGeneratedCollections = mutable.ListBuffer[String]()
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
@@ -74,29 +76,34 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
-          for(predicateObject <- predicateObjects) {
-            registerCardinalityAndDatatype(shapeName.name, predicateObject, result)
-            if(shapePrefix == "_:") {
-              if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
-                output.add(createBNodeStatement(action, predicateObject(0), normaliseURI(predicateObject(1))))
-              else
-                output.add(createBNodeStatementWithLiteral(
-                  action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
-            } else {
-              if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
-                output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
-              else
-                output.add(createStatementWithLiteral(
-                  prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+          result.rdfCollection match {
+            case None => {
+              for (predicateObject <- predicateObjects) {
+                registerCardinalityAndDatatype(shapeName.name, predicateObject, result)
+                createTriple(shapePrefix, action, predicateObject, result, output)
+              }
+            }
+            case Some(rdfCollection) => {
+              val predicateObjectsList = finalPredicateObjectsList.filter(_.rdfCollection.isDefined).flatMap(_.results).map(_.toString.split(" ", 2))
+              val groupedPredicateObjects = predicateObjectsList.groupBy(i => i(0))
+              val keys = groupedPredicateObjects.keys
+              for (key <- keys) {
+                if(!alreadyGeneratedCollections.contains(key + groupedPredicateObjects(key).map(_(1)).mkString(""))) {
+                  alreadyGeneratedCollections += key + groupedPredicateObjects(key).map(_(1)).mkString("")
+                  registerCardinalityAndDatatype(shapeName.name, groupedPredicateObjects(key).head, result)
+                  createTripleWithCollection(shapePrefix, action, groupedPredicateObjects(key), result, output, rdfCollection)
+                }
+              }
             }
           }
+
         }
         a
       }
       finalActions.map(r => Result(r.id, r.rootIds, r.results.map(ir => {
         val namespace = if(ir.startsWith("_:")) "" else prefixTable.getOrElse(shapePrefix, "_:")
         namespace + ir
-      }), r.dataType, r.langTag))
+      }), r.dataType, r.langTag, r.rdfCollection))
     }
 
     case PredicateObject(predicate, objectOrShapeLink) => {
@@ -106,7 +113,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         objectResult match {
           case lr: List[Result] => lr.map(result => {
             val results = result.results.map(predicateResult.toString + " " + _)
-            Result(result.id, result.rootIds, results, result.dataType, result.langTag)
+            Result(result.id, result.rootIds, results, result.dataType, result.langTag, result.rdfCollection)
           })
           case ResultAutoIncrement(iterator, _, namespace, dataType, langTag) =>
             visitor.ResultAutoIncrement(iterator, predicateResult.toString, namespace, dataType, langTag)
@@ -118,7 +125,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag) => {
+    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag, rdfCollection) => {
       val result = action match {
         case Some(value) => doVisit(value, optionalArgument)
         case None => literalValue match {
@@ -144,7 +151,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case langTagResults: List[Result] => langTagResults.filter(_.id == result.id).head.results.head
             case value: String => value
           })
-          Result(result.id, result.rootIds, newResults, normaliseDataType(dataTypeValue), langTagValue)
+          Result(result.id, result.rootIds, newResults, normaliseDataType(dataTypeValue), langTagValue, rdfCollection)
         })
         case ResultAutoIncrement(iterator, predicate, _, _, _) =>
           val dataTypeValue = dataTypeResult.map({
@@ -292,7 +299,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case l: util.ArrayList[_] => l.toArray.map(_.toString)
             case default => List(default.toString)
           })
-          Result(id, rootIds, finalList, None, None)
+          Result(id, rootIds, finalList, None, None, None)
         }
       }
     }
@@ -306,7 +313,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val rootIds = arguments.getOrElse("rootIds", List(id)).asInstanceOf[List[String]]
       val compilationResult = XPathCompiler.builtIn.compile(query)
       compilationResult.toOption match {
-        case Some(value) => Result(id, rootIds, fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None)
+        case Some(value) => Result(id, rootIds, fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None, None)
         case None => throw new Exception("Bad iterator query: " + query)
       }
     }
@@ -319,7 +326,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val listToMatch = optionalArgument.asInstanceOf[List[Result]]
       listToMatch.map(r => visitor.Result(r.id, r.rootIds, r.results.map(s => {
         matchers.matchers.foldLeft(s)((value, matcher) => doVisit(matcher, value).asInstanceOf[String])
-      }), r.dataType, r.langTag))
+      }), r.dataType, r.langTag, r.rdfCollection))
     }
 
     case Matcher(replacedStrings, replacement) => {
@@ -328,11 +335,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case LiteralObject(prefix, value) => {
       val prefixValue = prefixTable(prefix.name)
-      List(Result("", Nil, List(prefixValue + value), None, None))
+      List(Result("", Nil, List(prefixValue + value), None, None, None))
     }
 
     case LiteralObjectValue(value) => {
-      List(Result("", Nil, List(value), None, None))
+      List(Result("", Nil, List(value), None, None, None))
     }
 
     case DataTypeGeneration(prefix, action, matcher) => {
@@ -345,7 +352,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case _: List[Result] =>
           matchedResultList.asInstanceOf[List[Result]].map(result => {
             val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
-            Result(result.id, result.rootIds, newResults, None, None)
+            Result(result.id, result.rootIds, newResults, None, None, None)
           })
         case _ => result
       }
@@ -401,6 +408,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
+  protected def createStatementWithCollection(s: String, p: String, o: Resource): Statement = {
+    val subject = ResourceFactory.createResource(s)
+    val predicate = ResourceFactory.createProperty(p)
+    ResourceFactory.createStatement(subject, predicate, o)
+  }
+
   protected def createBNodeStatement(s: String, p: String, o: String): Statement = {
     val anonID = new AnonId(s)
     val subject = dataset.getDefaultModel.createResource(anonID)
@@ -409,6 +422,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       dataset.getDefaultModel.createResource(new AnonId(o.replace("_:", "")))
       else ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
+  }
+
+  protected def createBNodeStatementWithCollection(s: String, p: String, o: Resource): Statement = {
+    val anonID = new AnonId(s)
+    val subject = dataset.getDefaultModel.createResource(anonID)
+    val predicate = ResourceFactory.createProperty(p)
+    ResourceFactory.createStatement(subject, predicate, o)
   }
 
   protected def createStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None, langTag: Option[String] = None): Statement = {
@@ -598,7 +618,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val results = resultMap(query.column)
     val composedResults = for (i <- results.indices) yield {
       val id = (query.query + i).hashCode.toString
-      Result(id, List(id), List(results(i)), None, None)
+      Result(id, List(id), List(results(i)), None, None, None)
     }
     composedResults.toList
 
@@ -619,7 +639,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val results = resultMap(query.column)
     val composedResults = for (i <- results.indices) yield {
       val id = (query.query + i).hashCode.toString
-      Result(id, List(id), List(results(i)), None, None)
+      Result(id, List(id), List(results(i)), None, None, None)
     }
     composedResults.toList
   }
@@ -640,7 +660,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       allLines(i).get(query.query) match {
         case Some(result) => {
           val id = (fileContent + i).hashCode.toString
-          Result(id, List(id), List(result), None, None)
+          Result(id, List(id), List(result), None, None, None)
         }
         case None => throw new Exception("Field not present")
       }
@@ -667,7 +687,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           i + unionString + j
         }
       }
-      Result(l.id, l.rootIds, results.flatten, r.dataType, r.langTag)
+      Result(l.id, l.rootIds, results.flatten, r.dataType, r.langTag, r.rdfCollection)
     }
   }
 
@@ -675,7 +695,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val joinUnionList = for(r <- right.asInstanceOf[List[Result]]) yield {
       val filteredJoin = join.asInstanceOf[List[Result]].filter(j => j.results.nonEmpty && j.results == r.results)
       if(filteredJoin.nonEmpty)
-        Result(r.id, r.rootIds, left.filter(l => l.id == filteredJoin.head.id && l.results.nonEmpty).head.results, r.dataType, r.langTag)
+        Result(r.id, r.rootIds, left.filter(l => l.id == filteredJoin.head.id && l.results.nonEmpty).head.results, r.dataType, r.langTag, r.rdfCollection)
       else r
     }
     left.union(joinUnionList)
@@ -683,7 +703,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   private def solveAutoIncrementResults(list: List[Any], action: Result): List[Result] = {
     val resultsAutoIncrement = list.filter(_.isInstanceOf[ResultAutoIncrement]).map(_.asInstanceOf[ResultAutoIncrement])
-    val newResultsAutoIncrement = resultsAutoIncrement.map(r => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag))
+    val newResultsAutoIncrement = resultsAutoIncrement.map(r => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag, None))
     list.filterNot(_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement
   }
 
@@ -708,11 +728,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
       getMaxOccurrencesPredicateObjectList(predicateObjectsList) match {
         case lr: List[Result] => lr.flatMap(r =>
-          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None)))
+          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None, None)))
         case ra: ResultAutoIncrement =>
           val id = ra.hashCode().toString
           val rootIds = List(id)
-          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None))
+          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None, None))
       }
     } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
   }
@@ -738,6 +758,86 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   private def registerCardinalityAndDatatype(shapeName: String, predicateObject: Array[String], result: Result) {
     shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, result.dataType)
+  }
+
+  private def createTriple(shapePrefix: String, action: String, predicateObject: Array[String], result: Result, output: Model): Unit = {
+    if(shapePrefix == "_:") {
+      if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
+        output.add(createBNodeStatement(action, predicateObject(0), normaliseURI(predicateObject(1))))
+      else
+        output.add(createBNodeStatementWithLiteral(
+          action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+    } else {
+      if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
+        output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
+      else
+        output.add(createStatementWithLiteral(
+          prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+    }
+  }
+
+  private def createTripleWithCollection(shapePrefix: String, action: String, predicateObjects: List[Array[String]],
+                                         result: Result, output: Model, rdfCollection: RDFCollection): Unit = {
+    val predicateObject = predicateObjects.head
+    if(shapePrefix == "_:") {
+      if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:")) {
+        val values = predicateObjects.map(i => output.createResource(normaliseURI(i(1))))
+        val collection = collectionConstructor(output, values.toIterator, rdfCollection)
+        output.add(createBNodeStatementWithCollection(action, predicateObject(0), collection))
+      }
+      else {
+        val values = predicateObjects.map(i => {
+          if(result.langTag.isDefined) output.createLiteral(i(1), result.langTag.get)
+          else if(result.dataType.isDefined) {
+            val xsdType = result.dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
+              .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(i(1)))
+            output.createTypedLiteral(i(1), xsdType)
+          }
+          else output.createTypedLiteral(i(1), searchForXSDType(i(1)))
+        })
+        val collection = collectionConstructor(output, values.toIterator, rdfCollection)
+        output.add(createBNodeStatementWithCollection(action, predicateObject(0), collection))
+      }
+    } else {
+      if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:")) {
+        val values = predicateObjects.map(i => output.createResource(normaliseURI(i(1))))
+        val collection = collectionConstructor(output, values.toIterator, rdfCollection)
+        output.add(createStatementWithCollection(prefixTable(shapePrefix) + action, predicateObject(0), collection))
+      }
+      else {
+        val values = predicateObjects.map(i => {
+          if(result.langTag.isDefined) output.createLiteral(i(1), result.langTag.get)
+          else if(result.dataType.isDefined) {
+            val xsdType = result.dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
+              .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(i(1)))
+            output.createTypedLiteral(i(1), xsdType)
+          }
+          else output.createTypedLiteral(i(1), searchForXSDType(i(1)))
+        })
+        val collection = collectionConstructor(output, values.toIterator, rdfCollection)
+        output.add(createStatementWithCollection(
+          prefixTable(shapePrefix) + action, predicateObject(0), collection))
+      }
+    }
+  }
+
+  private def collectionConstructor(output: Model, nodes: Iterator[RDFNode],
+        rdfCollection: RDFCollection): Resource =
+    rdfCollection match {
+      case RDFList() => output.createList(nodes.asJava)
+      case RDFBag() =>
+        val bag = output.createBag()
+        nodes.foreach(n => bag.add(n))
+        bag
+      case RDFAlt() =>
+        val alt = output.createAlt()
+        nodes.foreach(n => alt.add(n))
+        alt
+      case RDFSeq() =>
+        val seq = output.createSeq()
+        nodes.foreach(n => seq.add(n))
+        seq
+      case _ => throw new Exception("Collection not supported")
   }
 
   private def normaliseDataType(datatype: Option[String]): Option[String] = datatype.map(dt => {
@@ -802,7 +902,8 @@ class QueryResultsCache() {
 sealed trait Resultable {
   def results: List[String]
 }
-case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String], langTag: Option[String]) extends Resultable {
+case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String],
+                  langTag: Option[String], rdfCollection: Option[RDFCollection]) extends Resultable {
   override def equals(that: Any): Boolean = {
     canEqual(that) && id == that.asInstanceOf[Result].id
   }

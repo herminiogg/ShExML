@@ -313,7 +313,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       )
     }
 
-    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag) => {
+    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag, rdfCollection) => {
       val arguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
       val prefixArguments = if(prefix.nonEmpty) arguments.+("prefix" -> prefix) else arguments
       val dataTypeArguments = if(dataType.isDefined) prefixArguments.+("dataType" -> dataType.getOrElse(None)) else prefixArguments
