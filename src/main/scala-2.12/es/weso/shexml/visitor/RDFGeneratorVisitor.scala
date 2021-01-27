@@ -151,7 +151,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case langTagResults: List[Result] => langTagResults.filter(_.id == result.id).head.results.head
             case value: String => value
           })
-          Result(result.id, result.rootIds, newResults, dataTypeValue, langTagValue, rdfCollection)
+          Result(result.id, result.rootIds, newResults, normaliseDataType(dataTypeValue), langTagValue, rdfCollection)
         })
         case ResultAutoIncrement(iterator, predicate, _, _, _) =>
           val dataTypeValue = dataTypeResult.map({
@@ -162,7 +162,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case _: List[Result] => throw new Exception("Autoincrement values cannot have a generated langTag")
             case value: String => value
           })
-          visitor.ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), dataTypeValue, langTagValue)
+          visitor.ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), normaliseDataType(dataTypeValue), langTagValue)
         case _ => result
       }
     }
@@ -839,6 +839,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         seq
       case _ => throw new Exception("Collection not supported")
   }
+
+  private def normaliseDataType(datatype: Option[String]): Option[String] = datatype.map(dt => {
+    val xsdURI = "http://www.w3.org/2001/XMLSchema#"
+    if(dt.contains(xsdURI)) "xsd:" + dt.split('#').takeRight(1).head
+    else dt
+  })
 
   override def doVisitDefault(): Any = Nil
 
