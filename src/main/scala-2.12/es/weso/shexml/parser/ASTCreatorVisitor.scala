@@ -236,7 +236,16 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       else Option(ctx.firstPartObjectElement().valueRetriever().variable(1)).map(createVar)
     val dataType = if(ctx.xmlschemadatatype() != null) Some(visit(ctx.xmlschemadatatype()).asInstanceOf[DataType]) else None
     val langTag = if(ctx.langtag() != null) Some(visit(ctx.langtag()).asInstanceOf[LangTag]) else None
-    ObjectElement(prefix, expOrVar, literalValue, matcherVar, dataType, langTag)
+    val rdfCollection = {
+      if(ctx.firstPartObjectElement() == null || ctx.firstPartObjectElement().valueRetriever() == null
+        || ctx.firstPartObjectElement().valueRetriever().rdfCollection() == null) None
+      else if(ctx.firstPartObjectElement().valueRetriever().rdfCollection().RDFLIST() != null) Some(RDFList())
+      else if(ctx.firstPartObjectElement().valueRetriever().rdfCollection().RDFSEQ() != null) Some(RDFSeq())
+      else if(ctx.firstPartObjectElement().valueRetriever().rdfCollection().RDFALT() != null) Some(RDFAlt())
+      else if(ctx.firstPartObjectElement().valueRetriever().rdfCollection().RDFBAG() != null) Some(RDFBag())
+      else None
+    }
+    ObjectElement(prefix, expOrVar, literalValue, matcherVar, dataType, langTag, rdfCollection)
   }
 
   override def visitXmlschemadatatype(ctx: XmlschemadatatypeContext): AST = {

@@ -54,7 +54,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       Predicate(prefix, localname)
     }
 
-    case es.weso.shexml.ast.ObjectElement(prefix, _, literalValue, _, dataType, langTag) => {
+    case es.weso.shexml.ast.ObjectElement(prefix, _, literalValue, _, dataType, langTag, _) => {
       val shapeName = optionalArgument("shapeName")
       val predicateIRI = optionalArgument("predicateIRI")
       val cardinality = getInferredCardinality(shapeName, predicateIRI)

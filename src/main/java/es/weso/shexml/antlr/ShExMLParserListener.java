@@ -290,6 +290,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitValueRetriever(ShExMLParser.ValueRetrieverContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#rdfCollection}.
+	 * @param ctx the parse tree
+	 */
+	void enterRdfCollection(ShExMLParser.RdfCollectionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#rdfCollection}.
+	 * @param ctx the parse tree
+	 */
+	void exitRdfCollection(ShExMLParser.RdfCollectionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#xmlschemadatatype}.
 	 * @param ctx the parse tree
 	 */
