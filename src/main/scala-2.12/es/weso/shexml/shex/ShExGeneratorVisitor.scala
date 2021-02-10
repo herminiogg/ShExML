@@ -59,16 +59,16 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       val predicateIRI = optionalArgument("predicateIRI")
       val cardinality = getInferredCardinality(shapeName, predicateIRI)
 
-      val shexDatatype = literalValue match {
-        case Some(_) if langTag.isDefined => "rdf:langString"
-        case None => dataType match {
+      val shexDatatype =
+        if(literalValue.isDefined && langTag.isDefined) "rdf:langString"
+        else { dataType match {
           case Some(value) => value match {
             case dt: DataTypeLiteral => dt.value
             case _ => "" //change for generated datatype
           }
           case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xs:string")
+         }
         }
-      }
       literalValue match {
         case Some(value) => FixedValue('"' + value.value + '"')
         case None => if(prefix.isEmpty) ObjectDefinition(shexDatatype, cardinality) else PartialFixedValue(prefix, cardinality)
