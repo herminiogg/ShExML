@@ -11,11 +11,11 @@ class ShapeMapPrinter {
   }
 
   def print(node: Node): String = {
-    "<" + node.prefix + node.value + ">"
+    node.prefix + node.value
   }
 
   def print(shape: ShapeMapShape): String = {
-    "<" + shape.prefix + shape.name + ">"
+    shape.prefix + shape.name
   }
 
 }
