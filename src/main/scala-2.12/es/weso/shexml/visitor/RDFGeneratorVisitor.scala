@@ -3,13 +3,12 @@ package es.weso.shexml.visitor
 import java.io.{File, StringReader}
 import java.sql.DriverManager
 import java.util
-
 import collection.JavaConverters._
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
 import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
-import es.weso.shexml.shex.ShExMLInferredCardinalitiesAndDatatypes
+import es.weso.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import es.weso.shexml.visitor
 import kantan.xpath.XPathCompiler
 
@@ -28,7 +27,8 @@ import scala.util.Try
   * Created by herminio on 26/12/17.
   */
 class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], username: String, password: String,
-                          shexInferredPropertiesTable: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes] = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes])
+                          shexInferredPropertiesTable: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes] = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes],
+                          shapeMapTable: mutable.ListBuffer[ShapeMapInference] = mutable.ListBuffer.empty[ShapeMapInference])
   extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
@@ -100,6 +100,19 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         }
         a
       }
+      finalActions.foreach(fa => {
+        fa.results.foreach(r => {
+          val splittedShapeName = shapeName.name.split(':')
+          val shapeMapShape =
+            if(splittedShapeName.length > 1)
+              ShapeMapShape(splittedShapeName(0) + ":", splittedShapeName(1))
+            else
+              ShapeMapShape(":", splittedShapeName(1))
+          val node = Node(shapePrefix, r)
+          val shapeMap = ShapeMapInference(node, shapeMapShape)
+          shapeMapTable += shapeMap
+        })
+      })
       finalActions.map(r => Result(r.id, r.rootIds, r.results.map(ir => {
         val namespace = if(ir.startsWith("_:")) "" else prefixTable.getOrElse(shapePrefix, "_:")
         namespace + ir
