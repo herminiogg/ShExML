@@ -36,7 +36,7 @@ class ShExPrinter {
     }
 
     case ShapeLink(linkedShape) => {
-      "@" + linkedShape
+      "@" + linkedShape + " +"
     }
 
     case ObjectDefinition(datatype, cardinality) => {
