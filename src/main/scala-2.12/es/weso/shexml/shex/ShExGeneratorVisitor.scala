@@ -66,7 +66,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
             case dt: DataTypeLiteral => dt.value
             case _ => "" //change for generated datatype
           }
-          case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xs:string")
+          case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xsd:string")
          }
         }
       literalValue match {
