@@ -770,7 +770,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def registerCardinalityAndDatatype(shapeName: String, predicateObject: Array[String], result: Result) {
-    shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, result.dataType)
+    val datatype = result.dataType match {
+      case Some(value) => Some(value)
+      case None => {
+        val value = result.results.head.split(' ')(1)
+        normaliseDataType(Some(searchForXSDType(value).getURI))
+      }
+    }
+    shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, datatype)
   }
 
   private def createTriple(shapePrefix: String, action: String, predicateObject: Array[String], result: Result, output: Model): Unit = {
@@ -855,7 +862,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   private def normaliseDataType(datatype: Option[String]): Option[String] = datatype.map(dt => {
     val xsdURI = "http://www.w3.org/2001/XMLSchema#"
-    if(dt.contains(xsdURI)) "xsd:" + dt.split('#').takeRight(1).head
+    val xsPrefix = prefixTable.get("xs:")
+    val xsdPrefix = prefixTable.get("xsd:")
+    val prefix = if(xsdPrefix.isDefined) "xsd:" else if(xsPrefix.isDefined) "xs:" else "xsd:"
+    if(dt.contains(xsdURI)) prefix + dt.split('#').takeRight(1).head
     else dt
   })
 

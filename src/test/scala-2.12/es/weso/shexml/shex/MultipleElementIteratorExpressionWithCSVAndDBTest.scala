@@ -55,8 +55,8 @@ class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with Sh
       |    ex:director [films.directors] ;
       |}
     """.stripMargin
-  private val shapeMap = "<ex:1>@<ex:Films>,<ex:2>@<ex:Films>,<ex:3>@<ex:Films>,<ex:4>@<ex:Films>,<ex:5>@<ex:Films>," +
-                          "<ex:6>@<ex:Films>,<ex:7>@<ex:Films>,<ex:8>@<ex:Films>,<ex:9>@<ex:Films>"
+  private val shapeMap = "ex:1@ex:Films,ex:2@ex:Films,ex:3@ex:Films,ex:4@ex:Films,ex:5@ex:Films," +
+                          "ex:6@ex:Films,ex:7@ex:Films,ex:8@ex:Films,ex:9@ex:Films"
 
   test("Films validate against generated schema") {
     this.validate(example, shapeMap)
