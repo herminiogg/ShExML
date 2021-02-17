@@ -1,6 +1,6 @@
 package es.weso.shexml.shex
 
-import es.weso.shexml.ast.{DataTypeLiteral, Declaration, ShExML}
+import es.weso.shexml.ast.{DataTypeLiteral, Declaration, LangTagGeneration, LangTagLiteral, ShExML}
 import es.weso.shexml.visitor.DefaultVisitor
 
 import scala.collection.immutable.HashMap
@@ -71,7 +71,16 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
         }
       literalValue match {
         case Some(value) => FixedValue('"' + value.value + '"')
-        case None => if(prefix.isEmpty) ObjectDefinition(shexDatatype, cardinality) else PartialFixedValue(prefix, cardinality)
+        case None =>
+          if(prefix.isEmpty) {
+            if(langTag.isDefined) langTag.get match {
+              case LangTagLiteral(value) => FixedValue("@" + value)
+              case LangTagGeneration(action, matcher) => throw new Exception("ShEx generation with dynamic langtag is not yet supported!")
+            }
+            else
+              ObjectDefinition(shexDatatype, cardinality)
+          }
+          else PartialFixedValue(prefix, cardinality)
       }
     }
 
