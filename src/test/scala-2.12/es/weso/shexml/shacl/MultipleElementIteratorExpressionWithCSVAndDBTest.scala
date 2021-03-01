@@ -1,9 +1,8 @@
-package es.weso.shexml.shex
+package es.weso.shexml.shacl
 
-import es.weso.shexml.MappingLauncher
 import org.scalatest.FunSuite
 
-class MultipleElementIteratorExpressionWithCSVAndDBInferredShapeMapTest extends FunSuite with ShExValidation {
+class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with SHACLValidation {
 
   private val example =
     """
@@ -56,8 +55,11 @@ class MultipleElementIteratorExpressionWithCSVAndDBInferredShapeMapTest extends 
     """.stripMargin
 
   test("Films validate against generated schema") {
-    val shapeMap = new MappingLauncher().launchShapeMapGeneration(example)
-    assert(this.validate(example, shapeMap))
+    assert(this.validate(example))
+  }
+
+  test("Films validate against generated schema with closed shapes") {
+    assert(this.validate(example, true))
   }
 
 }

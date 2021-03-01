@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream
 import es.weso.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import es.weso.shexml.ast._
 import es.weso.shexml.parser.ASTCreatorVisitor
-import es.weso.shexml.shex.{ShExGeneratorVisitor, ShExMLInferredCardinalitiesAndDatatypes, ShExPrinter, ShapeMapInference, ShapeMapPrinter}
+import es.weso.shexml.shex.{SHACLGenerator, ShExGeneratorVisitor, ShExMLInferredCardinalitiesAndDatatypes, ShExPrinter, ShapeMapInference, ShapeMapPrinter}
 import es.weso.shexml.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
@@ -65,6 +65,21 @@ class MappingLauncher(val username: String = "", val password: String = "") {
     val varTable = createVarTable(ast)
     val shapeMaps = generateShapeMaps(ast, varTable)
     new ShapeMapPrinter().print(shapeMaps)
+  }
+
+  def launchSHACLGeneration(mappingCode: String, closed: Boolean = false): String = {
+    val lexer = createLexer(mappingCode)
+    val parser = createParser(lexer)
+    val ast = createAST(parser)
+    val varTable = createVarTable(ast)
+    val inferencesTable = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
+    generateInferencesFromShExML(ast, varTable, inferencesTable)
+    val shex = new ShExGeneratorVisitor(inferencesTable.toList).doVisit(ast, null)
+    val dataset = DatasetFactory.create()
+    new SHACLGenerator(dataset, closed).generate(shex)
+    val outputStream = new ByteArrayOutputStream()
+    dataset.getDefaultModel.write(outputStream, "TURTLE")
+    outputStream.toString
   }
 
   private def createLexer(mappingCode: String): ShExMLLexer = {
