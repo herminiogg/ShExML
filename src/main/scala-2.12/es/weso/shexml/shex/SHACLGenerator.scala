@@ -106,6 +106,7 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
       // to check if it is possible
       val subject = subjectId.get
       output.add(createBNodeStatement(subject, shPrefix + "nodeKind", shPrefix + "IRI"))
+      generate(cardinality, subjectId)
     }
 
     case NumberCardinality(from, to) => {
