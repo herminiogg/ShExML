@@ -59,7 +59,7 @@ class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with Sh
                           "ex:6@ex:Films,ex:7@ex:Films,ex:8@ex:Films,ex:9@ex:Films"
 
   test("Films validate against generated schema") {
-    this.validate(example, shapeMap)
+    assert(this.validate(example, shapeMap))
   }
 
 }
