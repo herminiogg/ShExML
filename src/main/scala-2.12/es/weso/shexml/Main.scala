@@ -28,6 +28,15 @@ class Main extends Callable[Int] {
   @Option(names = Array("-s", "--shex"), description = Array("Generate ShEx validation"))
   private var shexOutput: Boolean = false
 
+  @Option(names = Array("-sm", "--shapeMap"), description = Array("Generate Shape Map for ShEx validation"))
+  private var shapeMapOutput: Boolean = false
+
+  @Option(names = Array("-sh", "--shacl"), description = Array("Generate SHACL validation"))
+  private var shaclOutput: Boolean = false
+
+  @Option(names = Array("-shc", "--shaclClosed"), description = Array("Generate SHACL validation with closed shapes as default"))
+  private var shaclClosedOutput: Boolean = false
+
   @Option(names = Array("-f", "--format"), description = Array("Output format for RDF graph. Turtle, RDF/XML, N-Triples, ..."))
   private var format: String = "Turtle"
 
@@ -52,6 +61,12 @@ class Main extends Callable[Int] {
         mappingLauncher.launchRMLTranslation(fileContent)
       } else if(shexOutput) {
         mappingLauncher.launchShExGeneration(fileContent)
+      } else if(shapeMapOutput) {
+        mappingLauncher.launchShapeMapGeneration(fileContent)
+      } else if(shaclOutput) {
+        mappingLauncher.launchSHACLGeneration(fileContent)
+      } else if(shaclClosedOutput) {
+        mappingLauncher.launchSHACLGeneration(fileContent, true)
       } else {
         mappingLauncher.launchMapping(fileContent, format)
       }

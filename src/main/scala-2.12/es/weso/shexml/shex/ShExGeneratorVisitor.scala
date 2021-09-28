@@ -1,6 +1,6 @@
 package es.weso.shexml.shex
 
-import es.weso.shexml.ast.{DataTypeLiteral, Declaration, ShExML}
+import es.weso.shexml.ast.{DataTypeLiteral, Declaration, LangTagGeneration, LangTagLiteral, ShExML}
 import es.weso.shexml.visitor.DefaultVisitor
 
 import scala.collection.immutable.HashMap
@@ -59,19 +59,28 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       val predicateIRI = optionalArgument("predicateIRI")
       val cardinality = getInferredCardinality(shapeName, predicateIRI)
 
-      val shexDatatype = literalValue match {
-        case Some(_) if langTag.isDefined => "rdf:langString"
-        case None => dataType match {
+      val shexDatatype =
+        if(literalValue.isDefined && langTag.isDefined) "rdf:langString"
+        else { dataType match {
           case Some(value) => value match {
             case dt: DataTypeLiteral => dt.value
             case _ => "" //change for generated datatype
           }
-          case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xs:string")
+          case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xsd:string")
+         }
         }
-      }
       literalValue match {
         case Some(value) => FixedValue('"' + value.value + '"')
-        case None => if(prefix.isEmpty) ObjectDefinition(shexDatatype, cardinality) else PartialFixedValue(prefix, cardinality)
+        case None =>
+          if(prefix.isEmpty) {
+            if(langTag.isDefined) langTag.get match {
+              case LangTagLiteral(value) => FixedValue("@" + value)
+              case LangTagGeneration(action, matcher) => throw new Exception("ShEx generation with dynamic langtag is not yet supported!")
+            }
+            else
+              ObjectDefinition(shexDatatype, cardinality)
+          }
+          else PartialFixedValue(prefix, cardinality)
       }
     }
 

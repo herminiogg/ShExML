@@ -1,11 +1,10 @@
 package es.weso.shexml
 
 import java.io.ByteArrayOutputStream
-
 import es.weso.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import es.weso.shexml.ast._
 import es.weso.shexml.parser.ASTCreatorVisitor
-import es.weso.shexml.shex.{ShExGeneratorVisitor, ShExMLInferredCardinalitiesAndDatatypes, ShExPrinter}
+import es.weso.shexml.shex.{SHACLGenerator, ShExGeneratorVisitor, ShExMLInferredCardinalitiesAndDatatypes, ShExPrinter, ShapeMapInference, ShapeMapPrinter}
 import es.weso.shexml.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
@@ -59,6 +58,30 @@ class MappingLauncher(val username: String = "", val password: String = "") {
     new ShExPrinter().print(shex)
   }
 
+  def launchShapeMapGeneration(mappingCode: String): String = {
+    val lexer = createLexer(mappingCode)
+    val parser = createParser(lexer)
+    val ast = createAST(parser)
+    val varTable = createVarTable(ast)
+    val shapeMaps = generateShapeMaps(ast, varTable)
+    new ShapeMapPrinter().print(shapeMaps)
+  }
+
+  def launchSHACLGeneration(mappingCode: String, closed: Boolean = false): String = {
+    val lexer = createLexer(mappingCode)
+    val parser = createParser(lexer)
+    val ast = createAST(parser)
+    val varTable = createVarTable(ast)
+    val inferencesTable = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
+    generateInferencesFromShExML(ast, varTable, inferencesTable)
+    val shex = new ShExGeneratorVisitor(inferencesTable.toList).doVisit(ast, null)
+    val dataset = DatasetFactory.create()
+    new SHACLGenerator(dataset, closed).generate(shex)
+    val outputStream = new ByteArrayOutputStream()
+    dataset.getDefaultModel.write(outputStream, "TURTLE")
+    outputStream.toString
+  }
+
   private def createLexer(mappingCode: String): ShExMLLexer = {
     new ShExMLLexer(CharStreams.fromString(mappingCode))
   }
@@ -98,6 +121,14 @@ class MappingLauncher(val username: String = "", val password: String = "") {
                                            inferences: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes]): Unit = {
     val dataset = DatasetFactory.create()
     new RDFGeneratorVisitor(dataset, varTable, username, password, inferences).doVisit(ast, null)
+  }
+
+  private def generateShapeMaps(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): List[ShapeMapInference] = {
+    val shapeMapTable = mutable.ListBuffer.empty[ShapeMapInference]
+    val inferences = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
+    val dataset = DatasetFactory.create()
+    new RDFGeneratorVisitor(dataset, varTable, username, password, inferences, shapeMapTable).doVisit(ast, null)
+    shapeMapTable.result()
   }
 
 }

@@ -1,10 +1,8 @@
-package es.weso.shexml.shex
+package es.weso.shexml.shacl
 
-import es.weso.shexml.{MappingLauncher, RDFStatementCreator}
-import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.FunSuite
 
-class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with ShExValidation {
+class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with SHACLValidation {
 
   private val example =
     """
@@ -55,11 +53,13 @@ class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with Sh
       |    ex:director [films.directors] ;
       |}
     """.stripMargin
-  private val shapeMap = "ex:1@ex:Films,ex:2@ex:Films,ex:3@ex:Films,ex:4@ex:Films,ex:5@ex:Films," +
-                          "ex:6@ex:Films,ex:7@ex:Films,ex:8@ex:Films,ex:9@ex:Films"
 
   test("Films validate against generated schema") {
-    assert(this.validate(example, shapeMap))
+    assert(this.validate(example))
+  }
+
+  test("Films validate against generated schema with closed shapes") {
+    assert(this.validate(example, true))
   }
 
 }

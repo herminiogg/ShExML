@@ -1,24 +1,11 @@
-package es.weso.shexml.shex
+package es.weso.shexml.shacl
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
-
-import es.weso.rdf.rdf4j.RDFAsRDF4jModel
-import es.weso.shapeMaps.ShapeMap
-import es.weso.shex.validator.Validator
-import es.weso.shex.{ResolvedSchema, Schema}
-import es.weso.shexml.{MappingLauncher, RDFStatementCreator}
-import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.apache.jena.riot.RDFWriterBuilder
-import org.eclipse.rdf4j.model.ModelFactory
-import org.eclipse.rdf4j.model.impl.DynamicModelFactory
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.FunSuite
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMapping extends FunSuite with ShExValidation {
+class JsonAndXmlEventsMapping extends FunSuite with SHACLValidation {
 
   private val example =
     """
@@ -56,11 +43,13 @@ class JsonAndXmlEventsMapping extends FunSuite with ShExValidation {
       |  ex:long [long_union] ;
       |}
     """.stripMargin
-  private val shapeMap = "ex:51.043613-3.717333@ex:Location, ex:51.043611-3.717222@ex:Location, ex:51.076891-3.717222@ex:Location," +
-    "ex:398@ex:Performance, ex:567@ex:Performance, ex:444@ex:Performance, ex:989@ex:Performance"
 
   test("Events validate against created schema") {
-    assert(this.validate(example, shapeMap))
+    assert(this.validate(example))
+  }
+
+  test("Events validate against created schema with closed shapes") {
+    assert(this.validate(example, true))
   }
 
 }
