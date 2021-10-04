@@ -12,8 +12,8 @@ class JsonAndXmlEventsMappingWithExternalQuery extends FunSuite with Matchers wi
   private val example =
     """
       |PREFIX ex: <http://ex.com/>
-      |SOURCE performances_json <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.json>
-      |SOURCE events_xml <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.xml>
+      |SOURCE performances_json <https://raw.githubusercontent.com/herminiogg/ShExML/master/src/test/resources/events.json>
+      |SOURCE events_xml <https://raw.githubusercontent.com/herminiogg/ShExML/master/src/test/resources/events.xml>
       |QUERY performances_query <jsonpath: $.Performances[*]>
       |QUERY events_query <xpath: /Events/Exhibition>
       |ITERATOR performances_iterator <performances_query> {

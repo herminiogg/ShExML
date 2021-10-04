@@ -1,19 +1,6 @@
 package es.weso.shexml.shex
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
-
-import es.weso.rdf.rdf4j.RDFAsRDF4jModel
-import es.weso.shapeMaps.ShapeMap
-import es.weso.shex.validator.Validator
-import es.weso.shex.{ResolvedSchema, Schema}
-import es.weso.shexml.{MappingLauncher, RDFStatementCreator}
-import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.apache.jena.riot.RDFWriterBuilder
-import org.eclipse.rdf4j.model.ModelFactory
-import org.eclipse.rdf4j.model.impl.DynamicModelFactory
-import org.eclipse.rdf4j.model.vocabulary.RDF
-import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.FunSuite
 
 /**
   * Created by herminio on 21/2/18.

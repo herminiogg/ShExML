@@ -8,8 +8,6 @@ scalaVersion := "2.12.4"
 
 resolvers += "jitpack" at "https://jitpack.io"
 
-resolvers += "binTray" at "https://dl.bintray.com/labra/maven/"
-
 libraryDependencies += "org.antlr" % "antlr4" % "4.8"
 
 libraryDependencies += "io.gatling" % "jsonpath_2.12" % "0.6.10"
@@ -20,7 +18,7 @@ libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.
 
 libraryDependencies += "com.nrinaudo" %% "kantan.xpath" % "0.3.2"
 
-libraryDependencies += "org.apache.jena" % "apache-jena-libs" % "3.16.0" pomOnly()
+libraryDependencies += "org.apache.jena" % "apache-jena-libs" % "3.17.0" pomOnly()
 
 libraryDependencies += "org.scalatest" % "scalatest_2.12" % "3.0.4" % "test"
 
@@ -42,11 +40,11 @@ libraryDependencies += "org.mariadb.jdbc" % "mariadb-java-client" % "2.6.2"
 
 libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "8.4.1.jre8"
 
-libraryDependencies += "es.weso" %% "shex" % "0.1.71" % "test"
+libraryDependencies += "es.weso" %% "shex" % "0.1.97" % "test"
 
-libraryDependencies += "es.weso" %% "srdf4j" % "0.1.76" % "test"
+libraryDependencies += "es.weso" %% "srdf4j" % "0.1.104" % "test"
 
-libraryDependencies += "es.weso" %% "srdf" % "0.1.76" % "test"
+libraryDependencies += "es.weso" %% "srdf" % "0.1.104" % "test"
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
