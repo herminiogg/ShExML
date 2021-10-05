@@ -782,13 +782,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   private def createTriple(shapePrefix: String, action: String, predicateObject: Array[String], result: Result, output: Model): Unit = {
     if(shapePrefix == "_:") {
-      if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
+      if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).contains("_:"))
         output.add(createBNodeStatement(action, predicateObject(0), normaliseURI(predicateObject(1))))
       else
         output.add(createBNodeStatementWithLiteral(
           action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
     } else {
-      if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:"))
+      if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:"))
         output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
       else
         output.add(createStatementWithLiteral(
@@ -800,7 +800,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                                          result: Result, output: Model, rdfCollection: RDFCollection): Unit = {
     val predicateObject = predicateObjects.head
     if(shapePrefix == "_:") {
-      if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:")) {
+      if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:")) {
         val values = predicateObjects.map(i => output.createResource(normaliseURI(i(1))))
         val collection = collectionConstructor(output, values.toIterator, rdfCollection)
         output.add(createBNodeStatementWithCollection(action, predicateObject(0), collection))
@@ -819,7 +819,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         output.add(createBNodeStatementWithCollection(action, predicateObject(0), collection))
       }
     } else {
-      if (predicateObject(1).contains("http://") || predicateObject(1).contains("https://") || predicateObject(1).contains("_:")) {
+      if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:")) {
         val values = predicateObjects.map(i => output.createResource(normaliseURI(i(1))))
         val collection = collectionConstructor(output, values.toIterator, rdfCollection)
         output.add(createStatementWithCollection(prefixTable(shapePrefix) + action, predicateObject(0), collection))
