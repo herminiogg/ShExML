@@ -449,9 +449,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val predicate = ResourceFactory.createProperty(p)
     val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
       .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
+    val escapedO = escapeIfString(o, dataType, langTag)
     val obj = if(langTag.isDefined)
-      ResourceFactory.createLangLiteral(o, langTag.get)
-      else ResourceFactory.createTypedLiteral(o, xsdType)
+      ResourceFactory.createLangLiteral(escapedO, langTag.get)
+      else ResourceFactory.createTypedLiteral(escapedO, xsdType)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
@@ -461,9 +462,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val predicate = ResourceFactory.createProperty(p)
     val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
       .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
+    val escapedO = escapeIfString(o, dataType, langTag)
     val obj = if(langTag.isDefined)
-      ResourceFactory.createLangLiteral(o, langTag.get)
-    else ResourceFactory.createTypedLiteral(o, xsdType)
+      ResourceFactory.createLangLiteral(escapedO, langTag.get)
+    else ResourceFactory.createTypedLiteral(escapedO, xsdType)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
@@ -868,6 +870,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     if(dt.contains(xsdURI)) prefix + dt.split('#').takeRight(1).head
     else dt
   })
+
+  private def escapeIfString(str: String, datatype: Option[String], langtag: Option[String]): String = {
+    if(langtag.isDefined || datatype.exists(d => d.contains("string"))) {
+      str.replaceAll("[^\\\\]\"", "\\\"")
+    } else str
+  }
 
   override def doVisitDefault(): Any = Nil
 
