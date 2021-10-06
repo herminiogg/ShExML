@@ -783,8 +783,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val datatype = result.dataType match {
       case Some(value) => Some(value)
       case None => {
-        val value = result.results.head.split(' ')(1)
-        normaliseDataType(Some(searchForXSDType(value).getURI))
+        val splittedObject = result.results.head.split(' ')
+        if(splittedObject.length > 1)
+          normaliseDataType(Some(searchForXSDType(splittedObject(1)).getURI))
+        else
+          None
       }
     }
     shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, datatype)
