@@ -532,7 +532,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     case x :: Nil => getQueryFromVarTable(Var(context + x.name))
     case x :: xs => getQueryFromVarTable(Var(context + x.name)) match {
       case j: JsonPath => {
-        val constructedQuery = JsonPath(j.query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
+        val querySeparator = if(xs.isDefinedAt(0)
+            && getQueryFromVarTable(Var(context + x.name + "." + xs.head.name)).query.startsWith("[")) ""
+          else "."
+        val constructedQuery = JsonPath(j.query + querySeparator + generateFinalQuery(xs, context + x.name + ".", j).query)
         getQueryFromVarTable(Var(context + varList.map(_.name).mkString("."))) match {
           case f: FieldQuery => {
             if(f.pushed) {
@@ -552,7 +555,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       case sql: Sql => SqlColumn(sql.query, generateFinalQuery(xs, context + x.name + ".", sql).query)
       case sp: Sparql => SparqlColumn(sp.query, generateFinalQuery(xs, context + x.name + ".", sp).query)
       case FieldQuery(query, pushed, popped) => rootQuery match {
-          case j: JsonPath => JsonPath(query + "." + generateFinalQuery(xs, context + x.name + ".", j).query)
+          case j: JsonPath => {
+            val querySeparator = if(xs.isDefinedAt(0)
+              && getQueryFromVarTable(Var(context + x.name + "." + xs.head.name)).query.startsWith("[")) ""
+            else "."
+            JsonPath(query + querySeparator + generateFinalQuery(xs, context + x.name + ".", j).query)
+          }
           case xp: XmlPath => XmlPath(query + "[*]/" + generateFinalQuery(xs, context + x.name + ".", xp).query)
           case csv: CSVPerRow => CSVPerRow(query)
           case sql: Sql => SqlColumn(rootQuery.query, query)

@@ -8,7 +8,7 @@ scalaVersion := "2.12.4"
 
 resolvers += "jitpack" at "https://jitpack.io"
 
-libraryDependencies += "org.antlr" % "antlr4" % "4.8"
+libraryDependencies += "org.antlr" % "antlr4" % "4.9.2"
 
 libraryDependencies += "io.gatling" % "jsonpath_2.12" % "0.6.10"
 
