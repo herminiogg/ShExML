@@ -6,7 +6,7 @@ import java.util
 import collection.JavaConverters._
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import es.weso.shexml.ast.{AST, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
 import es.weso.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import es.weso.shexml.visitor
@@ -64,7 +64,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       shapes.map(doVisit(_, optionalArgument))
     }
 
-    case Shape(shapeName, shapePrefix, action, predicateObjects, holdingGraph) => {
+    case Shape(shapeName, action, predicateObjects, holdingGraph) => {
+      val shapePrefix = getShapePrefix(action)
       val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
       val output = if(holdingGraph.isEmpty) dataset.getDefaultModel else dataset.getNamedModel(graphName)
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
@@ -344,6 +345,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case Matcher(replacedStrings, replacement) => {
       if(replacedStrings.strings.contains(optionalArgument.toString)) replacement else optionalArgument.toString
+    }
+
+    case LiteralSubject(prefix, value) => {
+      List(Result("", Nil, List(value), None, None, None))
     }
 
     case LiteralObject(prefix, value) => {
@@ -747,18 +752,25 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath)).toList
   }
 
-  private def visitAction(action: ExpOrVar, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = {
-    if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
-      getMaxOccurrencesPredicateObjectList(predicateObjectsList) match {
-        case lr: List[Result] => lr.flatMap(r =>
-          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None, None)))
-        case ra: ResultAutoIncrement =>
-          val id = ra.hashCode().toString
-          val rootIds = List(id)
-          doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None, None))
-      }
-    } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+  private def visitAction(actionOrLiteral: ActionOrLiteral, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = actionOrLiteral match {
+    case a: Action => {
+      val action = a.action
+      if(action.isInstanceOf[Var] && varTable(action.asInstanceOf[Var]).isInstanceOf[AutoIncrement]) {
+        getMaxOccurrencesPredicateObjectList(predicateObjectsList) match {
+          case lr: List[Result] => lr.flatMap(r =>
+            doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None, None)))
+          case ra: ResultAutoIncrement =>
+            val id = ra.hashCode().toString
+            val rootIds = List(id)
+            doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None, None))
+        }
+      } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+    }
+    case l: LiteralSubject => {
+      doVisit(l, optionalArgument).asInstanceOf[List[Result]]
+    }
   }
+
 
   private def getMaxOccurrencesPredicateObjectList(list: List[Any]) = {
     val mostCommonSize = mutable.HashMap[Int, Int]()
@@ -886,6 +898,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     if(langtag.isDefined || datatype.exists(d => d.contains("string"))) {
       str.replaceAll("[^\\\\]\"", "\\\"")
     } else str
+  }
+
+  protected def getShapePrefix(action: ActionOrLiteral): String = action match {
+    case Action(shapePrefix, _) => shapePrefix
+    case LiteralSubject(prefix, _) => prefix.name
   }
 
   override def doVisitDefault(): Any = Nil

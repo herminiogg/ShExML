@@ -8,8 +8,11 @@ sealed trait AST
 case class ShExML(declaration: List[Declaration], graph: List[Graph], shape: List[Shape]) extends AST
 case class Declaration(declarationStatement: DeclarationStatement) extends AST
 case class Graph(graphName: GraphVar, shapes: List[Shape]) extends VarResult
-case class Shape(shapeName: ShapeVar, shapePrefix: String, action: ExpOrVar, predicateObjects: List[PredicateObject], holdingGraph: Option[Graph]) extends VarResult
+case class Shape(shapeName: ShapeVar, action: ActionOrLiteral, predicateObjects: List[PredicateObject], holdingGraph: Option[Graph]) extends VarResult
 
+sealed trait ActionOrLiteral extends AST
+case class Action(shapePrefix: String, action: ExpOrVar) extends ActionOrLiteral
+case class LiteralSubject(prefix: Var, value: String) extends ActionOrLiteral
 
 sealed trait DeclarationStatement extends AST
 

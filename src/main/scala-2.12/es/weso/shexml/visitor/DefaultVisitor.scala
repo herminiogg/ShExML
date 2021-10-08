@@ -18,7 +18,7 @@ abstract class DefaultVisitor[A, B] {
 
     case Declaration(declarationStatement) => doVisit(declarationStatement, optionalArgument)
 
-    case Shape(shapeName, _, action, predicateObjects, _) => {
+    case Shape(shapeName, action, predicateObjects, _) => {
       doVisit(shapeName, optionalArgument)
       predicateObjects.foreach(doVisit(_, optionalArgument))
       doVisit(action, optionalArgument)

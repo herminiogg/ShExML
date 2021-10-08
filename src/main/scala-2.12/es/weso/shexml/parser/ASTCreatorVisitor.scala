@@ -183,16 +183,27 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val shapes = ctx.shape().asScala.map(visit(_).asInstanceOf[Shape]).toList
     val dummyGraph = Graph(graphName, Nil)
     val graphShapes = shapes.map(s =>
-      Shape(s.shapeName, s.shapePrefix, s.action, s.predicateObjects, Some(dummyGraph)))
+      Shape(s.shapeName, s.action, s.predicateObjects, Some(dummyGraph)))
     Graph(graphName, graphShapes)
   }
 
   override def visitShape(ctx: ShapeContext): AST = {
     val shapeName = createShapeVar(ctx.tripleElement)
+    val action = visit(ctx.actionOrLiteral()).asInstanceOf[ActionOrLiteral]
+    val predicateObjects = ctx.predicateObject().asScala.map(visit(_).asInstanceOf[PredicateObject]).toList
+    Shape(shapeName, action, predicateObjects, None)
+  }
+
+  override def visitAction(ctx: ActionContext): AST = {
     val shapePrefix = ctx.prefixVar().getText
     val action = if(ctx.exp() == null) createVar(ctx.variable()) else visit(ctx.exp()).asInstanceOf[Exp]
-    val predicateObjects = ctx.predicateObject().asScala.map(visit(_).asInstanceOf[PredicateObject]).toList
-    Shape(shapeName, shapePrefix, action, predicateObjects, None)
+    Action(shapePrefix, action)
+  }
+
+  override def visitLiteralSubject(ctx: LiteralSubjectContext): AST = {
+    val prefix = Var(ctx.prefixVar().getText)
+    val value = ctx.variable().getText
+    LiteralSubject(prefix, value)
   }
 
   override def visitPredicateObject(ctx: PredicateObjectContext): AST = {

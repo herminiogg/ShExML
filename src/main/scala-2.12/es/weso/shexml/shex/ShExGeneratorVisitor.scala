@@ -1,6 +1,6 @@
 package es.weso.shexml.shex
 
-import es.weso.shexml.ast.{DataTypeLiteral, Declaration, LangTagGeneration, LangTagLiteral, ShExML}
+import es.weso.shexml.ast.{Action, ActionOrLiteral, DataTypeLiteral, Declaration, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralSubject, ShExML}
 import es.weso.shexml.visitor.DefaultVisitor
 
 import scala.collection.immutable.HashMap
@@ -34,7 +34,8 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       Graph(graphName.prefix + graphName.name, shexShapes)
     }
 
-    case es.weso.shexml.ast.Shape(shapeName, shapePrefix, _, predicateObjects, _) => {
+    case es.weso.shexml.ast.Shape(shapeName, action, predicateObjects, _) => {
+      val shapePrefix = getShapePrefix(action)
       val arguments = HashMap("shapeName" -> shapeName.name)
       val name = shapeName.name
       val iriStart = PartialFixedValue(shapePrefix)
@@ -111,6 +112,11 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
   private def getInferredDatatype(shapeName: String, predicateIRI: String): Option[String] = {
     val filteredInferences = inferences.filter(i => i.shapeName == shapeName && i.predicateIRI == predicateIRI)
     filteredInferences.headOption.flatMap(_.observedDatatype)
+  }
+
+  protected def getShapePrefix(action: ActionOrLiteral): String = action match {
+    case Action(shapePrefix, _) => shapePrefix
+    case LiteralSubject(prefix, _) => prefix.name
   }
 
   override def doVisitDefault(): ShExSubsetAST = ???

@@ -19,7 +19,7 @@ abstract class DefaultUnitVisitor {
 
     case Graph(_, shapes) => shapes.foreach(doVisit)
 
-    case Shape(shapeName, _, action, predicateObjects, _) => {
+    case Shape(shapeName, action, predicateObjects, _) => {
       doVisit(shapeName)
       doVisit(action)
       predicateObjects.foreach(doVisit)

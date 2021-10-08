@@ -250,6 +250,36 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitShape(ShExMLParser.ShapeContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#actionOrLiteral}.
+	 * @param ctx the parse tree
+	 */
+	void enterActionOrLiteral(ShExMLParser.ActionOrLiteralContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#actionOrLiteral}.
+	 * @param ctx the parse tree
+	 */
+	void exitActionOrLiteral(ShExMLParser.ActionOrLiteralContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#literalSubject}.
+	 * @param ctx the parse tree
+	 */
+	void enterLiteralSubject(ShExMLParser.LiteralSubjectContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#literalSubject}.
+	 * @param ctx the parse tree
+	 */
+	void exitLiteralSubject(ShExMLParser.LiteralSubjectContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#action}.
+	 * @param ctx the parse tree
+	 */
+	void enterAction(ShExMLParser.ActionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#action}.
+	 * @param ctx the parse tree
+	 */
+	void exitAction(ShExMLParser.ActionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#predicateObject}.
 	 * @param ctx the parse tree
 	 */
