@@ -15,13 +15,12 @@ jobs:
         java-version: '8'
         distribution: 'adopt'
     - name: Set up MySQL
-      uses: mirromutth/mysql-action@v1.1
     - run: mysql -e "CREATE DATABASE films;"
     - run: mysql -e "USE films; CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));"
     - run: mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');"
     - run: mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');"
     - name: Set up PostgreSQL
-      uses: harmon758/postgresql-action@v1
+    - run: sudo apt update && sudo apt-get install postgresql
     - run: psql -c "CREATE DATABASE films;" -U postgres
     - run: psql -c "CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));" films -U postgres
     - run: psql -c "INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" films -U postgres
