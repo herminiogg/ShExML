@@ -15,7 +15,8 @@ jobs:
         java-version: '8'
         distribution: 'adopt'
     - name: Set up MySQL
-      run: mysql -e "CREATE DATABASE films;" &&
+      run: sudo apt update && sudo apt install mysql-server &&
+            mysql -e "CREATE DATABASE films;" &&
             mysql -e "USE films; CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));" &&
             mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" &&
             mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');"
