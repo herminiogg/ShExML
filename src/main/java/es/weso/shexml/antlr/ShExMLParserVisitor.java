@@ -157,6 +157,24 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitShape(ShExMLParser.ShapeContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#actionOrLiteral}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitActionOrLiteral(ShExMLParser.ActionOrLiteralContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#literalSubject}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLiteralSubject(ShExMLParser.LiteralSubjectContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#action}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAction(ShExMLParser.ActionContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#predicateObject}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
