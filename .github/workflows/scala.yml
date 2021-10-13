@@ -25,7 +25,7 @@ jobs:
             sudo -u postgres psql -c "create user root with encrypted password 'root';" &&
             sudo -u postgres psql -c "CREATE DATABASE films;" &&
             sudo -u postgres psql -c "CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));" films &&
-            sudo -u postgres psql -c "grant all privileges on table films to root;" &&
+            sudo -u postgres psql -c "grant all privileges on table films to root;" films &&
             sudo -u postgres psql -c "INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" films &&
             sudo -u postgres psql -c "INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');" films
     - name: Run tests
