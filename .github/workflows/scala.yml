@@ -16,10 +16,10 @@ jobs:
         distribution: 'adopt'
     - name: Set up MySQL
       run: sudo service mysql start  &&
-            mysql -e "CREATE DATABASE films;" -u root &&
-            mysql -e "USE films; CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));" -u root &&
-            mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" -u root &&
-            mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');" -u root
+            mysql -e "CREATE DATABASE films;" -u root -proot &&
+            mysql -e "USE films; CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));" -u root -proot &&
+            mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" -u root -proot &&
+            mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');" -u root -proot
     - name: Set up PostgreSQL
       run: sudo apt update && sudo apt-get install postgresql && sudo pg_ctl start
             psql -c "CREATE DATABASE films;" -U postgres &&
