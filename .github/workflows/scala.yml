@@ -21,7 +21,8 @@ jobs:
             mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" -u root -proot &&
             mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');" -u root -proot
     - name: Set up PostgreSQL
-      run:  psql -c "CREATE DATABASE films;" -U postgres &&
+      run:  sudo apt update && sudo apt-get install postgresql && sudo service start postgresql-14
+            psql -c "CREATE DATABASE films;" -U postgres &&
             psql -c "CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));" films -U postgres &&
             psql -c "INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" films -U postgres &&
             psql -c "INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');" films -U postgres
