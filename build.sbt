@@ -6,7 +6,7 @@ version := "0.2.5"
 
 scalaVersion := "2.12.4"
 
-resolvers += "jitpack" at "https://jitpack.io"
+//resolvers += "jitpack" at "https://jitpack.io"
 
 libraryDependencies += "org.antlr" % "antlr4" % "4.9.2"
 
@@ -20,9 +20,11 @@ libraryDependencies += "com.nrinaudo" %% "kantan.xpath" % "0.3.2"
 
 libraryDependencies += "org.apache.jena" % "apache-jena-libs" % "3.17.0" pomOnly()
 
+libraryDependencies += "org.apache.jena" % "jena-arq" % "3.17.0"
+
 libraryDependencies += "org.scalatest" % "scalatest_2.12" % "3.0.4" % "test"
 
-libraryDependencies += "com.github.RMLio" % "rmlmapper-java" % "v4.8.2" % "test"
+libraryDependencies += "be.ugent.rml" % "rmlmapper" % "4.9.0" % "test"
 
 libraryDependencies += "info.picocli" % "picocli" % "4.0.4"
 
