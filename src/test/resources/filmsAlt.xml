@@ -1,19 +1,11 @@
 <films>
-    <film id="1">
+    <film>
         <name>Dunkirk</name>
         <year>2017</year>
         <country>USA</country>
         <directors>
             <director>Christopher Nolan</director>
         </directors>
-    </film>
-    <film id="2">
-        <name>Interstellar</name>
-        <year>2014</year>
-        <country>USA</country>
-        <directors>
-            <director>Christopher Nolan</director>
-            <director>Jonathan Nolan</director>
-        </directors>
+        <comment>A "different" movie</comment>
     </film>
 </films>

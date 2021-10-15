@@ -1,18 +1,11 @@
 {
     "films": [
         {
-            "id": 3,
-            "name": "Inception",
+            "name of the film": "Inception",
             "year": "2010",
             "country": "USA",
-            "director": "Christopher Nolan"
-        },
-        {
-            "id": 4,
-            "name": "The Prestige",
-            "year": "2006",
-            "country": "USA",
-            "director": ["Christopher Nolan", "Jonathan Nolan"]
+            "director": "Christopher Nolan",
+            "comment": "Very interesting movie, see more comments on: http://example.com/comments"
         }
     ]
 }
