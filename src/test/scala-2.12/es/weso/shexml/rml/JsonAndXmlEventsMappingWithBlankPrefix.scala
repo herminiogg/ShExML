@@ -9,8 +9,8 @@ class JsonAndXmlEventsMappingWithBlankPrefix extends FunSuite with Matchers with
   val example =
     """
       |PREFIX : <http://ex.com/>
-      |SOURCE performances_json <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.json>
-      |SOURCE events_xml <https://cdn.rawgit.com/herminiogg/ShExML/f1fa70f6/src/test/resources/events.xml>
+      |SOURCE performances_json <https://raw.githubusercontent.com/herminiogg/ShExML/master/src/test/resources/events.json>
+      |SOURCE events_xml <https://raw.githubusercontent.com/herminiogg/ShExML/master/src/test/resources/events.xml>
       |ITERATOR performances_iterator <jsonpath: $.Performances[*]> {
       |   FIELD performances_ids <Perf_ID>
       |   FIELD venues_ids <Venue.Venue_ID>

@@ -17,7 +17,7 @@ class RDFAltTest extends FunSuite with Matchers with RDFStatementCreator {
       |PREFIX exAuthor: <http://example.com/person/>
       |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      |SOURCE input <https://raw.githubusercontent.com/kg-construct/mapping-challenges/main/challenges/rdf-collections/input-1/input.json>
+      |SOURCE input <https://raw.githubusercontent.com/herminiogg/mapping-challenges/main/challenges/rdf-collections/input-1/input.json>
       |ITERATOR lab <jsonpath: $> {
       |    FIELD labName <labName>
       |    ITERATOR articles <article> {

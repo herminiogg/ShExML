@@ -32,7 +32,7 @@ class FilmsExternalQueryMySQLTest extends FunSuite with Matchers with RDFStateme
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher("root")
+  private val mappingLauncher = new MappingLauncher("root", "root")
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 

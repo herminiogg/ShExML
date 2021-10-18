@@ -1,11 +1,11 @@
-package es.weso.shexml.shex
+package es.weso.shexml.shacl
 
 import org.scalatest.FunSuite
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMapping extends FunSuite with ShExValidation {
+class JsonAndXmlEventsMapping extends FunSuite with SHACLValidation {
 
   private val example =
     """
@@ -43,11 +43,13 @@ class JsonAndXmlEventsMapping extends FunSuite with ShExValidation {
       |  ex:long [long_union] ;
       |}
     """.stripMargin
-  private val shapeMap = "ex:51.043613-3.717333@ex:Location, ex:51.043611-3.717222@ex:Location, ex:51.076891-3.717222@ex:Location," +
-    "ex:398@ex:Performance, ex:567@ex:Performance, ex:444@ex:Performance, ex:989@ex:Performance"
 
   test("Events validate against created schema") {
-    assert(this.validate(example, shapeMap))
+    assert(this.validate(example))
+  }
+
+  test("Events validate against created schema with closed shapes") {
+    assert(this.validate(example, true))
   }
 
 }

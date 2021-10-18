@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.8
+// Generated from ShExMLParser.g4 by ANTLR 4.9.2
 
 package es.weso.shexml.antlr;
 
@@ -301,6 +301,42 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitShape(ShExMLParser.ShapeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterActionOrLiteral(ShExMLParser.ActionOrLiteralContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitActionOrLiteral(ShExMLParser.ActionOrLiteralContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterLiteralSubject(ShExMLParser.LiteralSubjectContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLiteralSubject(ShExMLParser.LiteralSubjectContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAction(ShExMLParser.ActionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAction(ShExMLParser.ActionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

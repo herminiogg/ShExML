@@ -1,6 +1,6 @@
 package es.weso.shexml.shex
 
-import es.weso.shexml.ast.{DataTypeLiteral, Declaration, ShExML}
+import es.weso.shexml.ast.{Action, ActionOrLiteral, DataTypeLiteral, Declaration, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralSubject, ShExML}
 import es.weso.shexml.visitor.DefaultVisitor
 
 import scala.collection.immutable.HashMap
@@ -34,7 +34,8 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       Graph(graphName.prefix + graphName.name, shexShapes)
     }
 
-    case es.weso.shexml.ast.Shape(shapeName, shapePrefix, _, predicateObjects, _) => {
+    case es.weso.shexml.ast.Shape(shapeName, action, predicateObjects, _) => {
+      val shapePrefix = getShapePrefix(action)
       val arguments = HashMap("shapeName" -> shapeName.name)
       val name = shapeName.name
       val iriStart = PartialFixedValue(shapePrefix)
@@ -59,19 +60,28 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       val predicateIRI = optionalArgument("predicateIRI")
       val cardinality = getInferredCardinality(shapeName, predicateIRI)
 
-      val shexDatatype = literalValue match {
-        case Some(_) if langTag.isDefined => "rdf:langString"
-        case None => dataType match {
+      val shexDatatype =
+        if(literalValue.isDefined && langTag.isDefined) "rdf:langString"
+        else { dataType match {
           case Some(value) => value match {
             case dt: DataTypeLiteral => dt.value
             case _ => "" //change for generated datatype
           }
-          case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xs:string")
+          case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xsd:string")
+         }
         }
-      }
       literalValue match {
         case Some(value) => FixedValue('"' + value.value + '"')
-        case None => if(prefix.isEmpty) ObjectDefinition(shexDatatype, cardinality) else PartialFixedValue(prefix, cardinality)
+        case None =>
+          if(prefix.isEmpty) {
+            if(langTag.isDefined) langTag.get match {
+              case LangTagLiteral(value) => FixedValue("@" + value)
+              case LangTagGeneration(action, matcher) => throw new Exception("ShEx generation with dynamic langtag is not yet supported!")
+            }
+            else
+              ObjectDefinition(shexDatatype, cardinality)
+          }
+          else PartialFixedValue(prefix, cardinality)
       }
     }
 
@@ -102,6 +112,11 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
   private def getInferredDatatype(shapeName: String, predicateIRI: String): Option[String] = {
     val filteredInferences = inferences.filter(i => i.shapeName == shapeName && i.predicateIRI == predicateIRI)
     filteredInferences.headOption.flatMap(_.observedDatatype)
+  }
+
+  protected def getShapePrefix(action: ActionOrLiteral): String = action match {
+    case Action(shapePrefix, _) => shapePrefix
+    case LiteralSubject(prefix, _) => prefix.name
   }
 
   override def doVisitDefault(): ShExSubsetAST = ???

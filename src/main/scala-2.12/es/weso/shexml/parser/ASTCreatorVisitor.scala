@@ -48,8 +48,8 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitQueryClause(ctx: QueryClauseContext): AST = {
-    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART(0).getText)
-    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART(0).getText)
+    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "))
+    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "))
     else if(ctx.SQL() != null) SqlQuery(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "))
     else if(ctx.SPARQL() != null) SparqlQuery(ctx.QUERY_PART().asScala.map(_.getText)
       .mkString(" ").replaceAll("\\\\<", "<").replaceAll("\\\\>", ">"))
@@ -139,7 +139,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val query: QueryOrVar = if(ctx.queryClause() != null) {
       visit(ctx.queryClause()).asInstanceOf[QueryClause]
     } else {
-      Var(ctx.QUERY_PART().getText)
+      Var(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "))
     }
     val variable = createVar(ctx.variable())
     val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
@@ -148,7 +148,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitNestedIterator(ctx: NestedIteratorContext): AST = {
-    val query = FieldQuery(ctx.QUERY_PART().getText)
+    val query = FieldQuery(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "))
     val variable = createVar(ctx.variable())
     val fields = ctx.field().listIterator().asScala.map(visit(_).asInstanceOf[Field])
     val iterators = ctx.nestedIterator().listIterator().asScala.map(visit(_).asInstanceOf[NestedIterator])
@@ -158,7 +158,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   override def visitField(ctx: FieldContext): AST = {
     val pushed = ctx.PUSHED_FIELD() != null
     val popped = ctx.POPPED_FIELD() != null
-    val fieldQuery = FieldQuery(ctx.QUERY_PART().getText, pushed, popped)
+    val fieldQuery = FieldQuery(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "), pushed, popped)
     val variable = createVar(ctx.variable())
     Field(variable, fieldQuery, pushed, popped)
   }
@@ -183,16 +183,27 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val shapes = ctx.shape().asScala.map(visit(_).asInstanceOf[Shape]).toList
     val dummyGraph = Graph(graphName, Nil)
     val graphShapes = shapes.map(s =>
-      Shape(s.shapeName, s.shapePrefix, s.action, s.predicateObjects, Some(dummyGraph)))
+      Shape(s.shapeName, s.action, s.predicateObjects, Some(dummyGraph)))
     Graph(graphName, graphShapes)
   }
 
   override def visitShape(ctx: ShapeContext): AST = {
     val shapeName = createShapeVar(ctx.tripleElement)
+    val action = visit(ctx.actionOrLiteral()).asInstanceOf[ActionOrLiteral]
+    val predicateObjects = ctx.predicateObject().asScala.map(visit(_).asInstanceOf[PredicateObject]).toList
+    Shape(shapeName, action, predicateObjects, None)
+  }
+
+  override def visitAction(ctx: ActionContext): AST = {
     val shapePrefix = ctx.prefixVar().getText
     val action = if(ctx.exp() == null) createVar(ctx.variable()) else visit(ctx.exp()).asInstanceOf[Exp]
-    val predicateObjects = ctx.predicateObject().asScala.map(visit(_).asInstanceOf[PredicateObject]).toList
-    Shape(shapeName, shapePrefix, action, predicateObjects, None)
+    Action(shapePrefix, action)
+  }
+
+  override def visitLiteralSubject(ctx: LiteralSubjectContext): AST = {
+    val prefix = Var(ctx.prefixVar().getText)
+    val value = ctx.variable().getText
+    LiteralSubject(prefix, value)
   }
 
   override def visitPredicateObject(ctx: PredicateObjectContext): AST = {

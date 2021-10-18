@@ -15,7 +15,7 @@ class JoinChallenge extends FunSuite with Matchers with RDFStatementCreator {
       |PREFIX experson: <http://example.com/person/>
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
-      |SOURCE jsonfile <https://raw.githubusercontent.com/kg-construct/mapping-challenges/2aac9680cd731fd647abd33d44a7f400e4278cf3/challenges/join-on-literal/input-1/input.json>
+      |SOURCE jsonfile <https://raw.githubusercontent.com/herminiogg/mapping-challenges/2aac9680cd731fd647abd33d44a7f400e4278cf3/challenges/join-on-literal/input-1/input.json>
       |ITERATOR author <jsonpath: $.author[*]> {
       |    FIELD id <id>
       |    FIELD firstname <firstname>

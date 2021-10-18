@@ -1,14 +1,14 @@
 package es.weso.shexml.shex
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
-
 import es.weso.rdf.rdf4j.RDFAsRDF4jModel
-import es.weso.shapeMaps.ShapeMap
+import es.weso.shapemaps.ShapeMap
 import es.weso.shex.{ResolvedSchema, Schema}
 import es.weso.shex.validator.Validator
 import es.weso.shexml.MappingLauncher
 import org.eclipse.rdf4j.model.impl.DynamicModelFactory
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
+import cats.effect.unsafe.implicits.global
 
 trait ShExValidation {
 
@@ -34,7 +34,7 @@ trait ShExValidation {
         val resolvedSchema = ResolvedSchema.resolve(shexSchema, None).unsafeRunSync()
         Validator.validate(resolvedSchema, fixedShapeMap, rdf, rdfBuilder).unsafeRunSync().toResultShapeMap.attempt.unsafeRunSync().isRight
       }
-      case Left(l) => throw new Exception(l)
+      case Left(l) => throw new Exception(l.toList.mkString(" "))
     }
   }
 

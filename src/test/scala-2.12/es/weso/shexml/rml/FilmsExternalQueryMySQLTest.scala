@@ -33,7 +33,7 @@ class FilmsExternalQueryMySQLTest extends FunSuite with Matchers with RDFStateme
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher("root")
+  private val mappingLauncher = new MappingLauncher("root", "root")
   private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://example.com/"
   private val output = doTranslation(result, prefix).getDefaultModel

@@ -14,7 +14,7 @@ class DataTypeGenerationFullURI extends FunSuite with Matchers with RDFStatement
       PREFIX ex: <http://example.com/>
       |PREFIX exPerson: <http://example.com/person/>
       |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE input <https://raw.githubusercontent.com/kg-construct/mapping-challenges/main/challenges/datatype-map/input-1/input.json>
+      |SOURCE input <https://raw.githubusercontent.com/herminiogg/mapping-challenges/main/challenges/datatype-map/input-1/input.json>
       |ITERATOR persons <jsonpath: $.persons[*]> {
       |    FIELD firstname <firstname>
       |    FIELD lastname <lastname>

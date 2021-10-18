@@ -16,7 +16,7 @@ class MultiValueReferencesHierarchicalFile extends FunSuite with Matchers with R
       |PREFIX exArticle: <http://example.com/article/>
       |PREFIX exAuthor: <http://example.com/author/>
       |PREFIX exAff: <http://example.com/aff/>
-      |SOURCE lab_file <https://raw.githubusercontent.com/kg-construct/mapping-challenges/main/challenges/multivalue-references/input-1/input.json>
+      |SOURCE lab_file <https://raw.githubusercontent.com/herminiogg/mapping-challenges/main/challenges/multivalue-references/input-1/input.json>
       |ITERATOR lab <jsonpath: $> {
       |    FIELD labName <labName>
       |    ITERATOR articles <articles[*]> {

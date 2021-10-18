@@ -16,7 +16,7 @@ class DataTypeAndLangTagGenerationFromData extends FunSuite with Matchers with R
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE people <https://raw.githubusercontent.com/kg-construct/mapping-challenges/main/challenges/language-map/input-1/input.json>
+      |SOURCE people <https://raw.githubusercontent.com/herminiogg/mapping-challenges/main/challenges/language-map/input-1/input.json>
       |ITERATOR person_iterator <jsonpath: $.persons[*]> {
       |    FIELD firstname <firstname>
       |    FIELD lastname <lastname>
