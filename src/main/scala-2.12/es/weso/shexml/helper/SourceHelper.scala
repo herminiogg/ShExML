@@ -10,4 +10,9 @@ class SourceHelper {
     try { file.mkString } finally { file.close() }
   }
 
+  def getContentFromRelativePath(path: String): String = {
+    val file = scala.io.Source.fromFile(path, "UTF-8")
+    try { file.mkString } finally { file.close() }
+  }
+
 }

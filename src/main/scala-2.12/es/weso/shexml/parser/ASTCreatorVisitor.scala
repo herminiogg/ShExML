@@ -32,7 +32,10 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitSource(ctx: SourceContext): AST = {
-    val url = if(ctx.URL != null) URL(ctx.URL().getText) else JdbcURL(ctx.JDBC_URL().getText)
+    val url =
+      if(ctx.URL != null) URL(ctx.URL().getText)
+      else if(ctx.QUERY_PART() != null) RelativePath(ctx.QUERY_PART().getText)
+      else JdbcURL(ctx.JDBC_URL().getText)
     val name = createVar(ctx.variable())
     Source(name, url)
   }

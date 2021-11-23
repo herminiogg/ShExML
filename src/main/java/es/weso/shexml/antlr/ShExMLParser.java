@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.9.2
+// Generated from .\ShExMLParser.g4 by ANTLR 4.9.2
 
 package es.weso.shexml.antlr;
 
@@ -405,6 +405,7 @@ public class ShExMLParser extends Parser {
 		public TerminalNode GREATER_SYMBOL_QUERY() { return getToken(ShExMLParser.GREATER_SYMBOL_QUERY, 0); }
 		public TerminalNode URL() { return getToken(ShExMLParser.URL, 0); }
 		public TerminalNode JDBC_URL() { return getToken(ShExMLParser.JDBC_URL, 0); }
+		public TerminalNode QUERY_PART() { return getToken(ShExMLParser.QUERY_PART, 0); }
 		public SourceContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -439,7 +440,7 @@ public class ShExMLParser extends Parser {
 			match(LESS_SYMBOL_QUERY);
 			setState(111);
 			_la = _input.LA(1);
-			if ( !(_la==URL || _la==JDBC_URL) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << URL) | (1L << JDBC_URL) | (1L << QUERY_PART))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -3208,14 +3209,14 @@ public class ShExMLParser extends Parser {
 		" \3 \3 \3 \5 \u017e\n \3!\3!\3\"\3\"\5\"\u0184\n\"\3#\3#\3#\5#\u0189\n"+
 		"#\3$\3$\3%\3%\5%\u018f\n%\3&\3&\3&\3\'\3\'\3\'\3\'\3\'\5\'\u0199\n\'\3"+
 		"(\3(\5(\u019d\n(\3)\3)\3)\2\3\30*\2\4\6\b\n\f\16\20\22\24\26\30\32\34"+
-		"\36 \"$&(*,.\60\62\64\668:<>@BDFHJLNP\2\7\3\2/\60\3\2\7\t\4\2\'\'))\3"+
-		"\2\21\24\5\2\'(:;BB\2\u01b2\2U\3\2\2\2\4f\3\2\2\2\6h\3\2\2\2\bn\3\2\2"+
-		"\2\nt\3\2\2\2\f}\3\2\2\2\16\u0097\3\2\2\2\20\u00ae\3\2\2\2\22\u00b8\3"+
-		"\2\2\2\24\u00ce\3\2\2\2\26\u00d4\3\2\2\2\30\u00da\3\2\2\2\32\u00ee\3\2"+
-		"\2\2\34\u00f4\3\2\2\2\36\u00f6\3\2\2\2 \u00fc\3\2\2\2\"\u0105\3\2\2\2"+
-		"$\u0120\3\2\2\2&\u0122\3\2\2\2(\u0128\3\2\2\2*\u012e\3\2\2\2,\u0133\3"+
-		"\2\2\2.\u0135\3\2\2\2\60\u013e\3\2\2\2\62\u0150\3\2\2\2\64\u0152\3\2\2"+
-		"\2\66\u0155\3\2\2\28\u015d\3\2\2\2:\u0163\3\2\2\2<\u0169\3\2\2\2>\u017d"+
+		"\36 \"$&(*,.\60\62\64\668:<>@BDFHJLNP\2\7\4\2/\60\66\66\3\2\7\t\4\2\'"+
+		"\'))\3\2\21\24\5\2\'(:;BB\2\u01b2\2U\3\2\2\2\4f\3\2\2\2\6h\3\2\2\2\bn"+
+		"\3\2\2\2\nt\3\2\2\2\f}\3\2\2\2\16\u0097\3\2\2\2\20\u00ae\3\2\2\2\22\u00b8"+
+		"\3\2\2\2\24\u00ce\3\2\2\2\26\u00d4\3\2\2\2\30\u00da\3\2\2\2\32\u00ee\3"+
+		"\2\2\2\34\u00f4\3\2\2\2\36\u00f6\3\2\2\2 \u00fc\3\2\2\2\"\u0105\3\2\2"+
+		"\2$\u0120\3\2\2\2&\u0122\3\2\2\2(\u0128\3\2\2\2*\u012e\3\2\2\2,\u0133"+
+		"\3\2\2\2.\u0135\3\2\2\2\60\u013e\3\2\2\2\62\u0150\3\2\2\2\64\u0152\3\2"+
+		"\2\2\66\u0155\3\2\2\28\u015d\3\2\2\2:\u0163\3\2\2\2<\u0169\3\2\2\2>\u017d"+
 		"\3\2\2\2@\u017f\3\2\2\2B\u0183\3\2\2\2D\u0188\3\2\2\2F\u018a\3\2\2\2H"+
 		"\u018e\3\2\2\2J\u0190\3\2\2\2L\u0198\3\2\2\2N\u019c\3\2\2\2P\u019e\3\2"+
 		"\2\2RT\5\4\3\2SR\3\2\2\2TW\3\2\2\2US\3\2\2\2UV\3\2\2\2V\\\3\2\2\2WU\3"+
