@@ -97,6 +97,7 @@ sealed trait Iterators extends AST {
 sealed trait IRI extends VarResult
 case class URL(url: String) extends IRI with QueryOrURL
 case class JdbcURL(url: String) extends IRI
+case class RelativePath(path: String) extends IRI
 case class ReplacedStrings(strings: List[String]) extends AST
 case class ComposedVariable(variables: List[Var]) extends AST
 case class MatcherList(matchers: List[Matcher]) extends AST

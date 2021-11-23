@@ -6,7 +6,7 @@ import java.util
 import collection.JavaConverters._
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import es.weso.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import es.weso.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, ExpOrVar, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, SparqlQuery, Sql, SqlColumn, SqlQuery, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import es.weso.shexml.helper.SourceHelper
 import es.weso.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import es.weso.shexml.visitor
@@ -397,17 +397,25 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       doVisit(shapeVar, optionalArgument)
     }
 
-    case URL(url) => if(url.endsWith("/sparql") || url.endsWith(".ttl") || url.endsWith(".rdf")
-      || url.endsWith(".nt") || url.endsWith(".jsonld") || url.endsWith(".owl") || url.endsWith(".trig")
-      || url.endsWith(".nq") || url.endsWith(".trix") || url.endsWith(".trdf"))
-      List(url)
-    else if(url.contains('*') && url.startsWith("file://"))
-      getAllFilesContents(url)
-    else if(url.contains('*'))
-      throw new Exception("* wildcard not allowed over remote files")
-    else
-      List(new SourceHelper().getURLContent(url))
-
+    case URL(url) =>
+      if(isRDFSource(url))
+        List(url)
+      else if(url.contains('*') && url.startsWith("file://"))
+        getAllFilesContents(url)
+      else if(url.contains('*'))
+        throw new Exception("* wildcard not allowed over remote files")
+      else
+        List(new SourceHelper().getURLContent(url))
+    case RelativePath(path) =>
+      if(isRDFSource(path)) {
+        val fileAbsolutePath = new File(path).getAbsolutePath
+        val fileProtocol =
+          if(fileAbsolutePath.startsWith("/")) "file://"
+          else "file:///"
+        List(fileProtocol + fileAbsolutePath)
+      }
+      else if(path.contains('*')) getAllFilesContents(path)
+      else List(new SourceHelper().getContentFromRelativePath(path))
     case JdbcURL(url) => List(url)
 
     case default => visit(default, optionalArgument)
@@ -898,6 +906,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     if(langtag.isDefined || datatype.exists(d => d.contains("string"))) {
       str.replaceAll("[^\\\\]\"", "\\\"")
     } else str
+  }
+
+  private def isRDFSource(path: String): Boolean = {
+    path.endsWith("/sparql") || path.endsWith(".ttl") || path.endsWith(".rdf") ||
+      path.endsWith(".nt") || path.endsWith(".jsonld") || path.endsWith(".owl") ||
+      path.endsWith(".trig") || path.endsWith(".nq") || path.endsWith(".trix") || path.endsWith(".trdf")
   }
 
   protected def getShapePrefix(action: ActionOrLiteral): String = action match {

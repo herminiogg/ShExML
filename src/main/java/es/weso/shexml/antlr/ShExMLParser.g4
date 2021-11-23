@@ -9,7 +9,7 @@ options{tokenVocab=ShExMLLexer;}
 shExML: decl* (shape | graph)* ;
 decl: (source | prefix | query | expression | matcher | iterator | autoincrement) ;
 prefix: PREFIX variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
-source: SOURCE variable LESS_SYMBOL_QUERY (URL | JDBC_URL) GREATER_SYMBOL_QUERY ;
+source: SOURCE variable LESS_SYMBOL_QUERY (URL | JDBC_URL | QUERY_PART) GREATER_SYMBOL_QUERY ;
 query: QUERY variable LESS_SYMBOL_QUERY (URL | queryClause) GREATER_SYMBOL_QUERY ;
 iterator: ITERATOR variable LESS_SYMBOL_QUERY (queryClause | QUERY_PART+) GREATER_SYMBOL_QUERY '{' field+ nestedIterator* '}' ;
 nestedIterator: ITERATOR variable LESS_SYMBOL_QUERY QUERY_PART+ GREATER_SYMBOL_QUERY '{' field+ nestedIterator* '}' ;
