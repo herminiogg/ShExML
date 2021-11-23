@@ -310,8 +310,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case Left(_) => Nil
         case Right(r) => {
           val finalList = r.toList.flatMap({
-            case l: util.ArrayList[_] => l.toArray.map(_.toString)
-            case default => List(default.toString)
+            case l: util.ArrayList[_] => l.toArray.flatMap(r => if(r != null) List(r.toString) else Nil)
+            case default => if(default != null) List(default.toString) else Nil
           })
           Result(id, rootIds, finalList, None, None, None)
         }

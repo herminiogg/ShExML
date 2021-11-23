@@ -11,7 +11,8 @@ trait JdbcDriverRegistry {
     "jdbc:mariadb" -> "org.mariadb.jdbc.Driver",
     "jdbc:informix-sqli" -> "com.informix.jdbc.IfxDriver",
     "jdbc:hsqldb" -> "org.hsqldb.jdbc.JDBCDriver",
-    "jdbc:h2" -> "org.h2.Driver"
+    "jdbc:h2" -> "org.h2.Driver",
+    "jdbc:ucanaccess" -> "net.ucanaccess.jdbc.UcanaccessDriver"
   )
 
   def lookForJdbcDriver(jdbcURL: String, moreDrivers: Map[String, String] = Map()): String = {
