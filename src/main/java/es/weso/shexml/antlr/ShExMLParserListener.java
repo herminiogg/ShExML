@@ -1,4 +1,4 @@
-// Generated from ShExMLParser.g4 by ANTLR 4.9.2
+// Generated from .\ShExMLParser.g4 by ANTLR 4.9.2
 
 package es.weso.shexml.antlr;
 

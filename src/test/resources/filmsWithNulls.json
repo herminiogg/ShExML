@@ -1,0 +1,18 @@
+{
+    "films": [
+        {
+            "id": 3,
+            "name": "Inception",
+            "year": null,
+            "country": "USA",
+            "director": "Christopher Nolan"
+        },
+        {
+            "id": 4,
+            "name": "The Prestige",
+            "year": "2006",
+            "country": null,
+            "director": ["Christopher Nolan", "Jonathan Nolan"]
+        }
+    ]
+}
