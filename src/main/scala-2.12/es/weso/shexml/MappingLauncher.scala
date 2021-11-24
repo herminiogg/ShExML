@@ -15,7 +15,7 @@ import scala.collection.mutable
 /**
   * Created by herminio on 15/2/18.
   */
-class MappingLauncher(val username: String = "", val password: String = "") {
+class MappingLauncher(val username: String = "", val password: String = "", drivers: String = "") {
 
   def launchMapping(mappingCode: String, lang: String): String = {
     org.apache.jena.query.ARQ.init()
@@ -103,8 +103,9 @@ class MappingLauncher(val username: String = "", val password: String = "") {
   }
 
   private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {
+
     val dataset = DatasetFactory.create()
-    new RDFGeneratorVisitor(dataset, varTable, username, password).doVisit(ast, null)
+    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap()).doVisit(ast, null)
     //val in = new ByteArrayInputStream(output.toString().getBytes)
     //val model = ModelFactory.createDefaultModel()
     //model.read(in, null, "TURTLE")
@@ -120,15 +121,23 @@ class MappingLauncher(val username: String = "", val password: String = "") {
   private def generateInferencesFromShExML(ast: AST, varTable: mutable.HashMap[Variable, VarResult],
                                            inferences: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes]): Unit = {
     val dataset = DatasetFactory.create()
-    new RDFGeneratorVisitor(dataset, varTable, username, password, inferences).doVisit(ast, null)
+    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences).doVisit(ast, null)
   }
 
   private def generateShapeMaps(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): List[ShapeMapInference] = {
     val shapeMapTable = mutable.ListBuffer.empty[ShapeMapInference]
     val inferences = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
     val dataset = DatasetFactory.create()
-    new RDFGeneratorVisitor(dataset, varTable, username, password, inferences, shapeMapTable).doVisit(ast, null)
+    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences, shapeMapTable).doVisit(ast, null)
     shapeMapTable.result()
+  }
+
+  private def generateDriversMap(): Map[String, String] = {
+    drivers.split(";").flatMap(d => {
+      val driverTuple = d.split("%")
+      if(driverTuple.size > 1) List(driverTuple(0) -> driverTuple(1))
+      else Nil
+    }).toMap
   }
 
 }

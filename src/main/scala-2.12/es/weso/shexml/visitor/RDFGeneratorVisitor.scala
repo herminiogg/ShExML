@@ -27,6 +27,7 @@ import scala.util.Try
   * Created by herminio on 26/12/17.
   */
 class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], username: String, password: String,
+                          driversMap: Map[String, String] = Map[String, String](),
                           shexInferredPropertiesTable: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes] = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes],
                           shapeMapTable: mutable.ListBuffer[ShapeMapInference] = mutable.ListBuffer.empty[ShapeMapInference])
   extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
@@ -681,7 +682,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def connectToDB(dbURL: String) = {
-    Class.forName(lookForJdbcDriver(dbURL))
+    Class.forName(lookForJdbcDriver(dbURL, driversMap))
     DriverManager.getConnection(dbURL, username, password)
   }
 
