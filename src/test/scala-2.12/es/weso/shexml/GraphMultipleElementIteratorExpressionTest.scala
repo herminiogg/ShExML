@@ -131,4 +131,11 @@ class GraphMultipleElementIteratorExpressionTest extends FunSuite with Matchers 
     assert(myFilmsGraph.contains(createStatementWithLiteral(prefix, "4", "director", "Jonathan Nolan", XSDDatatype.XSDstring)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCountInDefaultGraph = 26
+    val triplesCountInMyFilmsGraph = 26
+    assert(output.size() == triplesCountInDefaultGraph)
+    assert(myFilmsGraph.size() == triplesCountInMyFilmsGraph)
+  }
+
 }

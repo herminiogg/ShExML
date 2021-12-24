@@ -62,4 +62,9 @@ class FilmsAlt extends FunSuite with Matchers with RDFStatementCreator {
     assert(output.contains(createStatementWithLiteral(prefix, "film1", "comment", "Very interesting movie, see more comments on: http://example.com/comments", XSDDatatype.XSDstring)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 9
+    assert(output.size() == triplesCount)
+  }
+
 }

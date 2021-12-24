@@ -52,4 +52,9 @@ class FilmsExternalQueryMySQLTest extends FunSuite with Matchers with RDFStateme
     assert(output.contains(createStatementWithLiteral(prefix, "9", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 10
+    assert(output.size() == triplesCount)
+  }
+
 }

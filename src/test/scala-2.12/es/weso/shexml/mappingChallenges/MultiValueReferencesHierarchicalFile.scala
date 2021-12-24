@@ -73,4 +73,9 @@ class MultiValueReferencesHierarchicalFile extends FunSuite with Matchers with R
     assert(output.contains(createStatement(prefix, "Claire", "hasAffiliation", "Company6")))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 15
+    assert(output.size() == triplesCount)
+  }
+
 }

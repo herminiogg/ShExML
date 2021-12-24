@@ -133,4 +133,9 @@ class AccessFieldsOutsideIterators extends FunSuite with Matchers with RDFStatem
     assert(output.contains(createStatementWithLiteral(prefix, "Piper_Perabo", "name", "Piper Perabo", XSDDatatype.XSDstring)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 74
+    assert(output.size() == triplesCount)
+  }
+
 }

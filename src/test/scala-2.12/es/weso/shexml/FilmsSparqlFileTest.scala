@@ -44,4 +44,9 @@ class FilmsSparqlFileTest extends FunSuite with Matchers with RDFStatementCreato
     assert(output.contains(createStatementWithLiteral(prefix, "Interstellar__film_", "director", "Christopher_Nolan", XSDDatatype.XSDstring)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 18
+    assert(output.size() == triplesCount)
+  }
+
 }

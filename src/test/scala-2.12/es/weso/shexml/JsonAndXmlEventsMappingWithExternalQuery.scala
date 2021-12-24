@@ -72,4 +72,9 @@ class JsonAndXmlEventsMappingWithExternalQuery extends FunSuite with Matchers wi
     assert(output.contains(createStatement(prefix, "989", "location", "51.043613-3.717333")))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 14
+    assert(output.size() == triplesCount)
+  }
+
 }

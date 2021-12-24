@@ -38,4 +38,9 @@ class DataTypeGenerationWithoutPrefix extends FunSuite with Matchers with RDFSta
     assert(output.contains(createStatementWithLiteral(prefix, "John", "num", "3", XSDDatatype.XSDinteger)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 2
+    assert(output.size() == triplesCount)
+  }
+
 }

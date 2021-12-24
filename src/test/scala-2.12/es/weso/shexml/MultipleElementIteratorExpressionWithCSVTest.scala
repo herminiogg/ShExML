@@ -98,4 +98,9 @@ class MultipleElementIteratorExpressionWithCSVTest extends FunSuite with Matcher
     assert(output.contains(createStatementWithLiteral(prefix, "6", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 32
+    assert(output.size() == triplesCount)
+  }
+
 }

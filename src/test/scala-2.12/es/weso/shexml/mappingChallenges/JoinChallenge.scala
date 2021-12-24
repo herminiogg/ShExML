@@ -44,4 +44,9 @@ class JoinChallenge extends FunSuite with Matchers with RDFStatementCreator {
     assert(output.contains(createStatementWithLiteral(prefix, "2", "lastName", "Dane", XSDDatatype.XSDstring)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 4
+    assert(output.size() == triplesCount)
+  }
+
 }

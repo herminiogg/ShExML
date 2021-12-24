@@ -102,4 +102,9 @@ class FilmsWithNullsTest extends FunSuite with Matchers with RDFStatementCreator
     assert(output.listResourcesWithProperty(ResourceFactory.createProperty(prefix, "country")).toList.size() == 5)
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 30
+    assert(output.size() == triplesCount)
+  }
+
 }

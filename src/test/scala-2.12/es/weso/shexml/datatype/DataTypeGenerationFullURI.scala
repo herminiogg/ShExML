@@ -37,4 +37,9 @@ class DataTypeGenerationFullURI extends FunSuite with Matchers with RDFStatement
     assert(output.contains(createStatementWithLiteral(prefix, "John", "num", "3", XSDDatatype.XSDinteger)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 2
+    assert(output.size() == triplesCount)
+  }
+
 }

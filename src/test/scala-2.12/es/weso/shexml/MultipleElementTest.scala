@@ -72,4 +72,9 @@ class MultipleElementTest extends FunSuite with Matchers with RDFStatementCreato
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Jonathan Nolan", XSDDatatype.XSDstring)))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 18
+    assert(output.size() == triplesCount)
+  }
+
 }

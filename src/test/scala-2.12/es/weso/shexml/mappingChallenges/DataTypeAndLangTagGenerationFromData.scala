@@ -46,4 +46,9 @@ class DataTypeAndLangTagGenerationFromData extends FunSuite with Matchers with R
     assert(output.contains(createStatementWithLiteral(prefix, "John", "lastname", "Doe", "en")))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 4
+    assert(output.size() == triplesCount)
+  }
+
 }

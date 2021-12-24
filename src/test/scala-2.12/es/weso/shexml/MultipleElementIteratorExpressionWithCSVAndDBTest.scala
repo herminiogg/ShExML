@@ -92,7 +92,7 @@ class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with Ma
   }
 
   test("Shape 5 is translated correctly") {
-    assert(output.contains(createStatement(prefix, "4", "type", "Film")))
+    assert(output.contains(createStatement(prefix, "5", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "5", "name", "Memento", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "5", "year", "2000", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "5", "country", "USA", XSDDatatype.XSDstring)))
@@ -100,7 +100,7 @@ class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with Ma
   }
 
   test("Shape 6 is translated correctly") {
-    assert(output.contains(createStatement(prefix, "4", "type", "Film")))
+    assert(output.contains(createStatement(prefix, "6", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "6", "name", "Insomnia", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "6", "year", "2002", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "6", "country", "USA", XSDDatatype.XSDstring)))
@@ -121,6 +121,11 @@ class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with Ma
     assert(output.contains(createStatementWithLiteral(prefix, "9", "year", "2005", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "9", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "9", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
+  }
+
+  test("No additional triples are generated") {
+    val triplesCount = 42
+    assert(output.size() == triplesCount)
   }
 
 }

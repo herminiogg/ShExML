@@ -68,4 +68,9 @@ class CommentTest extends FunSuite with Matchers with RDFStatementCreator {
     assert(output.contains(createStatement(prefix, "989", "location", "51.043613-3.717333")))
   }
 
+  test("No additional triples are generated") {
+    val triplesCount = 11
+    assert(output.size() == triplesCount)
+  }
+
 }
