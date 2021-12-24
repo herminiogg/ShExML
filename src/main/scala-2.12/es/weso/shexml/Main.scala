@@ -52,7 +52,7 @@ class Main extends Callable[Int] {
   @Option(names = Array("-p", "--password"), description = Array("Password in case of using a database"))
   private var password: String = ""
 
-  @Option(names = Array("-d", "--drivers"), description = Array("Add more JDBC database drivers in the form of <startJDBCURL>%<driver> and separating them with \";\". Example: jdbc:postgresql%org.postgresql.Driver;jdbc:oracle%oracle.jdbc.OracleDriver"))
+  @Option(names = Array("-d", "--drivers"), description = Array("Add more JDBC database drivers in the form of <startJDBCURL>%%<driver> and separating them with \";\". Example: jdbc:postgresql%%org.postgresql.Driver;jdbc:oracle%%oracle.jdbc.OracleDriver"))
   private var drivers: String = ""
 
   override def call(): Int = {
