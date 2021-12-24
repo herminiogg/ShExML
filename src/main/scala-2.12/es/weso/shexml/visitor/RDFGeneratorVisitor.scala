@@ -587,13 +587,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected def doIteratorQueries(varList: List[Var], varContext: String, precedentQueries: List[String], arguments: Any, rootQuery: QueryClause): List[Resultable] = varList match {
     case x :: Nil => val results = {
       precedentQueries.map(q => {
-        val optionalXPathEnd = if(q.isEmpty) "[*]" else ""
+        val xpathIteratorQueryEnd = "[*]"
         getQueryFromVarTable(Var(varContext + x.name)) match {
           case JsonPath(query) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
-          case XmlPath(query) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + optionalXPathEnd)
+          case XmlPath(query) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + xpathIteratorQueryEnd)
           case FieldQuery(query, _, _) => rootQuery match {
             case JsonPath(_) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
-            case XmlPath(_) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + optionalXPathEnd)
+            case XmlPath(_) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + xpathIteratorQueryEnd)
           }
         }
       })
