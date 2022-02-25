@@ -1,4 +1,4 @@
-organization := "es.weso"
+organization := "com.herminiogarcia"
 
 name := "ShExML"
 
