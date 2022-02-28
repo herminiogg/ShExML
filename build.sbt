@@ -1,8 +1,8 @@
-organization := "es.weso"
+organization := "com.herminiogarcia"
 
 name := "ShExML"
 
-version := "0.2.7"
+version := "0.3.0"
 
 scalaVersion := "2.12.4"
 
