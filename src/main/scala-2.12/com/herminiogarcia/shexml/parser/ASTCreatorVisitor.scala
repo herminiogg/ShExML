@@ -40,6 +40,14 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     Source(name, url)
   }
 
+  override def visitFunctions(ctx: FunctionsContext): AST = {
+    val url =
+      if(ctx.URL != null) URL(ctx.URL().getText)
+      else RelativePath(ctx.QUERY_PART().getText)
+    val name = createVar(ctx.variable())
+    Functions(name, url)
+  }
+
   override def visitQuery(ctx: QueryContext): AST = {
     val queryOrURL: QueryOrURL = if (ctx.URL() != null) {
       URL(ctx.URL().getText)
@@ -241,7 +249,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
         || (ctx.firstPartObjectElement().valueRetriever().variable().size() == 1 && ctx.firstPartObjectElement().valueRetriever().exp() == null))
       Some(createVar(ctx.firstPartObjectElement().valueRetriever().variable(0)))
     else if(ctx.firstPartObjectElement().valueRetriever().exp() != null) Some(visit(ctx.firstPartObjectElement().valueRetriever().exp()).asInstanceOf[ExpOrVar])
-    else None
+    else Some(visit(ctx.firstPartObjectElement().valueRetriever().functionCalling()).asInstanceOf[ExpOrVar])
     val literalValue = if(ctx.firstPartObjectElement().valueRetriever().STRINGOPERATOR() != null)
       Some(LiteralObjectValue(ctx.firstPartObjectElement().valueRetriever().STRINGOPERATOR().getText.replaceAll("\"", "")))
     else None
@@ -293,6 +301,23 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       else Option(ctx.valueRetriever().variable(1)).map(createVar)
       LangTagGeneration(expOrVar, matcherVar)
     }
+  }
+
+  override def visitFunctionCalling(ctx: FunctionCallingContext): AST = {
+    val functionHub = createVar(ctx.variable(0))
+    val functionName = createVar(ctx.variable(1))
+    val functionArguments = visit(ctx.functionArguments()).asInstanceOf[Arguments]
+    FunctionCalling(functionHub, functionName, functionArguments)
+  }
+
+  override def visitFunctionArguments(ctx: FunctionArgumentsContext): AST = {
+    val argument =
+      (if(ctx.exp() != null) visit(ctx.exp())
+      else visit(ctx.variable())).asInstanceOf[ExpOrVar]
+    val arguments =
+      if(ctx.functionArguments() != null) argument +: visit(ctx.functionArguments()).asInstanceOf[Arguments].arguments
+      else List(argument)
+    Arguments(arguments)
   }
 
   override def visitShapeLink(ctx: ShapeLinkContext): AST = {
