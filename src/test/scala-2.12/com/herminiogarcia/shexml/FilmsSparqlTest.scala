@@ -11,7 +11,7 @@ class FilmsSparqlTest extends FunSuite with Matchers with RDFStatementCreator {
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |QUERY query_film <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%2349/src/test/resources/filmQuery.sparql>
+      |QUERY query_film <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%23121/src/test/resources/filmQuery.sparql>
       |SOURCE films_database <https://query.wikidata.org/sparql>
       |ITERATOR films_iterator <query_film> {
       |    FIELD id <item>
