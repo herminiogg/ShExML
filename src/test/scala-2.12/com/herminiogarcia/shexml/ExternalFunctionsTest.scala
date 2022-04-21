@@ -113,4 +113,26 @@ class ExternalFunctionsTest extends FunSuite with Matchers with RDFStatementCrea
     assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2007", XSDDatatype.XSDinteger)))
   }
 
+  test("Actresses transformations are done correctly") {
+    assert(output.contains(createStatementWithLiteral(prefix, "Ellen_Burstyn", "name", "Ellen", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Ellen_Burstyn", "nameParts", "Ellen", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Ellen_Burstyn", "nameParts", "Burstyn", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Ellen_Burstyn", "surname", "Burstyn", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Mackenzie_Foy", "name", "Mackenzie", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Mackenzie_Foy", "nameParts", "Mackenzie", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Mackenzie_Foy", "nameParts", "Foy", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Mackenzie_Foy", "surname", "Foy", XSDDatatype.XSDstring)))
+  }
+
+  test("Actors transformations are done correctly") {
+    assert(output.contains(createStatementWithLiteral(prefix, "Joseph_Gordon-Levitt", "name", "Joseph", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Joseph_Gordon-Levitt", "nameParts", "Joseph", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Joseph_Gordon-Levitt", "nameParts", "Gordon-Levitt", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Joseph_Gordon-Levitt", "surname", "Gordon-Levitt", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Tom_Hardy", "name", "Tom", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Tom_Hardy", "nameParts", "Tom", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Tom_Hardy", "nameParts", "Hardy", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "Tom_Hardy", "surname", "Hardy", XSDDatatype.XSDstring)))
+  }
+
 }

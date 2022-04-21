@@ -1,5 +1,7 @@
 package com.herminiogarcia.shexml.helper
 
+import com.github.vickumar1981.stringdistance.StringDistance.Levenshtein
+
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
 import scala.reflect.runtime
@@ -16,9 +18,9 @@ class FunctionHubExecuter(val pathToFile: String) {
     val symbol = toolBox.define(tree.asInstanceOf[toolBox.u.ImplDef])
     val theClass = toolBox.eval(toolBox.parse(functionsCode + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
     val instance = theClass.getConstructors()(0).newInstance().asInstanceOf[AnyRef]
-    val method = theClass.getMethods.toList.filter(_.getName.matches(".*" + name + ".*")).head
-      // TO DO: use str distance to select the best one
-      //.sortBy()
+    val method = theClass.getMethods.toList.filter(_.getName.matches(".*" + name + ".*"))
+      .sortWith((a, b) => Levenshtein.distance(name, a.getName) < Levenshtein.distance(name, b.getName))
+      .head
     val parameterTypes = method.getParameterTypes.toSeq
     val finalArgs = for((arg, theType) <- args zip parameterTypes) yield {
       val typeName =
