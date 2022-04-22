@@ -76,7 +76,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       })
     }
 
-    case Action(shapePrefix: String, action: ExpOrVar) => {
+    case Action(shapePrefix: String, action: ExpOrVar, _) => {
       doVisit(action, optionalArgument).asInstanceOf[List[RMLMap]].filter(_.logicalSource.nonEmpty)
     }
 

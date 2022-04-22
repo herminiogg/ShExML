@@ -115,7 +115,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
   }
 
   protected def getShapePrefix(action: ActionOrLiteral): String = action match {
-    case Action(shapePrefix, _) => shapePrefix
+    case Action(shapePrefix, _, _) => shapePrefix
     case LiteralSubject(prefix, _) => prefix.name
   }
 
