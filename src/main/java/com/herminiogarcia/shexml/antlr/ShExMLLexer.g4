@@ -18,6 +18,7 @@ UNION: U N I O N ;
 JOIN: J O I N ;
 MATCHER: M A T C H E R ;
 AS: A S ;
+IF: I F ;
 MATCHING: M A T C H I N G ;
 RDFLIST: R D F L I S T ;
 RDFBAG: R D F B A G ;

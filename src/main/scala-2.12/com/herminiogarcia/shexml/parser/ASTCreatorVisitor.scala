@@ -207,8 +207,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitAction(ctx: ActionContext): AST = {
     val shapePrefix = ctx.prefixVar().getText
-    val action = if(ctx.exp() == null) createVar(ctx.variable()) else visit(ctx.exp()).asInstanceOf[Exp]
-    Action(shapePrefix, action)
+    val action = visit(ctx.expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar]
+    val condition = if(ctx.expOrVarOrFunctionCallign(1) != null)
+      Some(visit(ctx.expOrVarOrFunctionCallign(1)).asInstanceOf[ExpOrVar])
+    else None
+    Action(shapePrefix, action, condition)
   }
 
   override def visitLiteralSubject(ctx: LiteralSubjectContext): AST = {
@@ -245,17 +248,18 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitObjectElement(ctx: ObjectElementContext): AST = {
     val prefix = if(ctx.firstPartObjectElement().prefixVar() != null) ctx.firstPartObjectElement().prefixVar().getText else ""
-    val expOrVar = if(ctx.firstPartObjectElement().valueRetriever().variable().size() == 2
-        || (ctx.firstPartObjectElement().valueRetriever().variable().size() == 1 && ctx.firstPartObjectElement().valueRetriever().exp() == null))
-      Some(createVar(ctx.firstPartObjectElement().valueRetriever().variable(0)))
-    else if(ctx.firstPartObjectElement().valueRetriever().exp() != null) Some(visit(ctx.firstPartObjectElement().valueRetriever().exp()).asInstanceOf[ExpOrVar])
-    else Some(visit(ctx.firstPartObjectElement().valueRetriever().functionCalling()).asInstanceOf[ExpOrVar])
+    val mainExpOrVar = if(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(0) != null)
+      Some(visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar])
+    else None
     val literalValue = if(ctx.firstPartObjectElement().valueRetriever().STRINGOPERATOR() != null)
       Some(LiteralObjectValue(ctx.firstPartObjectElement().valueRetriever().STRINGOPERATOR().getText.replaceAll("\"", "")))
     else None
-    val matcherVar = if(ctx.firstPartObjectElement().valueRetriever().variable(1) == null && ctx.firstPartObjectElement().valueRetriever().exp() != null)
-        Option(ctx.firstPartObjectElement().valueRetriever().variable(0)).map(createVar)
-      else Option(ctx.firstPartObjectElement().valueRetriever().variable(1)).map(createVar)
+    val matcherVar = if(ctx.firstPartObjectElement().valueRetriever().variable() != null)
+        Option(ctx.firstPartObjectElement().valueRetriever().variable()).map(createVar)
+      else None
+    val condition = if(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(1) != null)
+        Some(visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(1)).asInstanceOf[ExpOrVar])
+      else None
     val dataType = if(ctx.xmlschemadatatype() != null) Some(visit(ctx.xmlschemadatatype()).asInstanceOf[DataType]) else None
     val langTag = if(ctx.langtag() != null) Some(visit(ctx.langtag()).asInstanceOf[LangTag]) else None
     val rdfCollection = {
@@ -267,7 +271,13 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       else if(ctx.firstPartObjectElement().valueRetriever().rdfCollection().RDFBAG() != null) Some(RDFBag())
       else None
     }
-    ObjectElement(prefix, expOrVar, literalValue, matcherVar, dataType, langTag, rdfCollection)
+    ObjectElement(prefix, mainExpOrVar, literalValue, matcherVar, condition, dataType, langTag, rdfCollection)
+  }
+
+  override def visitExpOrVarOrFunctionCallign(ctx: ExpOrVarOrFunctionCallignContext): AST = {
+    if(ctx.variable() != null) createVar(ctx.variable())
+    else if(ctx.exp() != null) visit(ctx.exp())
+    else visit(ctx.functionCalling())
   }
 
   override def visitXmlschemadatatype(ctx: XmlschemadatatypeContext): AST = {
@@ -275,14 +285,10 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       DataTypeLiteral(ctx.XMLSCHEMADATATYPE().getText)
     } else {
       val prefix = if(ctx.firstPartObjectElement().prefixVar() != null) ctx.firstPartObjectElement().prefixVar().getText else ""
-      val expOrVar = if(ctx.firstPartObjectElement().valueRetriever().variable().size() == 2
-          || (ctx.firstPartObjectElement().valueRetriever().variable().size() == 1 && ctx.firstPartObjectElement().valueRetriever().exp() == null))
-          createVar(ctx.firstPartObjectElement().valueRetriever().variable(0))
-        else //if(ctx.firstPartObjectElement().valueRetriever().exp() != null)
-          visit(ctx.firstPartObjectElement().valueRetriever().exp()).asInstanceOf[ExpOrVar]
-      val matcherVar = if(ctx.firstPartObjectElement().valueRetriever().variable(1) == null && ctx.firstPartObjectElement().valueRetriever().exp() != null)
-        Option(ctx.firstPartObjectElement().valueRetriever().variable(0)).map(createVar)
-      else Option(ctx.firstPartObjectElement().valueRetriever().variable(1)).map(createVar)
+      val expOrVar = visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar]
+      val matcherVar = if(ctx.firstPartObjectElement().valueRetriever().variable() != null)
+        Option(ctx.firstPartObjectElement().valueRetriever().variable()).map(createVar)
+      else None
       DataTypeGeneration(prefix, expOrVar, matcherVar)
     }
   }
@@ -291,14 +297,10 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     if(ctx.valueRetriever() == null) {
       LangTagLiteral(ctx.LANGTAG().getText.replace("@", ""))
     } else {
-      val expOrVar = if(ctx.valueRetriever().variable().size() == 2
-        || (ctx.valueRetriever().variable().size() == 1 && ctx.valueRetriever().exp() == null))
-        createVar(ctx.valueRetriever().variable(0))
-      else //if(ctx.valueRetriever().exp() != null)
-        visit(ctx.valueRetriever().exp()).asInstanceOf[ExpOrVar]
-      val matcherVar = if(ctx.valueRetriever().variable(1) == null && ctx.valueRetriever().exp() != null)
-        Option(ctx.valueRetriever().variable(0)).map(createVar)
-      else Option(ctx.valueRetriever().variable(1)).map(createVar)
+      val expOrVar = visit(ctx.valueRetriever().expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar]
+      val matcherVar = if(ctx.valueRetriever().variable() != null)
+        Option(ctx.valueRetriever().variable()).map(createVar)
+      else None
       LangTagGeneration(expOrVar, matcherVar)
     }
   }

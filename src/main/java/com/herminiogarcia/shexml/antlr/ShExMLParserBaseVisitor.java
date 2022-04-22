@@ -243,6 +243,13 @@ public class ShExMLParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> impl
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitExpOrVarOrFunctionCallign(ShExMLParser.ExpOrVarOrFunctionCallignContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitFunctionCalling(ShExMLParser.FunctionCallingContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

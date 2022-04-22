@@ -330,6 +330,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitValueRetriever(ShExMLParser.ValueRetrieverContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#expOrVarOrFunctionCallign}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpOrVarOrFunctionCallign(ShExMLParser.ExpOrVarOrFunctionCallignContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#expOrVarOrFunctionCallign}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpOrVarOrFunctionCallign(ShExMLParser.ExpOrVarOrFunctionCallignContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#functionCalling}.
 	 * @param ctx the parse tree
 	 */

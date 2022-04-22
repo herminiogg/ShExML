@@ -205,6 +205,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitValueRetriever(ShExMLParser.ValueRetrieverContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#expOrVarOrFunctionCallign}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpOrVarOrFunctionCallign(ShExMLParser.ExpOrVarOrFunctionCallignContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#functionCalling}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

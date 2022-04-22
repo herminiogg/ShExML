@@ -402,6 +402,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterExpOrVarOrFunctionCallign(ShExMLParser.ExpOrVarOrFunctionCallignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExpOrVarOrFunctionCallign(ShExMLParser.ExpOrVarOrFunctionCallignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterFunctionCalling(ShExMLParser.FunctionCallingContext ctx) { }
 	/**
 	 * {@inheritDoc}

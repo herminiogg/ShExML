@@ -11,7 +11,7 @@ case class Graph(graphName: GraphVar, shapes: List[Shape]) extends VarResult
 case class Shape(shapeName: ShapeVar, action: ActionOrLiteral, predicateObjects: List[PredicateObject], holdingGraph: Option[Graph]) extends VarResult
 
 sealed trait ActionOrLiteral extends AST
-case class Action(shapePrefix: String, action: ExpOrVar) extends ActionOrLiteral
+case class Action(shapePrefix: String, action: ExpOrVar, condition: Option[ExpOrVar]) extends ActionOrLiteral
 case class LiteralSubject(prefix: Var, value: String) extends ActionOrLiteral
 
 sealed trait DeclarationStatement extends AST
@@ -77,7 +77,7 @@ case class Arguments(arguments: List[ExpOrVar]) extends AST
 
 sealed trait ObjectOrShapeLink extends AST
 
-case class ObjectElement(prefix: String, action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var],
+case class ObjectElement(prefix: String, action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var], filter: Option[ExpOrVar],
                          dataType: Option[DataType], langTag: Option[LangTag], rdfCollection: Option[RDFCollection]) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 
