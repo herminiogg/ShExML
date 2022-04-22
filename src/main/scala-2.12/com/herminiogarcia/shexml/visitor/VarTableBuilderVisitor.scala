@@ -13,6 +13,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
     case Prefix(name, value) => variableMap += ((name, value))
     case Source(name, value) => variableMap += ((name, value))
     case Query(name, value) => variableMap += ((name, value))
+    case Functions(name, value) => variableMap += ((name, value))
     case Expression(name, value) => variableMap += ((name, value))
     case Iterator(name, value, fields, iterators) => registerIterator(name, value, fields, iterators, optionalArgument)
     case NestedIterator(name, value, fields, iterators) => registerIterator(name, value, fields, iterators, optionalArgument)

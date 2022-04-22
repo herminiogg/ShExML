@@ -7,10 +7,11 @@ package com.herminiogarcia.shexml.antlr;
 options{tokenVocab=ShExMLLexer;}
 
 shExML: decl* (shape | graph)* ;
-decl: (source | prefix | query | expression | matcher | iterator | autoincrement) ;
+decl: (source | prefix | query | expression | matcher | iterator | autoincrement | functions) ;
 prefix: PREFIX variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
 source: SOURCE variable LESS_SYMBOL_QUERY (URL | JDBC_URL | QUERY_PART) GREATER_SYMBOL_QUERY ;
 query: QUERY variable LESS_SYMBOL_QUERY (URL | queryClause) GREATER_SYMBOL_QUERY ;
+functions: FUNCTIONS variable LESS_SYMBOL_QUERY SCALA (URL | QUERY_PART) GREATER_SYMBOL_QUERY ;
 iterator: ITERATOR variable LESS_SYMBOL_QUERY (queryClause | QUERY_PART+) GREATER_SYMBOL_QUERY '{' field+ nestedIterator* '}' ;
 nestedIterator: ITERATOR variable LESS_SYMBOL_QUERY QUERY_PART+ GREATER_SYMBOL_QUERY '{' field+ nestedIterator* '}' ;
 field: (FIELD | PUSHED_FIELD | POPPED_FIELD) variable LESS_SYMBOL_QUERY QUERY_PART+ GREATER_SYMBOL_QUERY ;
@@ -35,11 +36,13 @@ graph: literalValue '[[' shape+ ']]' ;
 shape: tripleElement actionOrLiteral '{' (predicateObject ';')* predicateObject? '}' ;
 actionOrLiteral: (action | literalSubject) ;
 literalSubject: prefixVar variable ;
-action: prefixVar '[' (exp | variable) ']' ;
+action: prefixVar '[' (exp | variable | functionCalling) ']' ;
 predicateObject: predicate (objectElement | shapeLink | literalValue) ;
 objectElement: firstPartObjectElement (xmlschemadatatype | langtag)? ;
 firstPartObjectElement: prefixVar? valueRetriever ;
-valueRetriever: ('[' (exp | variable) (MATCHING variable)? (AS rdfCollection)? ']' | STRINGOPERATOR) ;
+valueRetriever: ('[' (exp | variable | functionCalling) (MATCHING variable)? (AS rdfCollection)? ']' | STRINGOPERATOR) ;
+functionCalling: variable '.' variable '(' functionArguments ')' ;
+functionArguments: (exp | variable) ',' functionArguments | (exp | variable) ;
 rdfCollection: RDFLIST | RDFBAG | RDFSEQ | RDFALT ;
 xmlschemadatatype: XMLSCHEMADATATYPE | firstPartObjectElement ;
 langtag: LANGTAG | '@' valueRetriever ;

@@ -19,6 +19,7 @@ sealed trait DeclarationStatement extends AST
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
 case class Source(name: Var, path: IRI) extends DeclarationStatement
 case class Query(name: Var, query: QueryOrURL) extends DeclarationStatement
+case class Functions(name: Var, query: IRI) extends DeclarationStatement
 case class Iterator(name: Var, queryClause: QueryOrVar, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class Field(name: Var, queryClause: QueryClause, pushed: Boolean, popped: Boolean) extends AST
@@ -71,6 +72,8 @@ case class LiteralObjectValue(value: String) extends ObjectOrShapeLink
 case class PredicateObject(predicate: Predicate, objectOrShapeLink: ObjectOrShapeLink) extends AST
 case class Predicate(prefix: String, extension: String) extends AST
 
+case class FunctionCalling(functionHub: Var, functionName: Var, arguments: Arguments) extends ExpOrVar
+case class Arguments(arguments: List[ExpOrVar]) extends AST
 
 sealed trait ObjectOrShapeLink extends AST
 

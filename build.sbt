@@ -42,6 +42,8 @@ libraryDependencies += "org.mariadb.jdbc" % "mariadb-java-client" % "2.6.2"
 
 libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "8.4.1.jre8"
 
+libraryDependencies += "com.github.vickumar1981" %% "stringdistance" % "1.2.6"
+
 libraryDependencies += "es.weso" %% "shex" % "0.1.97" % "test"
 
 libraryDependencies += "es.weso" %% "srdf4j" % "0.1.104" % "test"

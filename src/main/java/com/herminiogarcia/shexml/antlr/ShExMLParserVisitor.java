@@ -1,4 +1,4 @@
-// Generated from .\ShExMLParser.g4 by ANTLR 4.9.2
+// Generated from ShExMLParser.g4 by ANTLR 4.9.2
 
 package com.herminiogarcia.shexml.antlr;
 
@@ -42,6 +42,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitQuery(ShExMLParser.QueryContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#functions}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctions(ShExMLParser.FunctionsContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#iterator}.
 	 * @param ctx the parse tree
@@ -198,6 +204,18 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitValueRetriever(ShExMLParser.ValueRetrieverContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#functionCalling}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionCalling(ShExMLParser.FunctionCallingContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#functionArguments}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionArguments(ShExMLParser.FunctionArgumentsContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#rdfCollection}.
 	 * @param ctx the parse tree

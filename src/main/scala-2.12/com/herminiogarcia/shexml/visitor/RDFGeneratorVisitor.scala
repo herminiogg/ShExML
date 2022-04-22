@@ -2,8 +2,8 @@ package com.herminiogarcia.shexml.visitor
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
-import com.herminiogarcia.shexml.helper.SourceHelper
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
 import kantan.xpath.XPathCompiler
@@ -281,6 +281,27 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           throw new Exception("Bad number of vars")
         }
       })
+    }
+
+    case f: FunctionCalling => {
+      val functionsURL = varTable(f.functionHub).asInstanceOf[URL]
+      val functionHub = new FunctionHubExecuter(functionsURL.url)
+      val argumentsResults = f.arguments.arguments.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
+      val arguments = for (i <- argumentsResults.head.indices) yield {
+        for (j <- argumentsResults.indices) yield {
+          argumentsResults(j)(i)
+        }
+      }.toList
+      arguments.map(a => {
+        // TO DO: take into account possible multiple values returned from an expression
+        val maxResults = a.map(r => r.results.size).max
+        val functionCallResult = (0 until maxResults).flatMap(i => {
+          val results = a.map(_.results(i))
+          functionHub.callFunction(f.functionName.name, results:_*)
+          // TO DO: take into account multiple return values form the function
+        }).toList
+        Result(a.head.id, a.head.rootIds, functionCallResult, a.head.dataType, a.head.langTag, a.head.rdfCollection)
+      }).toList
     }
 
     case v: Var => {

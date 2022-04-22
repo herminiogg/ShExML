@@ -1,4 +1,4 @@
-// Generated from .\ShExMLParser.g4 by ANTLR 4.9.2
+// Generated from ShExMLParser.g4 by ANTLR 4.9.2
 
 package com.herminiogarcia.shexml.antlr;
 
@@ -73,6 +73,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitQuery(ShExMLParser.QueryContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFunctions(ShExMLParser.FunctionsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunctions(ShExMLParser.FunctionsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -385,6 +397,30 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitValueRetriever(ShExMLParser.ValueRetrieverContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFunctionCalling(ShExMLParser.FunctionCallingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunctionCalling(ShExMLParser.FunctionCallingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFunctionArguments(ShExMLParser.FunctionArgumentsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunctionArguments(ShExMLParser.FunctionArgumentsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
