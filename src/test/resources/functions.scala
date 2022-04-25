@@ -23,4 +23,13 @@ class Helper {
   def getNameParts(name: String): Array[String] = {
     name.split(" ")
   }
+
+  def isBefore2010(year: Int): Boolean = {
+    year < 2010
+  }
+
+  def outsideUSA(country: String): Boolean = {
+    country != "USA"
+  }
+
 }
