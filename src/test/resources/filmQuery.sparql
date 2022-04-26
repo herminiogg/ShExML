@@ -4,8 +4,7 @@ PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX wd: <http://www.wikidata.org/entity/>
 SELECT distinct ?item ?name ?year ?countryLabel ?directorLabel
 WHERE {
-    ?item wdt:P31 wd:Q11424 ;
-          wdt:P1476 ?name ;
+    ?item wdt:P1476 ?name ;
           wdt:P577 ?year ;
           wdt:P495 ?country ;
           wdt:P57 wd:Q25191 ;

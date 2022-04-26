@@ -2,8 +2,8 @@ package com.herminiogarcia.shexml.visitor
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
-import com.herminiogarcia.shexml.helper.SourceHelper
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
 import kantan.xpath.XPathCompiler
@@ -139,7 +139,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action, literalValue, matcher, dataType, langTag, rdfCollection) => {
+    case ObjectElement(prefix, action, literalValue, matcher, condition, dataType, langTag, rdfCollection) => {
       val result = action match {
         case Some(value) => doVisit(value, optionalArgument)
         case None => literalValue match {
@@ -151,22 +151,29 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
       }
+      val conditionsResultList = condition match {
+        case Some(conditionExpression) => doVisit(conditionExpression, optionalArgument).asInstanceOf[List[Result]]
+        case None => List()
+      }
       val dataTypeResult = dataType.map(doVisit(_, optionalArgument))
       val langTagResult = langTag.map(doVisit(_, optionalArgument))
       result match {
         case _: List[Result] =>
           matchedResultList.asInstanceOf[List[Result]].map(result => {
-          val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
-          val dataTypeValue = dataTypeResult.map({
-            case dataTypeResults: List[Result] => dataTypeResults.filter(_.id == result.id).head.results.head
-            case value: String => value
-          })
-          val langTagValue = langTagResult.map({
-            case langTagResults: List[Result] => langTagResults.filter(_.id == result.id).head.results.head
-            case value: String => value
-          })
-          Result(result.id, result.rootIds, newResults, normaliseDataType(dataTypeValue), langTagValue, rdfCollection)
-        })
+            val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
+            val dataTypeValue = dataTypeResult.map({
+              case dataTypeResults: List[Result] => dataTypeResults.filter(_.id == result.id).head.results.head
+              case value: String => value
+            })
+            val langTagValue = langTagResult.map({
+              case langTagResults: List[Result] => langTagResults.filter(_.id == result.id).head.results.head
+              case value: String => value
+            })
+            val toBeGenerated = conditionsResultList.find(_.id == result.id).map(_.results.head.toBoolean).getOrElse(true)
+            if(toBeGenerated)
+              Result(result.id, result.rootIds, newResults, normaliseDataType(dataTypeValue), langTagValue, rdfCollection)
+            else Nil
+          }).filter(_ != Nil)
         case ResultAutoIncrement(iterator, predicate, _, _, _) =>
           val dataTypeValue = dataTypeResult.map({
             case _: List[Result] => throw new Exception("Autoincrement values cannot have a generated dataType")
@@ -281,6 +288,27 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           throw new Exception("Bad number of vars")
         }
       })
+    }
+
+    case f: FunctionCalling => {
+      val functionsURL = varTable(f.functionHub).asInstanceOf[URL]
+      val functionHub = new FunctionHubExecuter(functionsURL.url)
+      val argumentsResults = f.arguments.arguments.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
+      val arguments = for (i <- argumentsResults.head.indices) yield {
+        for (j <- argumentsResults.indices) yield {
+          argumentsResults(j)(i)
+        }
+      }.toList
+      arguments.map(a => {
+        // TO DO: take into account possible multiple values returned from an expression
+        val maxResults = a.map(r => r.results.size).max
+        val functionCallResult = (0 until maxResults).flatMap(i => {
+          val results = a.map(_.results(i))
+          functionHub.callFunction(f.functionName.name, results:_*)
+          // TO DO: take into account multiple return values form the function
+        }).toList
+        Result(a.head.id, a.head.rootIds, functionCallResult, a.head.dataType, a.head.langTag, a.head.rdfCollection)
+      }).toList
     }
 
     case v: Var => {
@@ -772,7 +800,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             val rootIds = List(id)
             doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None, None))
         }
-      } else doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+      } else {
+        val conditions = a.condition.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]]).getOrElse(List())
+        doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+          .filterNot(r => conditions.exists(c => r.id == c.id && !c.results.head.toBoolean))
+      }
     }
     case l: LiteralSubject => {
       doVisit(l, optionalArgument).asInstanceOf[List[Result]]
@@ -915,7 +947,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   protected def getShapePrefix(action: ActionOrLiteral): String = action match {
-    case Action(shapePrefix, _) => shapePrefix
+    case Action(shapePrefix, _, _) => shapePrefix
     case LiteralSubject(prefix, _) => prefix.name
   }
 

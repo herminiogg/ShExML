@@ -1,4 +1,4 @@
-// Generated from .\ShExMLParser.g4 by ANTLR 4.9.2
+// Generated from ShExMLParser.g4 by ANTLR 4.9.2
 
 package com.herminiogarcia.shexml.antlr;
 
@@ -59,6 +59,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitQuery(ShExMLParser.QueryContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#functions}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunctions(ShExMLParser.FunctionsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#functions}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunctions(ShExMLParser.FunctionsContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#iterator}.
 	 * @param ctx the parse tree
@@ -319,6 +329,36 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitValueRetriever(ShExMLParser.ValueRetrieverContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#expOrVarOrFunctionCallign}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpOrVarOrFunctionCallign(ShExMLParser.ExpOrVarOrFunctionCallignContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#expOrVarOrFunctionCallign}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpOrVarOrFunctionCallign(ShExMLParser.ExpOrVarOrFunctionCallignContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#functionCalling}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunctionCalling(ShExMLParser.FunctionCallingContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#functionCalling}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunctionCalling(ShExMLParser.FunctionCallingContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#functionArguments}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunctionArguments(ShExMLParser.FunctionArgumentsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#functionArguments}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunctionArguments(ShExMLParser.FunctionArgumentsContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#rdfCollection}.
 	 * @param ctx the parse tree

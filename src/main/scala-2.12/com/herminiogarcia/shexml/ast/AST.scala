@@ -11,7 +11,7 @@ case class Graph(graphName: GraphVar, shapes: List[Shape]) extends VarResult
 case class Shape(shapeName: ShapeVar, action: ActionOrLiteral, predicateObjects: List[PredicateObject], holdingGraph: Option[Graph]) extends VarResult
 
 sealed trait ActionOrLiteral extends AST
-case class Action(shapePrefix: String, action: ExpOrVar) extends ActionOrLiteral
+case class Action(shapePrefix: String, action: ExpOrVar, condition: Option[ExpOrVar]) extends ActionOrLiteral
 case class LiteralSubject(prefix: Var, value: String) extends ActionOrLiteral
 
 sealed trait DeclarationStatement extends AST
@@ -19,6 +19,7 @@ sealed trait DeclarationStatement extends AST
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
 case class Source(name: Var, path: IRI) extends DeclarationStatement
 case class Query(name: Var, query: QueryOrURL) extends DeclarationStatement
+case class Functions(name: Var, query: IRI) extends DeclarationStatement
 case class Iterator(name: Var, queryClause: QueryOrVar, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class Field(name: Var, queryClause: QueryClause, pushed: Boolean, popped: Boolean) extends AST
@@ -71,10 +72,12 @@ case class LiteralObjectValue(value: String) extends ObjectOrShapeLink
 case class PredicateObject(predicate: Predicate, objectOrShapeLink: ObjectOrShapeLink) extends AST
 case class Predicate(prefix: String, extension: String) extends AST
 
+case class FunctionCalling(functionHub: Var, functionName: Var, arguments: Arguments) extends ExpOrVar
+case class Arguments(arguments: List[ExpOrVar]) extends AST
 
 sealed trait ObjectOrShapeLink extends AST
 
-case class ObjectElement(prefix: String, action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var],
+case class ObjectElement(prefix: String, action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var], filter: Option[ExpOrVar],
                          dataType: Option[DataType], langTag: Option[LangTag], rdfCollection: Option[RDFCollection]) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar) extends ObjectOrShapeLink
 
