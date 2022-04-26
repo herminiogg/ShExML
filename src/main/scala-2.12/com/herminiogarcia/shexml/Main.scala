@@ -17,7 +17,7 @@ object Main {
 
 }
 
-@Command(name = "ShExML", version = Array("v0.3.0"),
+@Command(name = "ShExML", version = Array("v0.3.1"),
   mixinStandardHelpOptions = true,
   description = Array("Map and merge heterogeneous data sources with a Shape Expressions based syntax"))
 class Main extends Callable[Int] {
