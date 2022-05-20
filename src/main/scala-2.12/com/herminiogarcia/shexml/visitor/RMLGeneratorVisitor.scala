@@ -23,6 +23,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   private val joinIndex = (1 to Int.MaxValue).iterator
   private val mapGraphIndex = (1 to Int.MaxValue).iterator
   private val dbIndex = (1 to Int.MaxValue).iterator
+  private val languageMapIndex = (1 to Int.MaxValue).iterator
 
   val output = dataset.getDefaultModel
 
@@ -136,23 +137,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             }
           }
 
-          val fieldQuery = composedVar match {
-            case v: Var => varTable(v) match {
-              case f: FieldQuery => f
-              case _ => arguments("composedVar") match {
-                case cv: Var => varTable(Var(v.name + "." + cv.name)).asInstanceOf[FieldQuery]
-                case i: IteratorQuery =>
-                  return doVisit(IteratorQuery(firstVar, IteratorQuery(Var(composedVar.asInstanceOf[Var].name + "." + i.firstVar.name), i.composedVar)), optionalArgument)
-                  /*getNestedIteratorFieldQuery(i, Var(v.name + "." + i.firstVar.name), iterator) match {
-                  case Some(value) => value
-                  case None => return RMLMap(Nil, Nil, Nil, Nil)
-                } */
-                  //return doVisit(IteratorQuery(Var(v.name + "." + localFirstVar.name), localComposedVar), optionalArgument)
-              }
-
-            }
-            case i: IteratorQuery => getFieldQuery(i, i.firstVar).orNull
-          }
+          val fieldQuery = extractFieldQuery(firstVar, composedVar, arguments, optionalArgument)
           if(arguments("rmlType").asInstanceOf[String] != "subject" && fieldQuery != null) {
             val objectMapID = mapPrefix + "o_" + objectIndex.next
             if(arguments.isDefinedAt("prefix")) {
@@ -177,15 +162,26 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                 case _: DataTypeGeneration => throw new Exception("DataType generation from data not supported in RML")
               })
               val datatypeURI = datatypePrefix.map(_ + datatype.get)
-              val langTag = arguments.get("langTag").map({
-                case lt: LangTagLiteral => lt.value
-                case _: LangTagGeneration => throw new Exception("LangTag generation from data not supported in RML")
-              })
+              val langTagStatement = arguments.get("langTag").map({
+                case lt: LangTagLiteral => List(createStatementWithLiteral(objectMapID, rrPrefix + "language", lt.value))
+                case ltg: LangTagGeneration => {
+                  val statements = doVisit(ltg.action, null).asInstanceOf[List[RMLMap]]
+                  val reference = statements.find(_.objectMap.exists(_.getPredicate.getLocalName == "template"))
+                    .flatMap(_.objectMap.find(_.getPredicate.getLocalName == "template").map(_.getObject.asLiteral().getString))
+                    .map(_.replaceAll("[{}]", ""))
+                  val languageMapId = languageMapIndex.next()
+                  reference match {
+                    case Some(value) =>
+                      List(
+                        createStatement(objectMapID, rmlPrefix + "languageMap", "_:" + languageMapId),
+                        createBNodeStatementWithLiteral(languageMapId.toString, rmlPrefix + "reference", value),
+                      )
+                    case None => List()
+                  }
+                }
+              }).getOrElse(List())
               val datatypeStatement =
                 if(datatypeURI.isDefined) List(createStatement(objectMapID, rrPrefix + "datatype", datatypeURI.get))
-                else List()
-              val langTagStatement =
-                if(langTag.isDefined) List(createStatementWithLiteral(objectMapID, rrPrefix + "language", langTag.get))
                 else List()
               val objectMap = List(
                 createStatement(objectMapID, rdfPrefix + "type", rrPrefix + "ObjectMap"),
@@ -402,6 +398,26 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case default => super.doVisit(default, optionalArgument)
 
+  }
+
+  private def extractFieldQuery(firstVar: Var, composedVar: VarOrIteratorQuery, arguments: Map[String, Any], optionalArgument: Any): FieldQuery = {
+    composedVar match {
+      case v: Var => varTable(v) match {
+        case f: FieldQuery => f
+        case _ => arguments("composedVar") match {
+          case cv: Var => varTable(Var(v.name + "." + cv.name)).asInstanceOf[FieldQuery]
+          case i: IteratorQuery =>
+            doVisit(IteratorQuery(firstVar, IteratorQuery(Var(composedVar.asInstanceOf[Var].name + "." + i.firstVar.name), i.composedVar)), optionalArgument).asInstanceOf[FieldQuery]
+          /*getNestedIteratorFieldQuery(i, Var(v.name + "." + i.firstVar.name), iterator) match {
+                  case Some(value) => value
+                  case None => return RMLMap(Nil, Nil, Nil, Nil)
+                } */
+          //return doVisit(IteratorQuery(Var(v.name + "." + localFirstVar.name), localComposedVar), optionalArgument)
+        }
+
+      }
+      case i: IteratorQuery => getFieldQuery(i, i.firstVar).orNull
+    }
   }
 
   private def getFieldQuery(iteratorQuery: IteratorQuery, precedentVar: Var): Option[FieldQuery] = {
