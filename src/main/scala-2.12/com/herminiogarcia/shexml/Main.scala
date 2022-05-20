@@ -25,6 +25,9 @@ class Main extends Callable[Int] {
   @Option(names = Array("-r", "--rml"), description = Array("Generate RML output"))
   private var rmlOutput: Boolean = false
 
+  @Option(names = Array("-rp", "--rmlPrettified"), description = Array("Generate RML output using Blank node for better readability"))
+  private var rmlPrettifyOutput: Boolean = false
+
   @Option(names = Array("-s", "--shex"), description = Array("Generate ShEx validation"))
   private var shexOutput: Boolean = false
 
@@ -61,7 +64,9 @@ class Main extends Callable[Int] {
       val fileContent = fileHandler.mkString
       val mappingLauncher = new MappingLauncher(username, password, drivers)
       val outputContent = if(rmlOutput) {
-        mappingLauncher.launchRMLTranslation(fileContent)
+        mappingLauncher.launchRMLTranslation(fileContent, false)
+      } else if(rmlPrettifyOutput) {
+        mappingLauncher.launchRMLTranslation(fileContent, true)
       } else if(shexOutput) {
         mappingLauncher.launchShExGeneration(fileContent)
       } else if(shapeMapOutput) {
