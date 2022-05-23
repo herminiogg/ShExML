@@ -36,12 +36,12 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     generateResultingRDF(ast, varTable)
   }
 
-  def launchRMLTranslation(mappingCode: String): String = {
+  def launchRMLTranslation(mappingCode: String, prettify: Boolean = false): String = {
     val lexer = createLexer(mappingCode)
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
-    val dataset = generateResultingRML(ast, varTable)
+    val dataset = generateResultingRML(ast, varTable, prettify)
     val outputStream = new ByteArrayOutputStream()
     dataset.getDefaultModel.write(outputStream, "TURTLE")
     outputStream.toString
@@ -112,9 +112,9 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     dataset
   }
 
-  private def generateResultingRML(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {
+  private def generateResultingRML(ast: AST, varTable: mutable.HashMap[Variable, VarResult], prettify: Boolean): Dataset = {
     val output = DatasetFactory.create()
-    new RMLGeneratorVisitor(output, varTable, username, password).visit(ast, null)
+    new RMLGeneratorVisitor(output, varTable, prettify, username, password).visit(ast, null)
     output
   }
 
