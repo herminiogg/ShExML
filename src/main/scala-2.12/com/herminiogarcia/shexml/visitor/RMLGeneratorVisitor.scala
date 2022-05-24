@@ -139,7 +139,18 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             }
           }
 
-          val fieldQuery = extractFieldQuery(firstVar, composedVar, arguments, optionalArgument)
+          val fieldQuery = composedVar match {
+            case v: Var => varTable(v) match {
+              case f: FieldQuery => f
+              case _ => arguments("composedVar") match {
+                case cv: Var => varTable(Var(v.name + "." + cv.name)).asInstanceOf[FieldQuery]
+                case i: IteratorQuery =>
+                  return doVisit(IteratorQuery(firstVar, IteratorQuery(Var(composedVar.asInstanceOf[Var].name + "." + i.firstVar.name), i.composedVar)), optionalArgument)
+              }
+
+            }
+            case i: IteratorQuery => getFieldQuery(i, i.firstVar).orNull
+          }
           if(arguments("rmlType").asInstanceOf[String] != "subject" && fieldQuery != null) {
             val objectMapID = mapPrefixOrBNode + "o_" + objectIndex.next
             if(arguments.isDefinedAt("prefix")) {
@@ -401,26 +412,6 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case default => super.doVisit(default, optionalArgument)
 
-  }
-
-  private def extractFieldQuery(firstVar: Var, composedVar: VarOrIteratorQuery, arguments: Map[String, Any], optionalArgument: Any): FieldQuery = {
-    composedVar match {
-      case v: Var => varTable(v) match {
-        case f: FieldQuery => f
-        case _ => arguments("composedVar") match {
-          case cv: Var => varTable(Var(v.name + "." + cv.name)).asInstanceOf[FieldQuery]
-          case i: IteratorQuery =>
-            doVisit(IteratorQuery(firstVar, IteratorQuery(Var(composedVar.asInstanceOf[Var].name + "." + i.firstVar.name), i.composedVar)), optionalArgument).asInstanceOf[FieldQuery]
-          /*getNestedIteratorFieldQuery(i, Var(v.name + "." + i.firstVar.name), iterator) match {
-                  case Some(value) => value
-                  case None => return RMLMap(Nil, Nil, Nil, Nil)
-                } */
-          //return doVisit(IteratorQuery(Var(v.name + "." + localFirstVar.name), localComposedVar), optionalArgument)
-        }
-
-      }
-      case i: IteratorQuery => getFieldQuery(i, i.firstVar).orNull
-    }
   }
 
   private def getFieldQuery(iteratorQuery: IteratorQuery, precedentVar: Var): Option[FieldQuery] = {
