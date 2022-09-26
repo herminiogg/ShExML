@@ -24,8 +24,9 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   private val mapGraphIndex = (1 to Int.MaxValue).iterator
   private val dbIndex = (1 to Int.MaxValue).iterator
   private val languageMapIndex = (1 to Int.MaxValue).iterator
+  private val bNodeCount = (1 to Int.MaxValue).iterator //allows not sharing bnodes and getting a better pretty print
 
-  private def mapPrefixOrBNode = if(prettify) "_:" else mapPrefix
+  private def mapPrefixOrBNode = if(prettify) "_:b_" + bNodeCount.next() + "_" else mapPrefix
 
   val output = dataset.getDefaultModel
 
@@ -101,7 +102,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               else return RMLMap(Nil, Nil, Nil, Nil)
             case v: Var => transformNestedIterator(getQueryFromVarTable(v), v)
           }
-          val logicalSourceName = mapPrefixOrBNode + composedVar.hashCode.abs
+          val logicalSourceName = mapPrefixOrBNode + "l_" + (source.toString + iterator.query).hashCode.abs
           val logicalSource = iterator match {
             case SqlQuery(query) => {
               val dbSubjectID = mapPrefixOrBNode + "db_" + dbIndex.next()
@@ -312,8 +313,8 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case PredicateObject(predicate, objectOrShapeLink) => {
       val objectMap = doVisit(objectOrShapeLink, optionalArgument).asInstanceOf[List[RMLMap]]
-      val predicateStatements = doVisit(predicate, optionalArgument).asInstanceOf[List[Statement]]
       objectMap.map(om => {
+        val predicateStatements = doVisit(predicate, optionalArgument).asInstanceOf[List[Statement]]
         val objectStatements = om.objectMap
         val logicalSource = om.logicalSource
         val predicateID = getURIOrBNode(predicateStatements.head.getSubject)
