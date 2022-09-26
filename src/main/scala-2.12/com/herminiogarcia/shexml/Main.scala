@@ -25,7 +25,7 @@ class Main extends Callable[Int] {
   @Option(names = Array("-r", "--rml"), description = Array("Generate RML output"))
   private var rmlOutput: Boolean = false
 
-  @Option(names = Array("-rp", "--rmlPrettified"), description = Array("Generate RML output using Blank node for better readability"))
+  @Option(names = Array("-rp", "--rmlPrettified"), description = Array("Generate RML output using Blank nodes for better readability"))
   private var rmlPrettifyOutput: Boolean = false
 
   @Option(names = Array("-s", "--shex"), description = Array("Generate ShEx validation"))

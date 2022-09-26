@@ -2,12 +2,13 @@ package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import com.herminiogarcia.shexml.ast._
+import com.herminiogarcia.shexml.helper.OrphanBNodeRemover
 import com.herminiogarcia.shexml.parser.ASTCreatorVisitor
 import com.herminiogarcia.shexml.shex._
 import com.herminiogarcia.shexml.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
-import org.apache.jena.riot.{RDFDataMgr, RDFLanguages}
+import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
 
 import java.io.ByteArrayOutputStream
 import scala.collection.mutable
@@ -43,7 +44,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val varTable = createVarTable(ast)
     val dataset = generateResultingRML(ast, varTable, prettify)
     val outputStream = new ByteArrayOutputStream()
-    dataset.getDefaultModel.write(outputStream, "TURTLE")
+    if(prettify) new OrphanBNodeRemover().removeOrphanBNodes(dataset.getDefaultModel)
+    RDFDataMgr.write(outputStream, dataset.getDefaultModel, RDFFormat.TURTLE_PRETTY)
     outputStream.toString
   }
 
@@ -114,7 +116,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
 
   private def generateResultingRML(ast: AST, varTable: mutable.HashMap[Variable, VarResult], prettify: Boolean): Dataset = {
     val output = DatasetFactory.create()
-    new RMLGeneratorVisitor(output, varTable, prettify, username, password).visit(ast, null)
+    new RMLGeneratorVisitor(output, varTable, prettify, username, password).doVisit(ast, null)
     output
   }
 
