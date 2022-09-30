@@ -6,11 +6,16 @@ version := "0.3.1"
 
 scalaVersion := "2.13.9"
 
+crossScalaVersions := Seq("2.12.4", "2.13.9")
+
 //resolvers += "jitpack" at "https://jitpack.io"
 
 libraryDependencies += "org.antlr" % "antlr4" % "4.9.2"
 
-libraryDependencies += "io.gatling" % "gatling-jsonpath" % "3.8.4"
+libraryDependencies <+= scalaVersion {
+    case "2.13.9" => "io.gatling" % "gatling-jsonpath" % "3.8.2"
+    case "2.12.4" => "io.gatling" % "gatling-jsonpath" % "3.4.2"
+  }
 
 libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.9.4"
 
@@ -50,9 +55,9 @@ libraryDependencies += "es.weso" %% "srdf4j" % "0.1.104" % "test"
 
 libraryDependencies += "es.weso" %% "srdf" % "0.1.104" % "test"
 
-libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.13.9"
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.9"
+libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
