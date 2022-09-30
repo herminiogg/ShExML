@@ -14,10 +14,10 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
   override def doVisit(ast: com.herminiogarcia.shexml.ast.AST, optionalArgument: HashMap[String, String]): ShExSubsetAST = ast match {
     case ShExML(declarations, graphs, shapes) => {
       val prefixes = declarations.filter(_.declarationStatement.isInstanceOf[com.herminiogarcia.shexml.ast.Prefix])
-        .map(doVisit(_, optionalArgument).asInstanceOf[Prefix])
-      val shexGraphs = graphs.map(doVisit(_, optionalArgument).asInstanceOf[Graph])
-      val shexShapes = shapes.map(doVisit(_, optionalArgument).asInstanceOf[Shape])
-      ShEx(prefixes, shexShapes, shexGraphs)
+        .map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Prefix])
+      val shexGraphs = graphs.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Graph])
+      val shexShapes = shapes.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Shape])
+      com.herminiogarcia.shexml.shex.ShEx(prefixes, shexShapes, shexGraphs)
     }
 
     case Declaration(declarationStatement) => {
@@ -26,12 +26,12 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
 
     case com.herminiogarcia.shexml.ast.Prefix(name, url) => {
       prefixTable += (name.name -> url.url)
-      Prefix(name.name, url)
+      com.herminiogarcia.shexml.shex.Prefix(name.name, url)
     }
 
     case com.herminiogarcia.shexml.ast.Graph(graphName, shapes) => {
-      val shexShapes = shapes.map(doVisit(_, optionalArgument).asInstanceOf[Shape])
-      Graph(graphName.prefix + graphName.name, shexShapes)
+      val shexShapes = shapes.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Shape])
+      com.herminiogarcia.shexml.shex.Graph(graphName.prefix + graphName.name, shexShapes)
     }
 
     case com.herminiogarcia.shexml.ast.Shape(shapeName, action, predicateObjects, _) => {
@@ -39,20 +39,20 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       val arguments = HashMap("shapeName" -> shapeName.name)
       val name = shapeName.name
       val iriStart = PartialFixedValue(shapePrefix)
-      val shexPredicateObjects = predicateObjects.map(doVisit(_, arguments).asInstanceOf[PredicateObject])
-      Shape(name, iriStart, shexPredicateObjects)
+      val shexPredicateObjects = predicateObjects.map(doVisit(_, arguments).asInstanceOf[com.herminiogarcia.shexml.shex.PredicateObject])
+      com.herminiogarcia.shexml.shex.Shape(name, iriStart, shexPredicateObjects)
     }
 
     case com.herminiogarcia.shexml.ast.PredicateObject(predicate, objectOrShapeLink) => {
       val fullPrefix = prefixTable.getOrElse(predicate.prefix, "")
       val arguments = optionalArgument + ("predicateIRI" -> (fullPrefix + predicate.`extension`))
-      val shexPredicate = doVisit(predicate, optionalArgument).asInstanceOf[Predicate]
-      val objectElement = doVisit(objectOrShapeLink, arguments).asInstanceOf[ObjectElement]
-      PredicateObject(shexPredicate, objectElement)
+      val shexPredicate = doVisit(predicate, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Predicate]
+      val objectElement = doVisit(objectOrShapeLink, arguments).asInstanceOf[com.herminiogarcia.shexml.shex.ObjectElement]
+      com.herminiogarcia.shexml.shex.PredicateObject(shexPredicate, objectElement)
     }
 
     case com.herminiogarcia.shexml.ast.Predicate(prefix, localname) => {
-      Predicate(prefix, localname)
+      com.herminiogarcia.shexml.shex.Predicate(prefix, localname)
     }
 
     case com.herminiogarcia.shexml.ast.ObjectElement(prefix, _, literalValue, _, _, dataType, langTag, _) => {
@@ -86,7 +86,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
     }
 
     case com.herminiogarcia.shexml.ast.ShapeLink(shapeVar) => {
-      ShapeLink(shapeVar.name)
+      com.herminiogarcia.shexml.shex.ShapeLink(shapeVar.name)
     }
 
     case com.herminiogarcia.shexml.ast.LiteralObject(prefix, value) => {

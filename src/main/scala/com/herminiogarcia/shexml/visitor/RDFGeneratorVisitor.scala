@@ -1,6 +1,6 @@
 package com.herminiogarcia.shexml.visitor
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
 import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, SourceHelper}
@@ -332,17 +332,15 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val fileContent = arguments.getOrElse("fileContent", null).asInstanceOf[String]
       val id = (iteratorQuery + fileContent + index).hashCode.toString
       val rootIds = arguments.getOrElse("rootIds", List(id)).asInstanceOf[List[String]]
-      val jsonContent = new ObjectMapper().readValue(fileContent, classOf[Object])
+      val jsonContent = new ObjectMapper().readValue(fileContent, classOf[JsonNode])
       val result = io.gatling.jsonpath.JsonPath.query(query, jsonContent)
       result match {
         case Left(_) => Nil
-        case Right(r) => {
-          val finalList = r.toList.flatMap({
-            case l: util.ArrayList[_] => l.toArray.flatMap(r => if(r != null) List(r.toString) else Nil)
-            case default => if(default != null) List(default.toString) else Nil
-          })
-          Result(id, rootIds, finalList, None, None, None)
-        }
+        case Right(r) => val finalList = r.flatMap(j => {
+            if(j.isArray) j.iterator().asScala.flatMap(r => if(!r.isNull) List(r.asText()) else Nil)
+            else if(!j.isNull) List(j.asText()) else Nil
+          }).toList
+        Result(id, rootIds, finalList, None, None, None)
       }
     }
 
