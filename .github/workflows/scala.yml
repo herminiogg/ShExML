@@ -29,4 +29,4 @@ jobs:
             sudo -u postgres psql -c "INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" films &&
             sudo -u postgres psql -c "INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');" films
     - name: Run tests
-      run: sbt "+ test"
+      run: sbt --mem 2048 "+ test"
