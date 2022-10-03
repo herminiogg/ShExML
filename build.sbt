@@ -1,13 +1,14 @@
 ThisBuild / organization := "com.herminiogarcia"
 
-lazy val root = project 
+lazy val shexml = project
   .in(file("."))
   .settings(
     name := "ShExML",
     version := "0.3.1",
     scalaVersion := "2.13.9",
     crossScalaVersions := Seq("2.12.17", "2.13.9"),
-    libraryDependencies ++= Seq("org.antlr" % "antlr4" % "4.9.2",
+    libraryDependencies ++= Seq(
+      "org.antlr" % "antlr4" % "4.9.2",
       "com.fasterxml.jackson.core" % "jackson-core" % "2.9.4",
       "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.4",
       "com.nrinaudo" %% "kantan.xpath" % "0.5.3",
@@ -32,10 +33,9 @@ lazy val root = project
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, n)) if n == 13 => "io.gatling" % "gatling-jsonpath" % "3.8.2"
         case Some((2, n)) if n == 12 => "io.gatling" % "gatling-jsonpath" % "3.4.2"
-      })
+      }),
+      assembly / assemblyMergeStrategy := {
+        case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+        case x => MergeStrategy.first
+      }
   )
-
-assembly / assemblyMergeStrategy := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
-}
