@@ -44,6 +44,7 @@ lazy val shexml = project
         case Some((2, n)) if n == 12 => "io.gatling" % "gatling-jsonpath" % "3.4.2"
       }),
       assembly / assemblyMergeStrategy := {
+        case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
         case PathList("META-INF", xs @ _*) => MergeStrategy.discard
         case x => MergeStrategy.first
       }

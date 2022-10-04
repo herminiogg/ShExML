@@ -19,7 +19,6 @@ import scala.collection.mutable
 class MappingLauncher(val username: String = "", val password: String = "", drivers: String = "") {
 
   def launchMapping(mappingCode: String, lang: String): String = {
-    org.apache.jena.query.ARQ.init()
     val dataset = launchMapping(mappingCode)
     val outputStream = new ByteArrayOutputStream()
     val langValue = RDFLanguages.nameToLang(lang)
