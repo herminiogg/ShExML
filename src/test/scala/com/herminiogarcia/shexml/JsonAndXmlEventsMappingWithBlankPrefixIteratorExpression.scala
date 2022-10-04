@@ -1,9 +1,10 @@
 package com.herminiogarcia.shexml
 
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class JsonAndXmlEventsMappingWithBlankPrefixIteratorExpression extends FunSuite with Matchers with RDFStatementCreator {
+class JsonAndXmlEventsMappingWithBlankPrefixIteratorExpression extends AnyFunSuite with Matchers with RDFStatementCreator {
 
   val example =
     """

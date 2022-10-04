@@ -2,9 +2,10 @@ package com.herminiogarcia.shexml.mappingChallenges
 
 import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class AccessFieldsOutsideIterators extends FunSuite with Matchers with RDFStatementCreator {
+class AccessFieldsOutsideIterators extends AnyFunSuite with Matchers with RDFStatementCreator {
 
   private val example =
     """

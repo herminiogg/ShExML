@@ -5,7 +5,7 @@ import collection.JavaConverters._
 
 class OrphanBNodeRemover {
 
-  def removeOrphanBNodes(model: Model) {
+  def removeOrphanBNodes(model: Model) = {
     model.listStatements().toList.asScala.foreach(s => {
       val subject = s.getSubject
       if(subject.isAnon) {

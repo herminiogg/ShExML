@@ -1,12 +1,13 @@
 package com.herminiogarcia.shexml.rmlPrettyPrint
 
 import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMappingWithBNode extends FunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class JsonAndXmlEventsMappingWithBNode extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
 
   private val example =
     """

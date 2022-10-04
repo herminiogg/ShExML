@@ -1,6 +1,9 @@
 package com.herminiogarcia.shexml.helper
 
+import com.github.vickumar1981.stringdistance
 import com.github.vickumar1981.stringdistance.StringDistance.Levenshtein
+import com.github.vickumar1981.stringdistance.implicits._
+import com.github.vickumar1981.stringdistance.StringConverter._
 
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
@@ -19,7 +22,10 @@ class FunctionHubExecuter(val pathToFile: String) {
     val theClass = toolBox.eval(toolBox.parse(functionsCode + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
     val instance = theClass.getConstructors()(0).newInstance().asInstanceOf[AnyRef]
     val method = theClass.getMethods.toList.filter(_.getName.matches(".*" + name + ".*"))
-      .sortWith((a, b) => Levenshtein.distance(name, a.getName) < Levenshtein.distance(name, b.getName))
+      .sortWith((a, b) => {
+        name.levenshteinDist(a.getName) < name.levenshteinDist(b.getName)
+        //Levenshtein.distance(name, a.getName)(LevenshteinDistance) < Levenshtein.distance(name, b.getName)
+      })
       .head
     val parameterTypes = method.getParameterTypes.toSeq
     val finalArgs = for((arg, theType) <- args zip parameterTypes) yield {

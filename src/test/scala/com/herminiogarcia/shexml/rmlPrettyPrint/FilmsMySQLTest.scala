@@ -2,9 +2,10 @@ package com.herminiogarcia.shexml.rmlPrettyPrint
 
 import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class FilmsMySQLTest extends FunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class FilmsMySQLTest extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
 
   private val example =
     """

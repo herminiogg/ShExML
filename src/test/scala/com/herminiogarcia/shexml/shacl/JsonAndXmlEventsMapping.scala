@@ -1,11 +1,12 @@
 package com.herminiogarcia.shexml.shacl
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMapping extends FunSuite with SHACLValidation {
+class JsonAndXmlEventsMapping extends AnyFunSuite with SHACLValidation {
 
   private val example =
     """

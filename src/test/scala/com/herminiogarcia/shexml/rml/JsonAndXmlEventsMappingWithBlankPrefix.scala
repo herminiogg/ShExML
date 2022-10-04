@@ -2,9 +2,10 @@ package com.herminiogarcia.shexml.rml
 
 import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class JsonAndXmlEventsMappingWithBlankPrefix extends FunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class JsonAndXmlEventsMappingWithBlankPrefix extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
 
   val example =
     """

@@ -2,12 +2,13 @@ package com.herminiogarcia.shexml.collectionsandcontainers
 
 import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.rdf.model.ResourceFactory
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class RDFListTest extends FunSuite with Matchers with RDFStatementCreator {
+class RDFListTest extends AnyFunSuite with Matchers with RDFStatementCreator {
 
   private val example =
     """

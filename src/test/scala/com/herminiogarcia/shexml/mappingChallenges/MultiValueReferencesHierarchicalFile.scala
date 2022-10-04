@@ -1,12 +1,13 @@
 package com.herminiogarcia.shexml.mappingChallenges
 
 import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class MultiValueReferencesHierarchicalFile extends FunSuite with Matchers with RDFStatementCreator {
+class MultiValueReferencesHierarchicalFile extends AnyFunSuite with Matchers with RDFStatementCreator {
 
   private val example =
     """

@@ -1,12 +1,13 @@
 package com.herminiogarcia.shexml
 
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMappingWithExternalQuery extends FunSuite with Matchers with RDFStatementCreator {
+class JsonAndXmlEventsMappingWithExternalQuery extends AnyFunSuite with Matchers with RDFStatementCreator {
 
   private val example =
     """

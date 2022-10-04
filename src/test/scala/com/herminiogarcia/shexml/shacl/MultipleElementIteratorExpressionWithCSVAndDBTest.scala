@@ -1,8 +1,9 @@
 package com.herminiogarcia.shexml.shacl
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with SHACLValidation {
+class MultipleElementIteratorExpressionWithCSVAndDBTest extends AnyFunSuite with SHACLValidation {
 
   private val example =
     """

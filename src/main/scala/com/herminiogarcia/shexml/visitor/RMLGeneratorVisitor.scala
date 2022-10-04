@@ -159,9 +159,9 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                 else prefixTable(arguments("prefix").asInstanceOf[String])
               val termType = if(prefix == "_:")
                 List(createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "BlankNode"),
-                  createStatementWithLiteral(objectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"))
+                  createStatementWithLiteral(objectMapID, rrPrefix + "template", s"$prefix{" + fieldQuery.query + "}"))
                 else List(createStatement(objectMapID, rrPrefix + "termType", rrPrefix + "IRI"),
-                  createStatementWithLiteral(objectMapID, rrPrefix + "template", prefix + "{" + fieldQuery.query + "}"))
+                  createStatementWithLiteral(objectMapID, rrPrefix + "template", s"$prefix{" + fieldQuery.query + "}"))
               val objectMap = List(
                 createStatement(objectMapID, rdfPrefix + "type", rrPrefix + "ObjectMap")
               ) ::: termType

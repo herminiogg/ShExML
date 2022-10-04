@@ -1,11 +1,11 @@
 package com.herminiogarcia.shexml.shex
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMapping extends FunSuite with ShExValidation {
+class JsonAndXmlEventsMapping extends AnyFunSuite with ShExValidation {
 
   private val example =
     """

@@ -1,9 +1,9 @@
 package com.herminiogarcia.shexml.shex
 
 import com.herminiogarcia.shexml.MappingLauncher
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class FilmsWithInferredShapeMapTest extends FunSuite with ShExValidation {
+class FilmsWithInferredShapeMapTest extends AnyFunSuite with ShExValidation {
 
   private val example =
     """

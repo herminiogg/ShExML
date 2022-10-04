@@ -2,12 +2,13 @@ package com.herminiogarcia.shexml.rmlPrettyPrint
 
 import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMappingWithJoinIteratorExpression extends FunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class JsonAndXmlEventsMappingWithJoinIteratorExpression extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
 
   val example =
     """

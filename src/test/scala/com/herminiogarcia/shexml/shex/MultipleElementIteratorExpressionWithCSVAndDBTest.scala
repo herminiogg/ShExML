@@ -1,8 +1,8 @@
 package com.herminiogarcia.shexml.shex
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class MultipleElementIteratorExpressionWithCSVAndDBTest extends FunSuite with ShExValidation {
+class MultipleElementIteratorExpressionWithCSVAndDBTest extends AnyFunSuite with ShExValidation {
 
   private val example =
     """

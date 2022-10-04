@@ -197,7 +197,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           case mr: Map[String, List[Result]] => ml.keySet.union(mr.keySet).map(k => {
             val leftResult = mr.getOrElse(k, Nil)
             val rightResult = ml.getOrElse(k, Nil)
-            val value = expName + k -> leftResult.union(rightResult)
+            val value = s"$expName$k" -> leftResult.union(rightResult)
             iteratorsCombinations += value
             k -> leftResult.union(rightResult)
           }).toMap
@@ -219,7 +219,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               val leftResult = mr.getOrElse(k, Nil)
               val rightResult = ml.getOrElse(k, Nil)
               val joinResult = mj.getOrElse(k, Nil)
-              val value = expName + k -> getJoinResults(leftResult, rightResult, joinResult)
+              val value = s"$expName$k" -> getJoinResults(leftResult, rightResult, joinResult)
               iteratorsCombinations += value
             })
             case _ => throw new Exception("Cannot join iterator with non iterator expression. Join clause is not an iterator expression")
@@ -239,7 +239,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           case mr: Map[String, List[Result]] => ml.keySet.union(mr.keySet).foreach(k => {
             val leftResult = mr.getOrElse(k, Nil)
             val rightResult = ml.getOrElse(k, Nil)
-            val value = expName + k -> getStringOperationResults(leftResult, rightResult, unionString)
+            val value = s"$expName$k" -> getStringOperationResults(leftResult, rightResult, unionString)
             iteratorsCombinations += value
           })
           case _ => throw new Exception("Cannot make string operation with left clause being an iterator expression and right clause a non iterator expression")
@@ -267,16 +267,16 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case _ => false
           }.map {
             case v: Var => v.name.replaceFirst(iteratorName, "") -> {
-              val vars = v.name.split("[.]").map(Var).toList
+              val vars = v.name.split("[.]").map(Var.apply).toList
               if (vars.size > 1)
                 doIteratorQuery(vars, middleArguments, fileContent)
               else Nil
             }
           }.toMap
           values.foreach {
-            case (k, v) => iteratorsCombinations.get(expName + k) match {
-              case Some(previousValue) => iteratorsCombinations += expName + k -> (previousValue ::: v.filterNot(previousValue.contains(_)))
-              case None => iteratorsCombinations += expName + k -> v
+            case (k, v) => iteratorsCombinations.get(s"$expName$k") match {
+              case Some(previousValue) => iteratorsCombinations += s"$expName$k" -> (previousValue ::: v.filterNot(previousValue.contains(_)))
+              case None => iteratorsCombinations += s"$expName$k" -> v
             }
           }
           values
@@ -829,7 +829,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     new QuerySearcher(varTable).getQueryFromVarTable(variable)
   }
 
-  private def registerCardinalityAndDatatype(shapeName: String, predicateObject: Array[String], result: Result) {
+  private def registerCardinalityAndDatatype(shapeName: String, predicateObject: Array[String], result: Result) = {
     val datatype = result.dataType match {
       case Some(value) => Some(value)
       case None => {
