@@ -23,7 +23,7 @@ lazy val shexml = project
       "com.github.tototoshi" %% "scala-csv" % "1.3.6",
       "org.xerial" % "sqlite-jdbc" % "3.32.3.2",
       "mysql" % "mysql-connector-java" % "8.0.21",
-      "org.postgresql" % "postgresql" % "42.2.16",
+      "org.postgresql" % "postgresql" % "42.5.0",
       "org.mariadb.jdbc" % "mariadb-java-client" % "2.6.2",
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.4.1.jre8",
       "com.github.vickumar1981" %% "stringdistance" % "1.2.6",
