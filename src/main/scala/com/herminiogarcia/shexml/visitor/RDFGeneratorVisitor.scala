@@ -21,6 +21,7 @@ import java.util
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Try
+import scala.util.control.Breaks.break
 
 /**
   * Created by herminio on 26/12/17.
@@ -536,7 +537,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     case c: IteratorQuery => List(i.firstVar) ::: iteratorQueryToList(c)
   }
 
-  protected def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], fileContent: String): List[QueryWithIndex] = iteratorQueries.flatMap({
+  /**protected def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], fileContent: String): List[QueryWithIndex] = iteratorQueries.flatMap({
     case r: ResultWithIteratorQuery => r.results.indices.map(i => query match {
       case XmlPath(xpathQuery) => {
         val composedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
@@ -565,7 +566,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
       }
     }).toList
-  })
+  })*/
 
   protected def generateFinalQuery(varList: List[Var], context: String, rootQuery: QueryClause): QueryClause = varList match {
     case x :: Nil => getQueryFromVarTable(Var(context + x.name))
@@ -609,53 +610,65 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
   }
 
-  protected def doIteratorQueries(varList: List[Var], varContext: String, precedentQueries: List[String], arguments: Any, rootQuery: QueryClause): List[Resultable] = varList match {
-    case x :: Nil => val results = {
-      precedentQueries.map(q => {
-        val xpathIteratorQueryEnd = "[*]"
-        getQueryFromVarTable(Var(varContext + x.name)) match {
-          case JsonPath(query) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
-          case XmlPath(query) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + xpathIteratorQueryEnd)
-          case FieldQuery(query, _, _) => rootQuery match {
-            case JsonPath(_) => (doVisit(JsonPath(q + query), arguments).asInstanceOf[Result], q + query)
-            case XmlPath(_) => (doVisit(XmlPath(q + query), arguments).asInstanceOf[Result], q + query + xpathIteratorQueryEnd)
-          }
-        }
-      })
-    }
-    results.map(r => ResultWithIteratorQuery(r._1.id, r._1.rootIds, r._1.results, r._2))
-    case x :: xs => {
-      val queries = precedentQueries.map(q => getQueryFromVarTable(Var(varContext + x.name)) match {
-        case JsonPath(query) => JsonPath(q + query)
-        case XmlPath(query) => XmlPath(q + query + "[*]")
-      })
-      val results = queries.map(doVisit(_, arguments).asInstanceOf[Result])
-      val newQueries = queries.indices.map(iq => {
-        results(iq).results.indices.map(ir => queries(iq) match {
-          case JsonPath(query)  => query.replaceFirst("[*]", ir.toString) + "."
-          case XmlPath(query) => query.replaceFirst("[*]", (ir + 1).toString) + "/"
-        })
-      }).toList
-      results.indices.map(r => ResultWithNested(results(r).id, results(r).rootIds, results(r).results,
-        doIteratorQueries(xs, varContext + x.name + ".", newQueries(r).toList, arguments, queries.head), queries(r).query)).toList
-    }
-  }
-
   protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContentOrURL: String): List[Result] = {
-    generateFinalQuery(iteratorVars, "", null) //to generate pushed vars, this can be improved for performance
+    //generateFinalQuery(iteratorVars, "", null) //to generate pushed vars, this can be improved for performance
     val query = generateFinalQuery(iteratorVars, "", null)
     query match {
       case c: CSVPerRow => doPerRowResults(c, fileContentOrURL)
       case s: SqlColumn => doSqlResults(s, fileContentOrURL)
       case sp: SparqlColumn => doSparqlResults(sp, fileContentOrURL)
       case _ => {
-        val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
-        val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContentOrURL)
-        queries.map(q => doVisit(q.query, middleArguments.+(
-          "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
-          .filter(_.results.nonEmpty)
+        doIteratorQueries(iteratorVars, "", middleArguments, null)
+        //val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
+        //val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContentOrURL)
+        //queries.map(q => doVisit(q.query, middleArguments.+(
+        //  "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
+        //  .filter(_.results.nonEmpty)
       }
     }
+  }
+
+  protected def doIteratorQueries(varList: List[Var], varContext: String, arguments: Any, rootQuery: QueryClause): List[Result] = varList match {
+    case x :: Nil =>
+      val partQuery = getQueryFromVarTable(Var(varContext + x.name)).query
+      val query = rootQuery match {
+        case JsonPath(_) => JsonPath(rootQuery.query + partQuery)
+        case XmlPath(_) => XmlPath(rootQuery.query + partQuery)
+      }
+      val result = doVisit(query, arguments).asInstanceOf[Result]
+      if(result.results.isEmpty) throw new EmptyResultException("Empty result for query: " + query)
+      else List(result)
+    case x :: xs =>
+        val precedentQuery = Option(rootQuery).map(_.query).getOrElse("")
+        var stop = false
+        var ir = 0
+        val results = mutable.ListBuffer[List[Result]]()
+        while(!stop) {
+          val newQuery = getQueryFromVarTable(Var(varContext + x.name)) match {
+            case JsonPath(query) => JsonPath(precedentQuery + query.replaceFirst("[*]", ir.toString) + ".")
+            case XmlPath(query) => XmlPath(precedentQuery + (query + "[*]").replaceFirst("[*]", (ir + 1).toString) + "/")
+            //possibility to stop if not field query
+          }
+          val rootId = (newQuery match {
+            case JsonPath(query) => doVisit(JsonPath(query.substring(0, query.length - 1)), arguments)
+            case XmlPath(query) => doVisit(XmlPath(query.substring(0, query.length - 1)), arguments)
+          }).asInstanceOf[Result].id
+          try {
+            val middleArguments = arguments.asInstanceOf[Map[String, Any]]
+            val rootIds = middleArguments.getOrElse("rootIds", List[String]()).asInstanceOf[List[String]].:+(rootId)
+            val iteratorQuery = newQuery.query.substring(0, newQuery.query.length - 1)
+            val result = doIteratorQueries(xs, varContext + x.name + ".",
+              middleArguments.+("rootIds" -> rootIds, "iteratorQuery" -> iteratorQuery),
+              newQuery)
+            results += result
+          } catch {
+            case _: EmptyResultException => stop = true
+          }
+          ir += 1
+        }
+        val finalResults = results.flatten
+        if(finalResults.exists(r => r.results.nonEmpty) || precedentQuery.isEmpty) finalResults.toList
+        else throw new EmptyResultException("No results for iterator query" + getQueryFromVarTable(Var(varContext + x.name)))
   }
 
   private def doSparqlResults(query: SparqlColumn, sparqlEndpointOrRDFLocation: String): List[Result] = {
@@ -1023,3 +1036,5 @@ case class ResultAutoIncrement(iterator: AutoIncrement, predicate: String, names
     List(predicateWithSpace + namespace + precedentString + iterator.iterator.next() + closingString)
   }
 }
+
+class EmptyResultException(message: String) extends Exception
