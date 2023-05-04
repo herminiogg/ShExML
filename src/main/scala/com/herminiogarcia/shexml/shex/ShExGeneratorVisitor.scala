@@ -2,12 +2,15 @@ package com.herminiogarcia.shexml.shex
 
 import com.herminiogarcia.shexml.ast._
 import com.herminiogarcia.shexml.visitor.DefaultVisitor
+import com.typesafe.scalalogging.Logger
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
 import scala.util.Try
 
 class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDatatypes]) extends DefaultVisitor[HashMap[String, String], ShExSubsetAST] {
+
+  private val logger = Logger[ShExGeneratorVisitor]
 
   val prefixTable = mutable.HashMap[String, String]()
 
@@ -17,7 +20,10 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
         .map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Prefix])
       val shexGraphs = graphs.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Graph])
       val shexShapes = shapes.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Shape])
-      com.herminiogarcia.shexml.shex.ShEx(prefixes, shexShapes, shexGraphs)
+      val result = com.herminiogarcia.shexml.shex.ShEx(prefixes, shexShapes, shexGraphs)
+      val totalShapes = shexGraphs.map(_.shapes.size).sum + shexShapes.size
+      logger.info(s"Extracted a total of $totalShapes shapes")
+      result
     }
 
     case Declaration(declarationStatement) => {
@@ -30,11 +36,13 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
     }
 
     case com.herminiogarcia.shexml.ast.Graph(graphName, shapes) => {
+      logger.info(s"Extracting ShEx for ${shapes.size} shapes within the graph ${graphName.prefix + graphName.name}")
       val shexShapes = shapes.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Shape])
       com.herminiogarcia.shexml.shex.Graph(graphName.prefix + graphName.name, shexShapes)
     }
 
     case com.herminiogarcia.shexml.ast.Shape(shapeName, action, predicateObjects, _) => {
+      logger.info(s"Extracting shape ${shapeName.name} with ${predicateObjects.size} predicate-object statements")
       val shapePrefix = getShapePrefix(action)
       val arguments = HashMap("shapeName" -> shapeName.name)
       val name = shapeName.name

@@ -1,9 +1,9 @@
 package com.herminiogarcia.shexml.shex
 
+import com.typesafe.scalalogging.Logger
 import org.apache.jena.datatypes.TypeMapper
 import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.{AnonId, ResourceFactory, Statement}
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
@@ -26,6 +26,7 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
     ("sh:", shPrefix)
   )
 
+  private val logger = Logger[SHACLGenerator]
 
   def generate(shex: ShExSubsetAST, subjectId: Option[String] = None): Unit = shex match {
     case ShEx(prefixes, shapes, graphs) => {
@@ -41,6 +42,7 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
 
     case Graph(name, shapes) => {
       // TO DO to check if it can validate graphs
+      logger.info(s"Extracting SHACL for ${shapes.size} shapes within the graph $name")
       shapes.foreach(generate(_))
     }
 
@@ -54,7 +56,7 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
       if(closed) {
         output.add(createStatementWithLiteral(shapeSubject, shPrefix + "closed", "true", xsdPrefix + "boolean"))
       }
-
+      logger.info(s"Extracting shape $name with ${predicateObjects.size} predicate-object statements")
       predicateObjects.foreach(po => generate(po, Some(shapeSubject)))
     }
 
