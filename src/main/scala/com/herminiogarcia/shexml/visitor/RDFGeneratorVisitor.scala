@@ -6,6 +6,7 @@ import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncremen
 import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
+import com.typesafe.scalalogging.Logger
 import kantan.xpath.XPathCompiler
 import kantan.xpath.implicits._
 import org.apache.jena.datatypes.xsd.XSDDatatype
@@ -37,6 +38,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val queryResultCache = new QueryResultsCache()
   protected val alreadyGeneratedCollections = mutable.ListBuffer[String]()
 
+  private val logger = Logger[RDFGeneratorVisitor]
+
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
     case ShExML(declarations, graphs, shapes) => {
@@ -47,6 +50,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case _ => List()
       }))
       val firstShape = shapes.filterNot(s => linkedShapes.contains(s.shapeName)).map(doVisit(_, optionalArgument)).headOption
+      val numberOfTriples =
+        (graphs.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).map(dataset.getNamedModel(_))
+          :+ dataset.getDefaultModel()).map(_.size()).sum
+      logger.info(s"The mapping rules produced $numberOfTriples triples")
       if(firstShape.isEmpty) firstGraph.get
     }
 
@@ -61,14 +68,17 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case Graph(graphName, shapes) => {
+      logger.info(s"Generating ${shapes.size} shapes within $graphName graph")
       shapes.map(doVisit(_, optionalArgument))
     }
 
     case Shape(shapeName, action, predicateObjects, holdingGraph) => {
+      logger.info(s"Generating shape ${shapeName.name} results with ${predicateObjects.size} predicate-object statements")
       val shapePrefix = getShapePrefix(action)
       val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
       val output = if(holdingGraph.isEmpty) dataset.getDefaultModel else dataset.getNamedModel(graphName)
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
+      logger.info(s"Expadend ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.size} results")
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
       val finalActions = for(a <- actions) yield {
         val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
@@ -101,6 +111,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         }
         a
       }
+      logger.info(s"Found ${finalActions.size} subjects from data")
       finalActions.foreach(fa => {
         fa.results.foreach(r => {
           val splittedShapeName = shapeName.name.split(':')
@@ -249,6 +260,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case i: IteratorQuery => {
+      logger.debug(s"Expanding iterator query: ${iteratorQueryToList(i).map(_.name).mkString(".")}")
       val expName = Option(optionalArgument).map(_.asInstanceOf[Map[String, Any]].getOrElse("varName", "")).getOrElse("")
       val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
       val fileContents = doVisit(i.firstVar, optionalArgument).asInstanceOf[List[Any]]
@@ -326,6 +338,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case JsonPath(query) => {
+      logger.debug(s"Doing JSONPath query: $query")
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
       val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
       val index = arguments.getOrElse("index", "")
@@ -345,6 +358,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case XmlPath(query) => {
+      logger.debug(s"Doing XPath query: $query")
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
       val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
       val index = arguments.getOrElse("index", "")
@@ -424,6 +438,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case URL(url) =>
+      logger.debug(s"Selecting file $url")
       if(isRDFSource(url))
         List(url)
       else if(url.contains('*') && url.startsWith("file://"))
@@ -659,6 +674,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def doSparqlResults(query: SparqlColumn, sparqlEndpointOrRDFLocation: String): List[Result] = {
+    logger.info(s"Executing SPARQL query against $sparqlEndpointOrRDFLocation")
+    logger.debug(s"Query: $query")
     val resultMap = queryResultCache.search(query.query, sparqlEndpointOrRDFLocation) match {
       case Some(value) => value.asInstanceOf[Map[String, List[String]]]
       case None => {
@@ -707,11 +724,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def connectToDB(dbURL: String) = {
+    logger.info(s"Connecting to JDBC database $dbURL")
     Class.forName(lookForJdbcDriver(dbURL, driversMap))
     DriverManager.getConnection(dbURL, username, password)
   }
 
   private def doPerRowResults(query: QueryClause, fileContent: String): List[Result] = {
+    logger.debug("Executing per row results for query $query in the CSV file")
     val reader = new StringReader(fileContent)
     val fileDelimiter = inferCSVDelimiter(fileContent)
     implicit object MyCSVFormat extends DefaultCSVFormat {
@@ -739,7 +758,9 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val sharp = fileContent.count(_.equals('#'))
     val tab = fileContent.count(_.equals('\t'))
     val map = Map(',' -> comma, ';' -> semicolon, '.' -> dot, ':' -> colon, '@' -> at, '#' -> sharp, '\t' -> tab)
-    map.foldLeft(',')((greater, count) => if(map(greater) < count._2) count._1 else greater)
+    val result = map.foldLeft(',')((greater, count) => if(map(greater) < count._2) count._1 else greater)
+    logger.debug(s"Inferred CSV delimiter is: $result")
+    result
   }
 
   protected def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {

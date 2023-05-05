@@ -9,7 +9,7 @@ import com.herminiogarcia.shexml.visitor.{RDFGeneratorVisitor, RMLGeneratorVisit
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
-
+import com.typesafe.scalalogging.Logger
 import java.io.ByteArrayOutputStream
 import scala.collection.mutable
 
@@ -18,8 +18,11 @@ import scala.collection.mutable
   */
 class MappingLauncher(val username: String = "", val password: String = "", drivers: String = "") {
 
+  private val logger = Logger[MappingLauncher]
+
   def launchMapping(mappingCode: String, lang: String): String = {
     val dataset = launchMapping(mappingCode)
+    logger.info(s"Converting output to $lang")
     val outputStream = new ByteArrayOutputStream()
     val langValue = RDFLanguages.nameToLang(lang)
     if(RDFLanguages.isQuads(langValue))
@@ -29,6 +32,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   def launchMapping(mappingCode: String): Dataset = {
+    logger.info(s"Launching mapping")
+    logger.debug(s"Mapping rules $mappingCode")
     val lexer = createLexer(mappingCode)
     val parser = createParser(lexer)
     val ast = createAST(parser)
@@ -37,6 +42,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   def launchRMLTranslation(mappingCode: String, prettify: Boolean = false): String = {
+    logger.info(s"Launching ShExML to RML translation with prettify option to $prettify")
+    logger.debug(s"Mapping rules $mappingCode")
     val lexer = createLexer(mappingCode)
     val parser = createParser(lexer)
     val ast = createAST(parser)
@@ -49,6 +56,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   def launchShExGeneration(mappingCode: String): String = {
+    logger.info(s"Launching ShEx generation from mapping rules")
+    logger.debug(s"Mapping rules $mappingCode")
     val lexer = createLexer(mappingCode)
     val parser = createParser(lexer)
     val ast = createAST(parser)
@@ -60,6 +69,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   def launchShapeMapGeneration(mappingCode: String): String = {
+    logger.info(s"Launching Shape Map generation from mapping rules")
+    logger.debug(s"Mapping rules $mappingCode")
     val lexer = createLexer(mappingCode)
     val parser = createParser(lexer)
     val ast = createAST(parser)
@@ -69,12 +80,15 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   def launchSHACLGeneration(mappingCode: String, closed: Boolean = false): String = {
+    logger.info(s"Launching SHACL generation from mapping rules")
+    logger.debug(s"Mapping rules $mappingCode")
     val lexer = createLexer(mappingCode)
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
     val inferencesTable = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
     generateInferencesFromShExML(ast, varTable, inferencesTable)
+    logger.info(s"Executing ShEx extraction process as base for the SHACL conversion")
     val shex = new ShExGeneratorVisitor(inferencesTable.toList).doVisit(ast, null)
     val dataset = DatasetFactory.create()
     new SHACLGenerator(dataset, closed).generate(shex)
@@ -84,22 +98,28 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   private def createLexer(mappingCode: String): ShExMLLexer = {
+    logger.info("Applying lexer to tokenize input mapping rules")
     new ShExMLLexer(CharStreams.fromString(mappingCode))
   }
 
   private def createParser(lexer: ShExMLLexer): ShExMLParser = {
+    logger.info("Parsing tokens from the lexer")
     new ShExMLParser(new CommonTokenStream(lexer))
   }
 
   private def createAST(parser: ShExMLParser): AST = {
+    logger.info("Creating the AST for the input mapping rules")
     new ASTCreatorVisitor().visitShExML(parser.shExML())
   }
 
   private def createVarTable(ast: AST): mutable.HashMap[Variable, VarResult] = {
+    logger.info(s"Building var table")
     val varTable = mutable.HashMap[Variable, VarResult]()
     varTable += ((Var("rdf:"), URL("http://www.w3.org/1999/02/22-rdf-syntax-ns#")))
     val optionalArgument = Map("variable" -> "", "query" -> "")
     new VarTableBuilderVisitor(varTable).visit(ast, optionalArgument)
+    logger.debug(s"Var table contents:")
+    varTable.foreach {case (v, vr) => logger.debug(s"$v -> $vr")}
     varTable
   }
 
@@ -121,6 +141,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
 
   private def generateInferencesFromShExML(ast: AST, varTable: mutable.HashMap[Variable, VarResult],
                                            inferences: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes]): Unit = {
+    logger.info("Executing RDF Generator to get more accurate inferences")
     val dataset = DatasetFactory.create()
     new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences).doVisit(ast, null)
   }
@@ -129,6 +150,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val shapeMapTable = mutable.ListBuffer.empty[ShapeMapInference]
     val inferences = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
     val dataset = DatasetFactory.create()
+    logger.info("Executing RDF Generator to get more accurate inferences")
     new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences, shapeMapTable).doVisit(ast, null)
     shapeMapTable.result()
   }

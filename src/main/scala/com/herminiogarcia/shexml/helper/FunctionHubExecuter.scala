@@ -4,6 +4,7 @@ import com.github.vickumar1981.stringdistance
 import com.github.vickumar1981.stringdistance.StringDistance.Levenshtein
 import com.github.vickumar1981.stringdistance.implicits._
 import com.github.vickumar1981.stringdistance.StringConverter._
+import com.typesafe.scalalogging.Logger
 
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
@@ -12,8 +13,10 @@ import scala.reflect.runtime.universe._
 
 class FunctionHubExecuter(val pathToFile: String) {
 
+  private val logger = Logger[FunctionHubExecuter]
 
   def callFunction(name: String, args: String*): List[String] = {
+    logger.debug(s"Executing function $name in source code $pathToFile")
     val functionsCode = new SourceHelper().getURLContent(pathToFile)
     val cm = universe.runtimeMirror(getClass.getClassLoader)
     val toolBox = cm.mkToolBox()
