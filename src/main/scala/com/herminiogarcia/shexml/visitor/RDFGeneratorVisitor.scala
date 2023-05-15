@@ -37,6 +37,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val pushedQueries = mutable.HashMap[String, QueryClause]()
   protected val queryResultCache = new QueryResultsCache()
   protected val alreadyGeneratedCollections = mutable.ListBuffer[String]()
+  protected val iteratorQueryResultsCache = new IteratorQueryResultsCache()
 
   private val logger = Logger[RDFGeneratorVisitor]
 
@@ -273,25 +274,34 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
         val varList = iteratorQueryToList(i)
         if (varTable(varList.head).isInstanceOf[IRI] && varList.size == 2) {
-          val iteratorName = varList.tail.head.name
-          val values = varTable.keys.filter {
-            case Var(name) => name.contains(iteratorName)
-            case _ => false
-          }.map {
-            case v: Var => v.name.replaceFirst(iteratorName, "") -> {
-              val vars = v.name.split("[.]").map(Var.apply).toList
-              if (vars.size > 1)
-                doIteratorQuery(vars, middleArguments, fileContent)
-              else Nil
-            }
-          }.toMap
-          values.foreach {
-            case (k, v) => iteratorsCombinations.get(s"$expName$k") match {
-              case Some(previousValue) => iteratorsCombinations += s"$expName$k" -> (previousValue ::: v.filterNot(previousValue.contains(_)))
-              case None => iteratorsCombinations += s"$expName$k" -> v
+          val iteratorQueryStringRepresentation = iteratorQueryToList(i).map(_.name).mkString(".")
+          iteratorQueryResultsCache.search(iteratorQueryStringRepresentation, fileContent) match {
+            case Some(value) =>
+              logger.debug(s"Retrieving cached result for iterator query $iteratorQueryStringRepresentation")
+              value
+            case None => {
+              val iteratorName = varList.tail.head.name
+              val values = varTable.keys.filter {
+                case Var(name) => name.contains(iteratorName)
+                case _ => false
+              }.map {
+                case v: Var => v.name.replaceFirst(iteratorName, "") -> {
+                  val vars = v.name.split("[.]").map(Var.apply).toList
+                  if (vars.size > 1)
+                    doIteratorQuery(vars, middleArguments, fileContent)
+                  else Nil
+                }
+              }.toMap
+              values.foreach {
+                case (k, v) => iteratorsCombinations.get(s"$expName$k") match {
+                  case Some(previousValue) => iteratorsCombinations += s"$expName$k" -> (previousValue ::: v.filterNot(previousValue.contains(_)))
+                  case None => iteratorsCombinations += s"$expName$k" -> v
+                }
+              }
+              iteratorQueryResultsCache.save(iteratorQueryStringRepresentation, fileContent, values)
+              values
             }
           }
-          values
         } else if (varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
           iteratorsCombinations(varList.map(_.name).mkString("."))
         } else if (varList.size >= 3) {
@@ -1020,6 +1030,25 @@ class QueryResultsCache() {
       })
       save(query, fileContent, results.toMap)
     }
+  }
+}
+
+class IteratorQueryResultsCache() {
+  private val table = mutable.HashMap[Int, Map[String, List[Result]]]()
+  private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
+
+  def search(iteratorQuery: String, fileContent: String): Option[Map[String, List[Result]]] = {
+    table.get((iteratorQuery + fileContent).hashCode)
+  }
+
+  def save(iteratorQuery: String, fileContent: String, results: Map[String, List[Result]]): Unit = {
+    val id = (iteratorQuery + fileContent).hashCode
+    if(!listNotPersistFirstTime.contains(id)) {
+      listNotPersistFirstTime.addOne(id) // First time is not persisted to "calculate" the pushed and popped vars
+    } else {
+      table += ((id, results))
+    }
+
   }
 }
 
