@@ -1044,7 +1044,7 @@ class IteratorQueryResultsCache() {
   def save(iteratorQuery: String, fileContent: String, results: Map[String, List[Result]]): Unit = {
     val id = (iteratorQuery + fileContent).hashCode
     if(!listNotPersistFirstTime.contains(id)) {
-      listNotPersistFirstTime.addOne(id) // First time is not persisted to "calculate" the pushed and popped vars
+      listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
     } else {
       table += ((id, results))
     }
