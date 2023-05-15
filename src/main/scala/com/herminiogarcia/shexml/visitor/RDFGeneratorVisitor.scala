@@ -79,7 +79,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
       val output = if(holdingGraph.isEmpty) dataset.getDefaultModel else dataset.getNamedModel(graphName)
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
-      logger.info(s"Expadend ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.size} results")
+      logger.info(s"Expanded ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.map(_.asInstanceOf[List[Result]].size).sum} results")
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
       val finalActions = for(a <- actions) yield {
         val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
