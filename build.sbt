@@ -4,7 +4,7 @@ lazy val shexml = project
   .in(file("."))
   .settings(
     name := "ShExML",
-    version := "0.3.2",
+    version := "0.3.3",
     scalaVersion := "3.2.0",
     crossScalaVersions := Seq("2.12.17", "2.13.9", "3.2.0"),
     libraryDependencies ++= Seq(
