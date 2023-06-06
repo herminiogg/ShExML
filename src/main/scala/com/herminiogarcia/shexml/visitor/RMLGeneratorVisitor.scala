@@ -1,6 +1,7 @@
 package com.herminiogarcia.shexml.visitor
 
 import com.herminiogarcia.shexml.ast._
+import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.{AnonId, Resource, ResourceFactory, Statement}
 
@@ -30,9 +31,13 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   val output = dataset.getDefaultModel
 
+  private val logger = Logger[RMLGeneratorVisitor]
+
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
     case Shape(shapeName, action, predicateObjects, holdingGraph) => {
+      logger.info(s"Converting shape ${shapeName.name} with ${predicateObjects.size} predicate-object statements under the graph " +
+        s"${holdingGraph.map(g => g.graphName.prefix + g.graphName.name).getOrElse("default")}")
       val shapePrefix = getShapePrefix(action)
       output.setNsPrefix("map", mapPrefix)
       output.setNsPrefix("rml", rmlPrefix)
