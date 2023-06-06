@@ -5,11 +5,12 @@ import com.herminiogarcia.shexml.ast._
 import com.herminiogarcia.shexml.helper.OrphanBNodeRemover
 import com.herminiogarcia.shexml.parser.ASTCreatorVisitor
 import com.herminiogarcia.shexml.shex._
-import com.herminiogarcia.shexml.visitor.{RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
+import com.herminiogarcia.shexml.visitor.{PushedOrPoppedValueSearchVisitor, RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
 import com.typesafe.scalalogging.Logger
+
 import java.io.ByteArrayOutputStream
 import scala.collection.mutable
 
@@ -126,7 +127,9 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {
 
     val dataset = DatasetFactory.create()
-    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap()).doVisit(ast, null)
+    val pushedOrPoppedFields = searchForPushedOrPoppedFields(ast)
+    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(),
+      pushedOrPoppedFieldsPresent = pushedOrPoppedFields).doVisit(ast, null)
     //val in = new ByteArrayInputStream(output.toString().getBytes)
     //val model = ModelFactory.createDefaultModel()
     //model.read(in, null, "TURTLE")
@@ -143,7 +146,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
                                            inferences: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes]): Unit = {
     logger.info("Executing RDF Generator to get more accurate inferences")
     val dataset = DatasetFactory.create()
-    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences).doVisit(ast, null)
+    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences,
+      pushedOrPoppedFieldsPresent = searchForPushedOrPoppedFields(ast)).doVisit(ast, null)
   }
 
   private def generateShapeMaps(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): List[ShapeMapInference] = {
@@ -151,7 +155,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val inferences = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
     val dataset = DatasetFactory.create()
     logger.info("Executing RDF Generator to get more accurate inferences")
-    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences, shapeMapTable).doVisit(ast, null)
+    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences, shapeMapTable,
+      pushedOrPoppedFieldsPresent = searchForPushedOrPoppedFields(ast)).doVisit(ast, null)
     shapeMapTable.result()
   }
 
@@ -162,5 +167,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
       else Nil
     }).toMap
   }
+
+  private def searchForPushedOrPoppedFields(ast: AST): Boolean = new PushedOrPoppedValueSearchVisitor().doVisit(ast, null)
 
 }
