@@ -3,7 +3,7 @@ package com.herminiogarcia.shexml.visitor
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
 import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
-import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, SourceHelper}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, LoadedSource, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
 import com.typesafe.scalalogging.Logger
@@ -15,7 +15,6 @@ import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, Resu
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
-
 import java.io.{File, StringReader}
 import java.sql.DriverManager
 import java.util
@@ -40,6 +39,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val alreadyGeneratedCollections = mutable.ListBuffer[String]()
   protected val iteratorQueryResultsCache = new IteratorQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val jsonpathQueryResultsCache = new JsonPathQueryResultsCache(pushedOrPoppedFieldsPresent)
+  protected val jsonObjectMapperCache = new JsonObjectMapperCache()
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
 
   private val logger = Logger[RDFGeneratorVisitor]
@@ -269,16 +269,16 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
       val fileContents = doVisit(i.firstVar, optionalArgument).asInstanceOf[List[Any]]
       val fileContentsToIterate = fileContents.head match {
-        case _: String => fileContents
+        case _: LoadedSource => fileContents
         case _ => List("")
       }
-      fileContentsToIterate.map(_.toString).flatMap(fileContent => {
-        val fileMap = Map("fileContent" -> fileContent)
+      fileContentsToIterate.flatMap(file => {
+        val fileMap = Map("file" -> file)
         val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
         val varList = iteratorQueryToList(i)
         if (varTable(varList.head).isInstanceOf[IRI] && varList.size == 2) {
           val iteratorQueryStringRepresentation = iteratorQueryToList(i).map(_.name).mkString(".")
-          iteratorQueryResultsCache.search(iteratorQueryStringRepresentation, fileContent) match {
+          iteratorQueryResultsCache.search(iteratorQueryStringRepresentation, file.asInstanceOf[LoadedSource]) match {
             case Some(value) =>
               logger.debug(s"Retrieving cached result for iterator query $iteratorQueryStringRepresentation")
               value
@@ -291,7 +291,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                 case v: Var => v.name.replaceFirst(iteratorName, "") -> {
                   val vars = v.name.split("[.]").map(Var.apply).toList
                   if (vars.size > 1)
-                    doIteratorQuery(vars, middleArguments, fileContent)
+                    doIteratorQuery(vars, middleArguments, file.asInstanceOf[LoadedSource])
                   else Nil
                 }
               }.toMap
@@ -301,14 +301,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                   case None => iteratorsCombinations += s"$expName$k" -> v
                 }
               }
-              iteratorQueryResultsCache.save(iteratorQueryStringRepresentation, fileContent, values)
+              iteratorQueryResultsCache.save(iteratorQueryStringRepresentation, file.asInstanceOf[LoadedSource], values)
               values
             }
           }
         } else if (varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
           iteratorsCombinations(varList.map(_.name).mkString("."))
         } else if (varList.size >= 3) {
-          doIteratorQuery(varList.slice(1, varList.size), middleArguments, fileContent)
+          doIteratorQuery(varList.slice(1, varList.size), middleArguments, file.asInstanceOf[LoadedSource])
         } else {
           throw new Exception("Bad number of vars")
         }
@@ -355,15 +355,23 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
       val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
       val index = arguments.getOrElse("index", "")
-      val fileContent = arguments.getOrElse("fileContent", null).asInstanceOf[String]
-      jsonpathQueryResultsCache.search(query, fileContent, index.toString) match {
+      val file = arguments.getOrElse("file", null).asInstanceOf[LoadedSource]
+      jsonpathQueryResultsCache.search(query, file, index.toString) match {
         case Some(result) =>
           logger.debug(s"Retrieving cached result for JsonPath query $query")
           result
         case None =>
-          val id = (iteratorQuery + fileContent + index).hashCode.toString
+          val id = (iteratorQuery + file.filepath + index).hashCode.toString
           val rootIds = arguments.getOrElse("rootIds", List(id)).asInstanceOf[List[String]]
-          val jsonContent = new ObjectMapper().readValue(fileContent, classOf[JsonNode])
+          val jsonContent =  jsonObjectMapperCache.search(file) match {
+            case Some(jsonNode) =>
+              logger.debug(s"Retrieving cached result for already parsed JSON file")
+              jsonNode
+            case None =>
+              val jsonNode = new ObjectMapper().readValue(file.fileContent, classOf[JsonNode])
+              jsonObjectMapperCache.save(file, jsonNode)
+              jsonNode
+          }
           val result = io.gatling.jsonpath.JsonPath.query(query, jsonContent)
           val processedResult = result match {
             case Left(_) => Nil
@@ -373,7 +381,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             }).toList
               Result(id, rootIds, finalList, None, None, None)
           }
-          if(processedResult.isInstanceOf[Result]) jsonpathQueryResultsCache.save(query, fileContent, index.toString, processedResult.asInstanceOf[Result])
+          if(processedResult.isInstanceOf[Result]) jsonpathQueryResultsCache.save(query, file, index.toString, processedResult.asInstanceOf[Result])
           processedResult
       }
     }
@@ -383,19 +391,19 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
       val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
       val index = arguments.getOrElse("index", "")
-      val fileContent = arguments.getOrElse("fileContent", null).asInstanceOf[String]
-      xpathQueryResultsCache.search(query, fileContent, index.toString) match {
+      val file = arguments.getOrElse("file", null).asInstanceOf[LoadedSource]
+      xpathQueryResultsCache.search(query, file, index.toString) match {
         case Some(result) =>
           logger.debug(s"Retrieving cached result for XPath query $query")
           result
         case None =>
-          val id = (iteratorQuery + fileContent + index).hashCode.toString
+          val id = (iteratorQuery + file.filepath + index).hashCode.toString
           val rootIds = arguments.getOrElse("rootIds", List(id)).asInstanceOf[List[String]]
           val compilationResult = XPathCompiler.builtIn.compile(query)
           compilationResult.toOption match {
             case Some(value) =>
-              val result = Result(id, rootIds, fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None, None)
-              xpathQueryResultsCache.save(query, fileContent, index.toString, result)
+              val result = Result(id, rootIds, file.fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None, None)
+              xpathQueryResultsCache.save(query, file, index.toString, result)
               result
             case None => throw new Exception("Bad iterator query: " + query)
           }
@@ -471,7 +479,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     case URL(url) =>
       logger.debug(s"Selecting file $url")
       if(isRDFSource(url))
-        List(url)
+        List(LoadedSource("", url))
       else if(url.contains('*') && url.startsWith("file://"))
         getAllFilesContents(url)
       else if(url.contains('*'))
@@ -484,11 +492,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         val fileProtocol =
           if(fileAbsolutePath.startsWith("/")) "file://"
           else "file:///"
-        List(fileProtocol + fileAbsolutePath)
+        List(LoadedSource("", fileProtocol + fileAbsolutePath))
       }
       else if(path.contains('*')) getAllFilesContents(path)
       else List(new SourceHelper().getContentFromRelativePath(path))
-    case JdbcURL(url) => List(url)
+    case JdbcURL(url) => List(LoadedSource("", url))
 
     case default => visit(default, optionalArgument)
   }
@@ -582,24 +590,24 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     case c: IteratorQuery => List(i.firstVar) ::: iteratorQueryToList(c)
   }
 
-  protected def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], fileContent: String): List[QueryWithIndex] = iteratorQueries.flatMap({
+  protected def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], file: LoadedSource): List[QueryWithIndex] = iteratorQueries.flatMap({
     case r: ResultWithIteratorQuery => r.results.indices.map(i => query match {
       case XmlPath(xpathQuery) => {
         val composedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
-        val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
+        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode.toString
         QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.iteratorQuery)
       }
       case JsonPath(jsonpathQuery) => {
         val composedQuery = JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
-        val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
+        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode.toString
         QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.iteratorQuery)
       }
     }).toList
     case r: ResultWithNested => r.results.indices.flatMap(i => query match {
       case XmlPath(xpathQuery) => {
         val indicedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
-        val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
-        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
+        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode.toString
+        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), file)
       }
       case JsonPath(jsonpathQuery) => {
         val indicedQuery =
@@ -607,8 +615,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
           else
             JsonPath(jsonpathQuery)
-        val rootId = (r.iteratorQuery + fileContent + i.toString).hashCode.toString
-        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), fileContent)
+        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode.toString
+        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), file)
       }
     }).toList
   })
@@ -668,7 +676,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           }
         }
       })
-    }
+    }.toList
     results.map(r => ResultWithIteratorQuery(r._1.id, r._1.rootIds, r._1.results, r._2))
     case x :: xs => {
       val queries = precedentQueries.map(q => getQueryFromVarTable(Var(varContext + x.name)) match {
@@ -687,7 +695,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
   }
 
-  protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContentOrURL: String): List[Result] = {
+  protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContentOrURL: LoadedSource): List[Result] = {
     if(pushedOrPoppedFieldsPresent) generateFinalQuery(iteratorVars, "", null) //to generate pushed vars, this can be improved for performance
     val query = generateFinalQuery(iteratorVars, "", null)
     query match {
@@ -704,10 +712,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
   }
 
-  private def doSparqlResults(query: SparqlColumn, sparqlEndpointOrRDFLocation: String): List[Result] = {
+  private def doSparqlResults(query: SparqlColumn, source: LoadedSource): List[Result] = {
+    val sparqlEndpointOrRDFLocation = source.filepath
     logger.info(s"Executing SPARQL query against $sparqlEndpointOrRDFLocation")
     logger.debug(s"Query: $query")
-    val resultMap = queryResultCache.search(query.query, sparqlEndpointOrRDFLocation) match {
+    val resultMap = queryResultCache.search(query.query, source) match {
       case Some(value) => value.asInstanceOf[Map[String, List[String]]]
       case None => {
         val jenaQuery = QueryFactory.create(query.query)
@@ -721,8 +730,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           QueryExecutionFactory.sparqlService(sparqlEndpointOrRDFLocation, jenaQuery)
         }
         val resultSet = queryExecution.execSelect()
-        queryResultCache.save(query.query, sparqlEndpointOrRDFLocation, resultSet)
-        queryResultCache.search(query.query, sparqlEndpointOrRDFLocation).get.asInstanceOf[Map[String, List[String]]]
+        queryResultCache.save(query.query, source, resultSet)
+        queryResultCache.search(query.query, source).get.asInstanceOf[Map[String, List[String]]]
       }
     }
     val results = resultMap(query.column)
@@ -734,16 +743,17 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   }
 
-  private def doSqlResults(query: SqlColumn, dbURLConnection: String): List[Result] = {
-    val resultMap = queryResultCache.search(query.query, dbURLConnection) match {
+  private def doSqlResults(query: SqlColumn, source: LoadedSource): List[Result] = {
+    val dbURLConnection = source.filepath
+    val resultMap = queryResultCache.search(query.query, source) match {
       case Some(value) => value.asInstanceOf[Map[String, List[String]]]
       case None => {
         val connection = connectToDB(dbURLConnection)
         val statement = connection.prepareStatement(query.query)
         val resultSet = statement.executeQuery()
-        queryResultCache.save(query.query, dbURLConnection, resultSet)
+        queryResultCache.save(query.query, source, resultSet)
         connection.close()
-        queryResultCache.search(query.query, dbURLConnection).get.asInstanceOf[Map[String, List[String]]]
+        queryResultCache.search(query.query, source).get.asInstanceOf[Map[String, List[String]]]
       }
     }
     val results = resultMap(query.column)
@@ -760,10 +770,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     DriverManager.getConnection(dbURL, username, password)
   }
 
-  private def doPerRowResults(query: QueryClause, fileContent: String): List[Result] = {
+  private def doPerRowResults(query: QueryClause, file: LoadedSource): List[Result] = {
     logger.debug("Executing per row results for query $query in the CSV file")
-    val reader = new StringReader(fileContent)
-    val fileDelimiter = inferCSVDelimiter(fileContent)
+    val reader = new StringReader(file.fileContent)
+    val fileDelimiter = inferCSVDelimiter(file.fileContent)
     implicit object MyCSVFormat extends DefaultCSVFormat {
       override val delimiter = fileDelimiter
     }
@@ -771,7 +781,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val results = for (i <- allLines.indices) yield {
       allLines(i).get(query.query) match {
         case Some(result) => {
-          val id = (fileContent + i).hashCode.toString
+          val id = (file.filepath + i).hashCode.toString
           Result(id, List(id), List(result), None, None, None)
         }
         case None => throw new Exception("Field not present")
@@ -821,7 +831,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     list.filterNot(_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement
   }
 
-  private def getAllFilesContents(url: String): List[String] = {
+  private def getAllFilesContents(url: String): List[LoadedSource] = {
     val slices = url.split("\\*")
     val windows = slices(0).lastIndexOf("/") < slices(0).lastIndexOf("\\")
     val path = if(windows)
@@ -1008,16 +1018,16 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 class QueryResultsCache() {
   private val table = mutable.HashMap[Int, Object]()
 
-  def search(query: String, fileContent: String): Option[Object] = {
-    table.get((query + fileContent).hashCode)
+  def search(query: String, file: LoadedSource): Option[Object] = {
+    table.get((query + file.filepath).hashCode)
   }
 
-  def save(query: String, fileContent: String, resultContainer: Object): Unit = {
-    val id = (query + fileContent).hashCode
+  def save(query: String, file: LoadedSource, resultContainer: Object): Unit = {
+    val id = (query + file.filepath).hashCode
     table += ((id, resultContainer))
   }
 
-  def save(query: String, fileContent: String, resultSet: java.sql.ResultSet): Unit = {
+  def save(query: String, file: LoadedSource, resultSet: java.sql.ResultSet): Unit = {
     val results = mutable.HashMap[String, List[String]]()
     val columns = resultSet.getMetaData.getColumnCount
     val columnsNames = (1 to columns).map(resultSet.getMetaData.getColumnName)
@@ -1029,10 +1039,10 @@ class QueryResultsCache() {
         }
       })
     }
-    save(query, fileContent, results.toMap)
+    save(query, file, results.toMap)
   }
 
-  def save(query: String, fileContent: String, resultSet: ResultSet): Unit = {
+  def save(query: String, file: LoadedSource, resultSet: ResultSet): Unit = {
     val results = mutable.HashMap[String, List[String]]()
     val columnsNames = resultSet.getResultVars
     while(resultSet.hasNext) {
@@ -1049,7 +1059,7 @@ class QueryResultsCache() {
           case None => results += (cn -> List(value))
         }
       })
-      save(query, fileContent, results.toMap)
+      save(query, file, results.toMap)
     }
   }
 }
@@ -1058,12 +1068,12 @@ class IteratorQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Map[String, List[Result]]]()
   private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
-  def search(iteratorQuery: String, fileContent: String): Option[Map[String, List[Result]]] = {
-    table.get((iteratorQuery + fileContent).hashCode)
+  def search(iteratorQuery: String, file: LoadedSource): Option[Map[String, List[Result]]] = {
+    table.get((iteratorQuery + file.filepath).hashCode)
   }
 
-  def save(iteratorQuery: String, fileContent: String, results: Map[String, List[Result]]): Unit = {
-    val id = (iteratorQuery + fileContent).hashCode
+  def save(iteratorQuery: String, file: LoadedSource, results: Map[String, List[Result]]): Unit = {
+    val id = (iteratorQuery + file.filepath).hashCode
     if(!listNotPersistFirstTime.contains(id) && pushedValues) {
       listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
     } else {
@@ -1077,12 +1087,12 @@ class JsonPathQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Result]()
   private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
-  def search(query: String, fileContent: String, index: String): Option[Result] = {
-    table.get((query + fileContent + index).hashCode)
+  def search(query: String, file: LoadedSource, index: String): Option[Result] = {
+    table.get((query + file.filepath + index).hashCode)
   }
 
-  def save(query: String, fileContent: String, index: String, result: Result): Unit = {
-    val id = (query + fileContent + index).hashCode
+  def save(query: String, file: LoadedSource, index: String, result: Result): Unit = {
+    val id = (query + file.filepath + index).hashCode
     if(!listNotPersistFirstTime.contains(id) && pushedValues) {
       listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
     } else {
@@ -1091,16 +1101,29 @@ class JsonPathQueryResultsCache(pushedValues: Boolean) {
   }
 }
 
+class JsonObjectMapperCache {
+  private val table = mutable.HashMap[Int, JsonNode]()
+
+  def search(file: LoadedSource): Option[JsonNode] = {
+    table.get(file.filepath.hashCode)
+  }
+
+  def save(file: LoadedSource, jsonNode: JsonNode): Unit = {
+    val id = file.filepath.hashCode
+    table += ((id, jsonNode))
+  }
+}
+
 class XpathQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Result]()
   private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
-  def search(query: String, fileContent: String, index: String): Option[Result] = {
-    table.get((query + fileContent + index).hashCode)
+  def search(query: String, file: LoadedSource, index: String): Option[Result] = {
+    table.get((query + file.filepath + index).hashCode)
   }
 
-  def save(query: String, fileContent: String, index: String, result: Result): Unit = {
-    val id = (query + fileContent + index).hashCode
+  def save(query: String, file: LoadedSource, index: String, result: Result): Unit = {
+    val id = (query + file.filepath + index).hashCode
     if(!listNotPersistFirstTime.contains(id) && pushedValues) {
       listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
     } else {
