@@ -27,7 +27,6 @@ lazy val shexml = project
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.4.1.jre8",
       ("com.github.vickumar1981" %% "stringdistance" % "1.2.6").cross(CrossVersion.for3Use2_13),
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
       "ch.qos.logback" % "logback-classic" % "1.3.5",
       "be.ugent.rml" % "rmlmapper" % "4.9.0" % "test",
       "es.weso" %% "shex" % "0.1.97" % "test",
@@ -45,6 +44,9 @@ lazy val shexml = project
         case Some((3, _)) => "io.gatling" % "gatling-jsonpath" % "3.8.2"
         case Some((2, n)) if n == 13 => "io.gatling" % "gatling-jsonpath" % "3.8.2"
         case Some((2, n)) if n == 12 => "io.gatling" % "gatling-jsonpath" % "3.4.2"
+      }) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((m, n)) if m == 3 || (m >= 2 && n >= 13) => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
+        case _ => Seq()
       }),
       assembly / assemblyMergeStrategy := {
         case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat

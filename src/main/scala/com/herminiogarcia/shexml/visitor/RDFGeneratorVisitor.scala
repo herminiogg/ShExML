@@ -18,14 +18,10 @@ import org.apache.jena.util.SplitIRI
 
 import java.io.{File, StringReader}
 import java.sql.DriverManager
-import java.util
-import scala.collection.IterableOnce.iterableOnceExtensionMethods
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.immutable
 import scala.collection.immutable.HashSet
-import scala.collection.mutable.ListBuffer
-import scala.collection.parallel.CollectionConverters._
 import scala.util.Try
 
 /**
