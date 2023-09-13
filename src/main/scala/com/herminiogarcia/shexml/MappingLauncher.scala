@@ -22,13 +22,17 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   private val logger = Logger[MappingLauncher]
 
   def launchMapping(mappingCode: String, lang: String): String = {
+    val startTime = System.currentTimeMillis()
     val dataset = launchMapping(mappingCode)
+    val endTime = System.currentTimeMillis()
+    logger.info(s"Execution time: ${endTime - startTime}ms")
     logger.info(s"Converting output to $lang")
     val outputStream = new ByteArrayOutputStream()
     val langValue = RDFLanguages.nameToLang(lang)
     if(RDFLanguages.isQuads(langValue))
       RDFDataMgr.write(outputStream, dataset, langValue)
     else RDFDataMgr.write(outputStream, dataset.getDefaultModel, langValue)
+
     outputStream.toString
   }
 

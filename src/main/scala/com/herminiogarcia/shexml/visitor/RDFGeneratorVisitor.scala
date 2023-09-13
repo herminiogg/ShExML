@@ -15,11 +15,17 @@ import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, Resu
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
+
 import java.io.{File, StringReader}
 import java.sql.DriverManager
 import java.util
+import scala.collection.IterableOnce.iterableOnceExtensionMethods
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.collection.immutable
+import scala.collection.immutable.HashSet
+import scala.collection.mutable.ListBuffer
+import scala.collection.parallel.CollectionConverters._
 import scala.util.Try
 
 /**
@@ -82,12 +88,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
       val output = if(holdingGraph.isEmpty) dataset.getDefaultModel else dataset.getNamedModel(graphName)
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
+      val predicateObjectsListFlattened = predicateObjectsList.asInstanceOf[List[List[Resultable]]].flatten
       logger.info(s"Expanded ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.map(_.asInstanceOf[List[Result]].size).sum} results")
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
       val finalActions = for(a <- actions) yield {
-        val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, a)
-        val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => i.rootIds.contains(a.id) ||
-          i.id == a.id || (i.id.isEmpty && i.rootIds.isEmpty) || a.id.isEmpty)
+        val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsListFlattened, a)
+        val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => (i.id.isEmpty && i.rootIds.isEmpty) ||
+          a.id.isEmpty || i.id == a.id || i.rootIds(a.id.get))
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
@@ -99,14 +106,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               }
             }
             case Some(rdfCollection) => {
-              val predicateObjectsList = finalPredicateObjectsList.filter(_.rdfCollection.isDefined).flatMap(_.results).map(_.toString.split(" ", 2))
+              val predicateObjectsList = finalPredicateObjectsList.withFilter(_.rdfCollection.isDefined).flatMap(_.results).map(_.toString.split(" ", 2))
               val groupedPredicateObjects = predicateObjectsList.groupBy(i => i(0))
               val keys = groupedPredicateObjects.keys
               for (key <- keys) {
                 if(!alreadyGeneratedCollections.contains(key + groupedPredicateObjects(key).map(_(1)).mkString(""))) {
                   alreadyGeneratedCollections += key + groupedPredicateObjects(key).map(_(1)).mkString("")
                   registerCardinalityAndDatatype(shapeName.name, groupedPredicateObjects(key).head, result)
-                  createTripleWithCollection(shapePrefix, action, groupedPredicateObjects(key), result, output, rdfCollection)
+                  createTripleWithCollection(shapePrefix, action, groupedPredicateObjects(key).toList, result, output, rdfCollection)
                 }
               }
             }
@@ -361,8 +368,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           logger.debug(s"Retrieving cached result for JsonPath query $query")
           result
         case None =>
-          val id = (iteratorQuery + file.filepath + index).hashCode.toString
-          val rootIds = arguments.getOrElse("rootIds", List(id)).asInstanceOf[List[String]]
+          val id = (iteratorQuery + file.filepath + index).hashCode
+          val rootIds = arguments.getOrElse("rootIds", HashSet(id)).asInstanceOf[HashSet[Int]]
           val jsonContent =  jsonObjectMapperCache.search(file) match {
             case Some(jsonNode) =>
               logger.debug(s"Retrieving cached result for already parsed JSON file")
@@ -379,7 +386,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               if(j.isArray) j.iterator().asScala.flatMap(r => if(!r.isNull) List(r.asText()) else Nil)
               else if(!j.isNull) List(j.asText()) else Nil
             }).toList
-              Result(id, rootIds, finalList, None, None, None)
+              Result(Option(id), rootIds, finalList, None, None, None)
           }
           if(processedResult.isInstanceOf[Result]) jsonpathQueryResultsCache.save(query, file, index.toString, processedResult.asInstanceOf[Result])
           processedResult
@@ -397,12 +404,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           logger.debug(s"Retrieving cached result for XPath query $query")
           result
         case None =>
-          val id = (iteratorQuery + file.filepath + index).hashCode.toString
-          val rootIds = arguments.getOrElse("rootIds", List(id)).asInstanceOf[List[String]]
+          val id = (iteratorQuery + file.filepath + index).hashCode
+          val rootIds = arguments.getOrElse("rootIds", HashSet(id)).asInstanceOf[HashSet[Int]]
           val compilationResult = XPathCompiler.builtIn.compile(query)
           compilationResult.toOption match {
             case Some(value) =>
-              val result = Result(id, rootIds, file.fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None, None)
+              val result = Result(Option(id), rootIds, file.fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None, None)
               xpathQueryResultsCache.save(query, file, index.toString, result)
               result
             case None => throw new Exception("Bad iterator query: " + query)
@@ -427,16 +434,16 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case LiteralSubject(prefix, value) => {
-      List(Result("", Nil, List(value), None, None, None))
+      List(Result(Option.empty, HashSet(), List(value), None, None, None))
     }
 
     case LiteralObject(prefix, value) => {
       val prefixValue = prefixTable(prefix.name)
-      List(Result("", Nil, List(prefixValue + value), None, None, None))
+      List(Result(Option.empty, HashSet(), List(prefixValue + value), None, None, None))
     }
 
     case LiteralObjectValue(value) => {
-      List(Result("", Nil, List(value), None, None, None))
+      List(Result(Option.empty, HashSet(), List(value), None, None, None))
     }
 
     case DataTypeGeneration(prefix, action, matcher) => {
@@ -590,24 +597,24 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     case c: IteratorQuery => List(i.firstVar) ::: iteratorQueryToList(c)
   }
 
-  protected def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: List[String], file: LoadedSource): List[QueryWithIndex] = iteratorQueries.flatMap({
+  protected def iteratorResultsToQueries(iteratorQueries: List[Resultable], query: QueryClause, rootIds: HashSet[Int], file: LoadedSource): List[QueryWithIndex] = iteratorQueries.flatMap({
     case r: ResultWithIteratorQuery => r.results.indices.map(i => query match {
       case XmlPath(xpathQuery) => {
         val composedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
-        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode.toString
-        QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.iteratorQuery)
+        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode
+        QueryWithIndex(i.toString, rootIds.+(rootId), composedQuery, r.iteratorQuery)
       }
       case JsonPath(jsonpathQuery) => {
         val composedQuery = JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
-        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode.toString
-        QueryWithIndex(i.toString, rootIds.::(rootId), composedQuery, r.iteratorQuery)
+        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode
+        QueryWithIndex(i.toString, rootIds.+(rootId), composedQuery, r.iteratorQuery)
       }
     }).toList
     case r: ResultWithNested => r.results.indices.flatMap(i => query match {
       case XmlPath(xpathQuery) => {
         val indicedQuery = XmlPath(xpathQuery.replaceFirst("[*]", (i + 1).toString))
-        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode.toString
-        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), file)
+        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode
+        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.+(rootId), file)
       }
       case JsonPath(jsonpathQuery) => {
         val indicedQuery =
@@ -615,8 +622,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             JsonPath(jsonpathQuery.replaceFirst("[*]", i.toString))
           else
             JsonPath(jsonpathQuery)
-        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode.toString
-        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.::(rootId), file)
+        val rootId = (r.iteratorQuery + file.filepath + i.toString).hashCode
+        iteratorResultsToQueries(List(r.nestedResults(i)), indicedQuery, rootIds.+(rootId), file)
       }
     }).toList
   })
@@ -704,7 +711,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       case sp: SparqlColumn => doSparqlResults(sp, fileContentOrURL)
       case _ => {
         val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
-        val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, List(), fileContentOrURL)
+        val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, HashSet(), fileContentOrURL)
         queries.map(q => doVisit(q.query, middleArguments.+(
           "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
           .filter(_.results.nonEmpty)
@@ -736,8 +743,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
     val results = resultMap(query.column)
     val composedResults = for (i <- results.indices) yield {
-      val id = (query.query + i).hashCode.toString
-      Result(id, List(id), List(results(i)), None, None, None)
+      val id = (query.query + i).hashCode
+      Result(Option(id), HashSet(id), List(results(i)), None, None, None)
     }
     composedResults.toList
 
@@ -758,8 +765,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
     val results = resultMap(query.column)
     val composedResults = for (i <- results.indices) yield {
-      val id = (query.query + i).hashCode.toString
-      Result(id, List(id), List(results(i)), None, None, None)
+      val id = (query.query + i).hashCode
+      Result(Option(id), HashSet(id), List(results(i)), None, None, None)
     }
     composedResults.toList
   }
@@ -781,8 +788,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val results = for (i <- allLines.indices) yield {
       allLines(i).get(query.query) match {
         case Some(result) => {
-          val id = (file.filepath + i).hashCode.toString
-          Result(id, List(id), List(result), None, None, None)
+          val id = (file.filepath + i).hashCode
+          Result(Option(id), HashSet(id), List(result), None, None, None)
         }
         case None => throw new Exception("Field not present")
       }
@@ -825,10 +832,9 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     left.union(joinUnionList)
   }
 
-  private def solveAutoIncrementResults(list: List[Any], action: Result): List[Result] = {
-    val resultsAutoIncrement = list.filter(_.isInstanceOf[ResultAutoIncrement]).map(_.asInstanceOf[ResultAutoIncrement])
-    val newResultsAutoIncrement = resultsAutoIncrement.map(r => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag, None))
-    list.filterNot(_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement
+  private def solveAutoIncrementResults(list: List[Resultable], action: Result): Vector[Result] = {
+    val newResultsAutoIncrement = list.collect { case r: ResultAutoIncrement => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag, None) }
+    immutable.Vector((list.withFilter(!_.isInstanceOf[ResultAutoIncrement]).map(_.asInstanceOf[Result]) ::: newResultsAutoIncrement): _*)
   }
 
   private def getAllFilesContents(url: String): List[LoadedSource] = {
@@ -856,8 +862,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           case lr: List[Result] => lr.flatMap(r =>
             doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(r.id, r.rootIds, List(re), None, None, None)))
           case ra: ResultAutoIncrement =>
-            val id = ra.hashCode().toString
-            val rootIds = List(id)
+            val id = Option(ra.hashCode)
+            val rootIds = id.map(HashSet(_)).getOrElse(HashSet())
             doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None, None))
         }
       } else {
@@ -1135,16 +1141,16 @@ class XpathQueryResultsCache(pushedValues: Boolean) {
 sealed trait Resultable {
   def results: List[String]
 }
-case class Result(id: String, rootIds: List[String], results: List[String], dataType: Option[String],
+case class Result(id: Option[Int], rootIds: HashSet[Int], results: List[String], dataType: Option[String],
                   langTag: Option[String], rdfCollection: Option[RDFCollection]) extends Resultable {
   override def equals(that: Any): Boolean = {
     canEqual(that) && id == that.asInstanceOf[Result].id
   }
 }
-case class ResultWithIteratorQuery(id: String, rootIds: List[String], results: List[String], iteratorQuery: String) extends Resultable
-case class ResultWithNested(id: String, rootIds: List[String], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
-case class QueryByID(id: String, query: String)
-case class QueryWithIndex(index: String, rootIds: List[String], query: QueryClause, iteratorQuery: String)
+case class ResultWithIteratorQuery(id: Option[Int], rootIds: HashSet[Int], results: List[String], iteratorQuery: String) extends Resultable
+case class ResultWithNested(id: Option[Int], rootIds: HashSet[Int], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
+case class QueryByID(id: Int, query: String)
+case class QueryWithIndex(index: String, rootIds: HashSet[Int], query: QueryClause, iteratorQuery: String)
 case class ResultAutoIncrement(iterator: AutoIncrement, predicate: String, namespace: String, dataType: Option[String], langTag: Option[String]) extends Resultable {
   def results: List[String] = {
     val precedentString = iterator.precedentString.getOrElse("")

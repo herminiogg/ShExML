@@ -4,7 +4,7 @@ lazy val shexml = project
   .in(file("."))
   .settings(
     name := "ShExML",
-    version := "0.3.3",
+    version := "0.3.4-SNAPSHOT",
     scalaVersion := "3.2.0",
     crossScalaVersions := Seq("2.12.17", "2.13.9", "3.2.0"),
     libraryDependencies ++= Seq(
@@ -27,6 +27,7 @@ lazy val shexml = project
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.4.1.jre8",
       ("com.github.vickumar1981" %% "stringdistance" % "1.2.6").cross(CrossVersion.for3Use2_13),
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
       "ch.qos.logback" % "logback-classic" % "1.3.5",
       "be.ugent.rml" % "rmlmapper" % "4.9.0" % "test",
       "es.weso" %% "shex" % "0.1.97" % "test",
