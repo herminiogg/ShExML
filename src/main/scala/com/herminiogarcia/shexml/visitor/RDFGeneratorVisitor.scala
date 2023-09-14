@@ -85,9 +85,18 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       logger.info(s"Expanded ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.collect { case r: List[Result] => r.size }.sum} results")
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
       val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, actions)
+      val groupedPredicateObjectsList = predicateObjectsWithAutoIncrements.map(po => {
+        if(po.id.isEmpty && po.rootIds.isEmpty) {
+          (for(a <- actions if a.id.isDefined) yield (a.id.get -> List(po))).toMap
+        } else {
+          (for(ri <- po.rootIds) yield (ri -> List(po))).toMap ++ Map(po.id.get -> List(po))
+        }
+      }).reduce((a, b) => a ++ b.map { case (k, v) => k -> (v ++ a.getOrElse(k, List())) })
       val finalActions = for(a <- actions) yield {
-        val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => (i.id.isEmpty && i.rootIds.isEmpty) ||
-          a.id.isEmpty || i.id == a.id || i.rootIds(a.id.get))
+        // This is a clearer way of filtering the results but it is much slower
+        //val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => (i.id.isEmpty && i.rootIds.isEmpty) ||
+        //  a.id.isEmpty || i.id == a.id || i.rootIds(a.id.get))
+        val finalPredicateObjectsList = if(a.id.isEmpty) predicateObjectsWithAutoIncrements else groupedPredicateObjectsList(a.id.get)
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
