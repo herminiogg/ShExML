@@ -15,12 +15,10 @@ import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, Resu
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
-
 import java.io.{File, StringReader}
 import java.sql.DriverManager
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.immutable
 import scala.collection.immutable.HashSet
 import scala.util.Try
 
@@ -84,11 +82,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
       val output = if(holdingGraph.isEmpty) dataset.getDefaultModel else dataset.getNamedModel(graphName)
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
-      val predicateObjectsListFlattened = predicateObjectsList.asInstanceOf[List[List[Resultable]]].flatten
-      logger.info(s"Expanded ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.map(_.asInstanceOf[List[Result]].size).sum} results")
+      logger.info(s"Expanded ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.collect { case r: List[Result] => r.size }.sum} results")
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
+      val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, actions)
       val finalActions = for(a <- actions) yield {
-        val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsListFlattened, a)
         val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => (i.id.isEmpty && i.rootIds.isEmpty) ||
           a.id.isEmpty || i.id == a.id || i.rootIds(a.id.get))
         for(result <- finalPredicateObjectsList) {
@@ -828,9 +825,9 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     left.union(joinUnionList)
   }
 
-  private def solveAutoIncrementResults(list: List[Resultable], action: Result): Vector[Result] = {
-    val newResultsAutoIncrement = list.collect { case r: ResultAutoIncrement => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag, None) }
-    immutable.Vector((list.withFilter(!_.isInstanceOf[ResultAutoIncrement]).map(_.asInstanceOf[Result]) ::: newResultsAutoIncrement): _*)
+  private def solveAutoIncrementResults(list: List[Any], actions: List[Result]): Vector[Result] = {
+    val newResultsAutoIncrement = list.collect { case r: ResultAutoIncrement => actions.map(action => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag, None)) }.flatten
+    Vector((list.withFilter(!_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement): _*)
   }
 
   private def getAllFilesContents(url: String): List[LoadedSource] = {
