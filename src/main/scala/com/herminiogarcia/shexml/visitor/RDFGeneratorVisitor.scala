@@ -96,7 +96,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         // This is a clearer way of filtering the results but it is much slower
         //val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => (i.id.isEmpty && i.rootIds.isEmpty) ||
         //  a.id.isEmpty || i.id == a.id || i.rootIds(a.id.get))
-        val finalPredicateObjectsList = if(a.id.isEmpty) predicateObjectsWithAutoIncrements else groupedPredicateObjectsList(a.id.get)
+        val finalPredicateObjectsList = {
+          if(a.id.isEmpty) predicateObjectsWithAutoIncrements
+          else if(groupedPredicateObjectsList.isDefinedAt(a.id.get)) groupedPredicateObjectsList(a.id.get)
+          else List.empty[Result]
+        }
         for(result <- finalPredicateObjectsList) {
           val predicateObjects = result.results.map(_.toString.split(" ", 2))
           val action = normaliseURI(a.results.head)
