@@ -91,7 +91,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         } else {
           (for(ri <- po.rootIds) yield (ri -> List(po))).toMap ++ Map(po.id.get -> List(po))
         }
-      }).reduce((a, b) => a ++ b.map { case (k, v) => k -> (v ++ a.getOrElse(k, List())) })
+      }).fold(Map[Int, List[Result]]())((a, b) => a ++ b.map { case (k, v) => k -> (v ++ a.getOrElse(k, List())) })
       val finalActions = for(a <- actions) yield {
         // This is a clearer way of filtering the results but it is much slower
         //val finalPredicateObjectsList = predicateObjectsWithAutoIncrements.filter(i => (i.id.isEmpty && i.rootIds.isEmpty) ||
