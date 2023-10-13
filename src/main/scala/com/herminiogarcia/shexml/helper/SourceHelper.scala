@@ -9,23 +9,23 @@ import scala.collection.mutable
   */
 class SourceHelper {
 
-  def getURLContent(url: String): String = searchFileResult(url) match {
+  def getURLContent(url: String): LoadedSource = searchFileResult(url) match {
     case Some(result) => result
     case None =>
       val file = scala.io.Source.fromURL(url, "UTF-8")
       try {
-        val content = file.mkString
+        val content = LoadedSource(file.mkString, url)
         saveFileResult(url, content)
         content
       } finally { file.close() }
   }
 
-  def getContentFromRelativePath(path: String): String = searchFileResult(path) match {
+  def getContentFromRelativePath(path: String): LoadedSource = searchFileResult(path) match {
     case Some(result) => result
     case None =>
       val file = scala.io.Source.fromFile(path, "UTF-8")
       try {
-        val content = file.mkString
+        val content = LoadedSource(file.mkString, path)
         saveFileResult(path, content)
         content
       } finally { file.close() }
@@ -34,9 +34,11 @@ class SourceHelper {
 }
 
 object SourceHelper {
-  private val table = new mutable.HashMap[String, String]()
+  private val table = new mutable.HashMap[String, LoadedSource]()
 
-  def searchFileResult(path: String): Option[String] = table.get(path)
+  def searchFileResult(path: String): Option[LoadedSource] = table.get(path)
 
-  def saveFileResult(path: String, result: String): Unit = table += ((path, result))
+  def saveFileResult(path: String, result: LoadedSource): Unit = table += ((path, result))
 }
+
+case class LoadedSource(fileContent: String, filepath: String)
