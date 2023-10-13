@@ -17,7 +17,7 @@ class FunctionHubExecuter(val pathToFile: String) {
 
   def callFunction(name: String, args: String*): List[String] = {
     logger.debug(s"Executing function $name in source code $pathToFile")
-    val functionsCode = new SourceHelper().getURLContent(pathToFile)
+    val functionsCode = new SourceHelper().getURLContent(pathToFile).fileContent
     val cm = universe.runtimeMirror(getClass.getClassLoader)
     val toolBox = cm.mkToolBox()
     val tree = toolBox.parse(functionsCode)

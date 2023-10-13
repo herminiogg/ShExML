@@ -29,15 +29,15 @@ class QuerySearcher(val varTable: mutable.HashMap[Variable, VarResult]) {
   private def getURLContents(u: URL): QueryClause = {
     val parts = u.url.split('.')
     val extension = parts(parts.length - 1)
-    val fileContent = new SourceHelper().getURLContent(u.url)
+    val file = new SourceHelper().getURLContent(u.url)
     if(extension == "xpath") {
-      XmlPath(fileContent)
+      XmlPath(file.fileContent)
     } else if(extension == "jsonpath") {
-      JsonPath(fileContent)
+      JsonPath(file.fileContent)
     } else if(extension == "sql") {
-      SqlQuery(fileContent)
+      SqlQuery(file.fileContent)
     } else if(extension == "sparql") {
-      SparqlQuery(fileContent)
+      SparqlQuery(file.fileContent)
     } else throw new Exception("File extension " + extension + " is not supported for queries")
   }
 

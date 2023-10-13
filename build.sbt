@@ -4,7 +4,7 @@ lazy val shexml = project
   .in(file("."))
   .settings(
     name := "ShExML",
-    version := "0.3.3",
+    version := "0.3.4-SNAPSHOT",
     scalaVersion := "3.2.0",
     crossScalaVersions := Seq("2.12.17", "2.13.9", "3.2.0"),
     libraryDependencies ++= Seq(
@@ -44,6 +44,9 @@ lazy val shexml = project
         case Some((3, _)) => "io.gatling" % "gatling-jsonpath" % "3.8.2"
         case Some((2, n)) if n == 13 => "io.gatling" % "gatling-jsonpath" % "3.8.2"
         case Some((2, n)) if n == 12 => "io.gatling" % "gatling-jsonpath" % "3.4.2"
+      }) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((m, n)) if m == 3 || (m >= 2 && n >= 13) => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
+        case _ => Seq()
       }),
       assembly / assemblyMergeStrategy := {
         case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
