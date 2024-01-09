@@ -42,7 +42,7 @@ class JsonAndXmlEventsMappingWithBlankPrefix extends AnyFunSuite with Matchers w
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://ex.com/"
 

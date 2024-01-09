@@ -44,7 +44,7 @@ class JsonAndXmlEventsMapping extends AnyFunSuite with Matchers with RDFStatemen
       |  ex:long [long_union] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://ex.com/"
 

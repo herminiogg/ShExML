@@ -83,7 +83,7 @@ class DeepHierarchyXMLTest extends AnyFunSuite with Matchers with RDFStatementCr
       |    :tag [tag.tag.tag.tag.tag.tag.tag.tag.tag.tag.tag] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 

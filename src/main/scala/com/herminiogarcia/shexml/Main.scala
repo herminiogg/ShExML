@@ -58,11 +58,14 @@ class Main extends Callable[Int] {
   @Option(names = Array("-d", "--drivers"), description = Array("Add more JDBC database drivers in the form of <startJDBCURL>%%<driver> and separating them with \";\". Example: jdbc:postgresql%%org.postgresql.Driver;jdbc:oracle%%oracle.jdbc.OracleDriver"))
   private var drivers: String = ""
 
+  @Option(names = Array("-id", "--inferenceDatatypes"), description = Array("Use the inference system for choosing the best suited datatype for the generated literal. Without this option, and not declaring a datatype in the mapping rules, all the literals will be outputted as strings"))
+  private var inferenceDatatype: Boolean = false
+
   override def call(): Int = {
     val fileHandler = scala.io.Source.fromFile(file)
     try {
       val fileContent = fileHandler.mkString
-      val mappingLauncher = new MappingLauncher(username, password, drivers)
+      val mappingLauncher = new MappingLauncher(username, password, drivers, inferenceDatatype)
       val outputContent = if(rmlOutput) {
         mappingLauncher.launchRMLTranslation(fileContent, false)
       } else if(rmlPrettifyOutput) {

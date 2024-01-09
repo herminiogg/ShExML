@@ -48,7 +48,7 @@ class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite with Matche
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
   private val result = mappingLauncher.launchRMLTranslation(example, true)
   private val prefix = "http://example.com/"
   private val dataset = doTranslation(result, prefix)

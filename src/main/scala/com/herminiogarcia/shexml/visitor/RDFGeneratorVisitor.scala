@@ -30,7 +30,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                           shexInferredPropertiesTable: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes] = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes],
                           shapeMapTable: mutable.ListBuffer[ShapeMapInference] = mutable.ListBuffer.empty[ShapeMapInference],
                           pushedOrPoppedFieldsPresent: Boolean = true,
-                          registerDatatypesAndCardinalities: Boolean = false)
+                          registerDatatypesAndCardinalities: Boolean = false,
+                          inferenceDatatype: Boolean = false)
   extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
@@ -577,14 +578,16 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   protected def searchForXSDType(o: String): RDFDatatype = {
-    if(Try(o.toInt).isSuccess)
-      XSDDatatype.XSDinteger
-    else if(Try(o.toDouble).isSuccess)
-      XSDDatatype.XSDdecimal
-    else if(Try(o.toBoolean).isSuccess)
-      XSDDatatype.XSDboolean
-    else
-      XSDDatatype.XSDstring
+    if(inferenceDatatype) {
+      if (Try(o.toInt).isSuccess)
+        XSDDatatype.XSDinteger
+      else if (Try(o.toDouble).isSuccess)
+        XSDDatatype.XSDdecimal
+      else if (Try(o.toBoolean).isSuccess)
+        XSDDatatype.XSDboolean
+      else
+        XSDDatatype.XSDstring
+    } else XSDDatatype.XSDstring
   }
 
   protected def normaliseURI(uri: String): String = {
