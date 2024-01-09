@@ -43,7 +43,7 @@ class MultipleElementIteratorExpressionWithAutoIncrementWithStringsTest extends 
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 
