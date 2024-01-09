@@ -151,7 +151,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     logger.info("Executing RDF Generator to get more accurate inferences")
     val dataset = DatasetFactory.create()
     new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences,
-      pushedOrPoppedFieldsPresent = searchForPushedOrPoppedFields(ast)).doVisit(ast, null)
+      pushedOrPoppedFieldsPresent = searchForPushedOrPoppedFields(ast),
+      registerDatatypesAndCardinalities = true).doVisit(ast, null)
   }
 
   private def generateShapeMaps(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): List[ShapeMapInference] = {

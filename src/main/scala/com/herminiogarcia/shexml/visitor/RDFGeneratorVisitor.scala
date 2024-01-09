@@ -29,7 +29,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                           driversMap: Map[String, String] = Map[String, String](),
                           shexInferredPropertiesTable: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes] = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes],
                           shapeMapTable: mutable.ListBuffer[ShapeMapInference] = mutable.ListBuffer.empty[ShapeMapInference],
-                          pushedOrPoppedFieldsPresent: Boolean = true)
+                          pushedOrPoppedFieldsPresent: Boolean = true,
+                          registerDatatypesAndCardinalities: Boolean = false)
   extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
@@ -904,17 +905,19 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def registerCardinalityAndDatatype(shapeName: String, predicateObject: Array[String], result: Result) = {
-    val datatype = result.dataType match {
-      case Some(value) => Some(value)
-      case None => {
-        val splittedObject = result.results.head.split(' ')
-        if(splittedObject.length > 1)
-          normaliseDataType(Some(searchForXSDType(splittedObject(1)).getURI))
-        else
-          None
+    if(registerDatatypesAndCardinalities) {
+      val datatype = result.dataType match {
+        case Some(value) => Some(value)
+        case None => {
+          val splittedObject = result.results.head.split(' ')
+          if(splittedObject.length > 1)
+            normaliseDataType(Some(searchForXSDType(splittedObject(1)).getURI))
+          else
+            None
+        }
       }
+      shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, datatype)
     }
-    shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, datatype)
   }
 
   private def createTriple(shapePrefix: String, action: String, predicateObject: Array[String], result: Result, output: Model): Unit = {
