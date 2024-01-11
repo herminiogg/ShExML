@@ -31,7 +31,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                           shapeMapTable: mutable.ListBuffer[ShapeMapInference] = mutable.ListBuffer.empty[ShapeMapInference],
                           pushedOrPoppedFieldsPresent: Boolean = true,
                           registerDatatypesAndCardinalities: Boolean = false,
-                          inferenceDatatype: Boolean = false)
+                          inferenceDatatype: Boolean = false,
+                          normaliseURIs: Boolean = false)
   extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
@@ -592,10 +593,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   protected def normaliseURI(uri: String): String = {
-    uri.replaceAll("[\\s,_()']", "_")
-      .replace("&quot;", "")
-      .replace("&#209;", "N").replace("&#241;", "n")
-      .replace("&#220;", "U").replace("&#252;", "u")
+    if(normaliseURIs) {
+      uri.replaceAll("[\\s,_()']", "_")
+        .replace("&quot;", "")
+        .replace("&#209;", "N").replace("&#241;", "n")
+        .replace("&#220;", "U").replace("&#252;", "u")
+    } else uri
   }
 
   protected def doVisitIteratorQuery(nestedIterator: QueryClause, currentIterator: QueryClause, optionalArgument: Any): Result = nestedIterator match {

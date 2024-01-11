@@ -40,7 +40,7 @@ class CommentIteratorExpressionTest extends AnyFunSuite with Matchers with RDFSt
       |  #ex:long [performances.long] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val result = mappingLauncher.launchRMLTranslation(example, true)
   private val prefix = "http://ex.com/"
   private val output = doTranslation(result, prefix).getDefaultModel

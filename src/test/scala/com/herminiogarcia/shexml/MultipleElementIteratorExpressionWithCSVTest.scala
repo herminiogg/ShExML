@@ -45,7 +45,7 @@ class MultipleElementIteratorExpressionWithCSVTest extends AnyFunSuite with Matc
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 

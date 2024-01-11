@@ -29,7 +29,7 @@ class DataTypeGenerationFullURI extends AnyFunSuite with Matchers with RDFStatem
       |    ex:num [person.num] [person.dt] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 

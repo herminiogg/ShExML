@@ -43,7 +43,7 @@ class CommentTest extends AnyFunSuite with Matchers with RDFStatementCreator wit
       |  #ex:long [long_union] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://ex.com/"
   private val output = doTranslation(result, prefix).getDefaultModel
