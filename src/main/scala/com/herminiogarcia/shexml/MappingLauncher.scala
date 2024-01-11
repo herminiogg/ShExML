@@ -17,7 +17,9 @@ import scala.collection.mutable
 /**
   * Created by herminio on 15/2/18.
   */
-class MappingLauncher(val username: String = "", val password: String = "", drivers: String = "", val inferenceDatatype: Boolean = false) {
+class MappingLauncher(val username: String = "", val password: String = "", drivers: String = "",
+                      val inferenceDatatype: Boolean = false,
+                      val normaliseURIs: Boolean = false) {
 
   private val logger = Logger[MappingLauncher]
 
@@ -134,7 +136,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val pushedOrPoppedFields = searchForPushedOrPoppedFields(ast)
     new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(),
       pushedOrPoppedFieldsPresent = pushedOrPoppedFields,
-      inferenceDatatype = inferenceDatatype).doVisit(ast, null)
+      inferenceDatatype = inferenceDatatype,
+      normaliseURIs = normaliseURIs).doVisit(ast, null)
     //val in = new ByteArrayInputStream(output.toString().getBytes)
     //val model = ModelFactory.createDefaultModel()
     //model.read(in, null, "TURTLE")
@@ -154,7 +157,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences,
       pushedOrPoppedFieldsPresent = searchForPushedOrPoppedFields(ast),
       registerDatatypesAndCardinalities = true,
-      inferenceDatatype = inferenceDatatype).doVisit(ast, null)
+      inferenceDatatype = inferenceDatatype,
+      normaliseURIs = normaliseURIs).doVisit(ast, null)
   }
 
   private def generateShapeMaps(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): List[ShapeMapInference] = {
@@ -164,7 +168,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     logger.info("Executing RDF Generator to get more accurate inferences")
     new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences, shapeMapTable,
       pushedOrPoppedFieldsPresent = searchForPushedOrPoppedFields(ast),
-      inferenceDatatype = inferenceDatatype).doVisit(ast, null)
+      inferenceDatatype = inferenceDatatype,
+      normaliseURIs = normaliseURIs).doVisit(ast, null)
     shapeMapTable.result()
   }
 

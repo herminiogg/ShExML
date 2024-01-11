@@ -70,7 +70,7 @@ class FilmWithActorsTest extends AnyFunSuite with Matchers with RDFStatementCrea
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true)
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val result = mappingLauncher.launchRMLTranslation(example)
   private val prefix = "http://example.com/"
   private val output = doTranslation(result, prefix).getDefaultModel

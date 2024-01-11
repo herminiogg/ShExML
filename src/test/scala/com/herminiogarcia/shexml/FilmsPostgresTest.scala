@@ -32,7 +32,7 @@ class FilmsPostgresTest extends AnyFunSuite with Matchers with RDFStatementCreat
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher("root", "root")
+  private val mappingLauncher = new MappingLauncher("root", "root", inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 
