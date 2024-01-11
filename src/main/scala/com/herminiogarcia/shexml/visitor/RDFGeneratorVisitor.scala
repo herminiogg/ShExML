@@ -43,6 +43,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val jsonpathQueryResultsCache = new JsonPathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val jsonObjectMapperCache = new JsonObjectMapperCache()
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
+  protected val defaultModel = dataset.getDefaultModel
 
   private val logger = Logger[RDFGeneratorVisitor]
 
@@ -58,7 +59,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val firstShape = shapes.filterNot(s => linkedShapes.contains(s.shapeName)).map(doVisit(_, optionalArgument)).headOption
       val numberOfTriples =
         (graphs.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).map(dataset.getNamedModel(_))
-          :+ dataset.getDefaultModel()).map(_.size()).sum
+          :+ defaultModel).map(_.size()).sum
       logger.info(s"The mapping rules produced $numberOfTriples triples")
       if(firstShape.isEmpty) firstGraph.get
     }
@@ -70,7 +71,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case Prefix(variable, url) => {
       prefixTable += ((variable.name, url.url))
-      dataset.getDefaultModel.setNsPrefix(variable.name.replace(":", ""), url.url)
+      defaultModel.setNsPrefix(variable.name.replace(":", ""), url.url)
     }
 
     case Graph(graphName, shapes) => {
@@ -82,7 +83,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       logger.info(s"Generating shape ${shapeName.name} results with ${predicateObjects.size} predicate-object statements")
       val shapePrefix = getShapePrefix(action)
       val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
-      val output = if(holdingGraph.isEmpty) dataset.getDefaultModel else dataset.getNamedModel(graphName)
+      val output = if(holdingGraph.isEmpty) defaultModel else dataset.getNamedModel(graphName)
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
       logger.info(s"Expanded ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.collect { case r: List[Result] => r.size }.sum} results")
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
@@ -524,7 +525,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
     val obj = if(o.contains("_:"))
-      dataset.getDefaultModel.createResource(new AnonId(o.replace("_:", "")))
+      defaultModel.createResource(new AnonId(o.replace("_:", "")))
       else ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
@@ -537,17 +538,17 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   protected def createBNodeStatement(s: String, p: String, o: String): Statement = {
     val anonID = new AnonId(s)
-    val subject = dataset.getDefaultModel.createResource(anonID)
+    val subject = defaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
     val obj = if(o.contains("_:"))
-      dataset.getDefaultModel.createResource(new AnonId(o.replace("_:", "")))
+      defaultModel.createResource(new AnonId(o.replace("_:", "")))
       else ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
   protected def createBNodeStatementWithCollection(s: String, p: String, o: Resource): Statement = {
     val anonID = new AnonId(s)
-    val subject = dataset.getDefaultModel.createResource(anonID)
+    val subject = defaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
     ResourceFactory.createStatement(subject, predicate, o)
   }
@@ -566,7 +567,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   protected def createBNodeStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None, langTag: Option[String] = None): Statement = {
     val anonID = new AnonId(s)
-    val subject = dataset.getDefaultModel.createResource(anonID)
+    val subject = defaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
     val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
       .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
