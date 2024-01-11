@@ -29,7 +29,7 @@ class FilmsSparqlFileTest extends AnyFunSuite with Matchers with RDFStatementCre
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher("root")
+  private val mappingLauncher = new MappingLauncher("root", normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 
