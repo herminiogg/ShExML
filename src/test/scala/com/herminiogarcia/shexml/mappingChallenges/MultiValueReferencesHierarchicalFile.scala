@@ -46,7 +46,7 @@ class MultiValueReferencesHierarchicalFile extends AnyFunSuite with Matchers wit
       |  	ex:hasAffiliation ex:[labValues.articles.authors.affiliation.label] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 

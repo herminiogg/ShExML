@@ -41,7 +41,7 @@ class RDFSeqTest extends AnyFunSuite with Matchers with RDFStatementCreator {
       |    ex:hasAuthors ex:[labValues.articles.authors.name AS RDFSeq] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 

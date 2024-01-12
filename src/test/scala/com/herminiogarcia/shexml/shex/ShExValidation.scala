@@ -14,7 +14,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 trait ShExValidation {
 
   def validate(shexml: String, shapemap: String): Boolean = {
-    val mappingLauncher = new MappingLauncher()
+    val mappingLauncher = new MappingLauncher(normaliseURIs = true)
     val output = mappingLauncher.launchMapping(shexml).getDefaultModel
     val outputStream = new ByteArrayOutputStream()
     output.write(outputStream, "Turtle")

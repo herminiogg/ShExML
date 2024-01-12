@@ -29,7 +29,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                           driversMap: Map[String, String] = Map[String, String](),
                           shexInferredPropertiesTable: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes] = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes],
                           shapeMapTable: mutable.ListBuffer[ShapeMapInference] = mutable.ListBuffer.empty[ShapeMapInference],
-                          pushedOrPoppedFieldsPresent: Boolean = true)
+                          pushedOrPoppedFieldsPresent: Boolean = true,
+                          registerDatatypesAndCardinalities: Boolean = false,
+                          inferenceDatatype: Boolean = false,
+                          normaliseURIs: Boolean = false)
   extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
 
   protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
@@ -41,6 +44,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val jsonpathQueryResultsCache = new JsonPathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val jsonObjectMapperCache = new JsonObjectMapperCache()
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
+  protected val defaultModel = dataset.getDefaultModel
 
   private val logger = Logger[RDFGeneratorVisitor]
 
@@ -56,7 +60,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val firstShape = shapes.filterNot(s => linkedShapes.contains(s.shapeName)).map(doVisit(_, optionalArgument)).headOption
       val numberOfTriples =
         (graphs.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).map(dataset.getNamedModel(_))
-          :+ dataset.getDefaultModel()).map(_.size()).sum
+          :+ defaultModel).map(_.size()).sum
       logger.info(s"The mapping rules produced $numberOfTriples triples")
       if(firstShape.isEmpty) firstGraph.get
     }
@@ -68,7 +72,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case Prefix(variable, url) => {
       prefixTable += ((variable.name, url.url))
-      dataset.getDefaultModel.setNsPrefix(variable.name.replace(":", ""), url.url)
+      defaultModel.setNsPrefix(variable.name.replace(":", ""), url.url)
     }
 
     case Graph(graphName, shapes) => {
@@ -80,7 +84,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       logger.info(s"Generating shape ${shapeName.name} results with ${predicateObjects.size} predicate-object statements")
       val shapePrefix = getShapePrefix(action)
       val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
-      val output = if(holdingGraph.isEmpty) dataset.getDefaultModel else dataset.getNamedModel(graphName)
+      val output = if(holdingGraph.isEmpty) defaultModel else dataset.getNamedModel(graphName)
       val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
       logger.info(s"Expanded ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.collect { case r: List[Result] => r.size }.sum} results")
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
@@ -522,7 +526,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
     val obj = if(o.contains("_:"))
-      dataset.getDefaultModel.createResource(new AnonId(o.replace("_:", "")))
+      defaultModel.createResource(new AnonId(o.replace("_:", "")))
       else ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
@@ -535,17 +539,17 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   protected def createBNodeStatement(s: String, p: String, o: String): Statement = {
     val anonID = new AnonId(s)
-    val subject = dataset.getDefaultModel.createResource(anonID)
+    val subject = defaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
     val obj = if(o.contains("_:"))
-      dataset.getDefaultModel.createResource(new AnonId(o.replace("_:", "")))
+      defaultModel.createResource(new AnonId(o.replace("_:", "")))
       else ResourceFactory.createResource(o)
     ResourceFactory.createStatement(subject, predicate, obj)
   }
 
   protected def createBNodeStatementWithCollection(s: String, p: String, o: Resource): Statement = {
     val anonID = new AnonId(s)
-    val subject = dataset.getDefaultModel.createResource(anonID)
+    val subject = defaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
     ResourceFactory.createStatement(subject, predicate, o)
   }
@@ -564,7 +568,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
   protected def createBNodeStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None, langTag: Option[String] = None): Statement = {
     val anonID = new AnonId(s)
-    val subject = dataset.getDefaultModel.createResource(anonID)
+    val subject = defaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
     val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
       .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
@@ -576,21 +580,25 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   protected def searchForXSDType(o: String): RDFDatatype = {
-    if(Try(o.toInt).isSuccess)
-      XSDDatatype.XSDinteger
-    else if(Try(o.toDouble).isSuccess)
-      XSDDatatype.XSDdecimal
-    else if(Try(o.toBoolean).isSuccess)
-      XSDDatatype.XSDboolean
-    else
-      XSDDatatype.XSDstring
+    if(inferenceDatatype) {
+      if (Try(o.toInt).isSuccess)
+        XSDDatatype.XSDinteger
+      else if (Try(o.toDouble).isSuccess)
+        XSDDatatype.XSDdecimal
+      else if (Try(o.toBoolean).isSuccess)
+        XSDDatatype.XSDboolean
+      else
+        XSDDatatype.XSDstring
+    } else XSDDatatype.XSDstring
   }
 
   protected def normaliseURI(uri: String): String = {
-    uri.replaceAll("[\\s,_()']", "_")
-      .replace("&quot;", "")
-      .replace("&#209;", "N").replace("&#241;", "n")
-      .replace("&#220;", "U").replace("&#252;", "u")
+    if(normaliseURIs) {
+      uri.replaceAll("[\\s,_()']", "_")
+        .replace("&quot;", "")
+        .replace("&#209;", "N").replace("&#241;", "n")
+        .replace("&#220;", "U").replace("&#252;", "u")
+    } else uri
   }
 
   protected def doVisitIteratorQuery(nestedIterator: QueryClause, currentIterator: QueryClause, optionalArgument: Any): Result = nestedIterator match {
@@ -904,17 +912,19 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def registerCardinalityAndDatatype(shapeName: String, predicateObject: Array[String], result: Result) = {
-    val datatype = result.dataType match {
-      case Some(value) => Some(value)
-      case None => {
-        val splittedObject = result.results.head.split(' ')
-        if(splittedObject.length > 1)
-          normaliseDataType(Some(searchForXSDType(splittedObject(1)).getURI))
-        else
-          None
+    if(registerDatatypesAndCardinalities) {
+      val datatype = result.dataType match {
+        case Some(value) => Some(value)
+        case None => {
+          val splittedObject = result.results.head.split(' ')
+          if(splittedObject.length > 1)
+            normaliseDataType(Some(searchForXSDType(splittedObject(1)).getURI))
+          else
+            None
+        }
       }
+      shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, datatype)
     }
-    shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, datatype)
   }
 
   private def createTriple(shapePrefix: String, action: String, predicateObject: Array[String], result: Result, output: Model): Unit = {

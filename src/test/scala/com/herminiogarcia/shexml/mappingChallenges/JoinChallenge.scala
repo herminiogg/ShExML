@@ -34,7 +34,7 @@ class JoinChallenge extends AnyFunSuite with Matchers with RDFStatementCreator {
       |    :lastName [familyName] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 

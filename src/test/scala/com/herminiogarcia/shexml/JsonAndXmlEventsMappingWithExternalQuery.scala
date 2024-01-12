@@ -46,7 +46,7 @@ class JsonAndXmlEventsMappingWithExternalQuery extends AnyFunSuite with Matchers
       |  ex:long [long_union] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://ex.com/"
 

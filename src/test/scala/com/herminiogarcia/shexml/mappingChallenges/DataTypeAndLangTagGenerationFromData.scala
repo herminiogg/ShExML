@@ -33,7 +33,7 @@ class DataTypeAndLangTagGenerationFromData extends AnyFunSuite with Matchers wit
       |    :num [values.num] [values.dt] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.launchMapping(example).getDefaultModel
   private val prefix = "http://example.com/"
 

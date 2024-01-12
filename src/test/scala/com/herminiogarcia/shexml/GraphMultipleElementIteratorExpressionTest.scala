@@ -51,7 +51,7 @@ class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite with Matche
     """.stripMargin
 
   private val prefix = "http://example.com/"
-  private val mappingLauncher = new MappingLauncher()
+  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val dataset = mappingLauncher.launchMapping(example)
   private val output = dataset.getDefaultModel
   private val myFilmsGraph = dataset.getNamedModel(prefix + "MyFilms")

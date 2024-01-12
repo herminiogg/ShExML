@@ -74,7 +74,7 @@ class FilmsWithInferredShapeMapTest extends AnyFunSuite with ShExValidation {
     """.stripMargin
 
   test("Films validate against generated schema") {
-    val shapeMap = new MappingLauncher().launchShapeMapGeneration(example)
+    val shapeMap = new MappingLauncher(normaliseURIs = true).launchShapeMapGeneration(example)
     assert(this.validate(example, shapeMap))
   }
 
