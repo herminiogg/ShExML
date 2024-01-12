@@ -17,7 +17,7 @@ object Main {
 
 }
 
-@Command(name = "ShExML", version = Array("v0.4.0"),
+@Command(name = "ShExML", version = Array("v0.4.1"),
   mixinStandardHelpOptions = true,
   description = Array("Map and merge heterogeneous data sources with a Shape Expressions based syntax"))
 class Main extends Callable[Int] {
@@ -82,6 +82,7 @@ class Main extends Callable[Int] {
       } else if(shaclClosedOutput) {
         mappingLauncher.launchSHACLGeneration(fileContent, true)
       } else {
+        Thread.sleep(20000)
         mappingLauncher.launchMapping(fileContent, format)
       }
       if(output.isEmpty) println(outputContent) else {
