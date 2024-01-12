@@ -1,6 +1,6 @@
 # ShExML
-![Master build](https://github.com/herminiogg/shexml/actions/workflows/scala.yml/badge.svg?branch=master)
-![Maven Central](https://img.shields.io/maven-central/v/com.herminiogarcia/shexml_3?color=blue)
+[![Master build](https://github.com/herminiogg/shexml/actions/workflows/scala.yml/badge.svg?branch=master)](https://github.com/herminiogg/ShExML/actions/workflows/scala.yml?query=branch%3Amaster)
+[![Maven Central](https://img.shields.io/maven-central/v/com.herminiogarcia/shexml_3?color=blue)](https://central.sonatype.com/artifact/com.herminiogarcia/shexml_3)
 
 Shape Expressions Mapping Language (ShExML) is a DSL that offers a solution
 for mapping and merging heterogeneous data sources. As being based on ShEx the
