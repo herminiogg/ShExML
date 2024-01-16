@@ -3,7 +3,7 @@ package com.herminiogarcia.shexml
 import picocli.CommandLine
 import picocli.CommandLine.{Command, Option}
 
-import java.io.{File, PrintWriter}
+import java.io.{File, FileOutputStream, PrintWriter}
 import java.util.concurrent.Callable
 
 /**
@@ -69,27 +69,23 @@ class Main extends Callable[Int] {
     try {
       val fileContent = fileHandler.mkString
       val mappingLauncher = new MappingLauncher(username, password, drivers, inferenceDatatype, normaliseURIs)
-      val outputContent = if(rmlOutput) {
-        mappingLauncher.launchRMLTranslation(fileContent, false)
+      val outputStream = if (output.isEmpty) Console.out else new FileOutputStream(output)
+      if(rmlOutput) {
+        mappingLauncher.launchRMLTranslationAndWrite(fileContent, outputStream, false)
       } else if(rmlPrettifyOutput) {
-        mappingLauncher.launchRMLTranslation(fileContent, true)
+        mappingLauncher.launchRMLTranslationAndWrite(fileContent, outputStream, true)
       } else if(shexOutput) {
-        mappingLauncher.launchShExGeneration(fileContent)
+        mappingLauncher.launchShExGenerationAndWrite(fileContent, outputStream)
       } else if(shapeMapOutput) {
-        mappingLauncher.launchShapeMapGeneration(fileContent)
+        mappingLauncher.launchShapeMapGenerationAndWrite(fileContent, outputStream)
       } else if(shaclOutput) {
-        mappingLauncher.launchSHACLGeneration(fileContent)
+        mappingLauncher.launchSHACLGenerationAndWrite(fileContent, outputStream)
       } else if(shaclClosedOutput) {
-        mappingLauncher.launchSHACLGeneration(fileContent, true)
+        mappingLauncher.launchSHACLGenerationAndWrite(fileContent, outputStream, true)
       } else {
-        Thread.sleep(20000)
-        mappingLauncher.launchMapping(fileContent, format)
+        mappingLauncher.launchMappingAndWrite(fileContent, format, outputStream)
       }
-      if(output.isEmpty) println(outputContent) else {
-        val pw = new PrintWriter(new File(output))
-        pw.print(outputContent)
-        pw.close()
-      }
+      outputStream.close()
       1 // well finished
     } finally { fileHandler.close() }
   }

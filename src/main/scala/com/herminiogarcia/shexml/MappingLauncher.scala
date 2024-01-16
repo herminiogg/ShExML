@@ -11,7 +11,7 @@ import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
 import com.typesafe.scalalogging.Logger
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayOutputStream, OutputStream}
 import scala.collection.mutable
 
 /**
@@ -24,18 +24,21 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   private val logger = Logger[MappingLauncher]
 
   def launchMapping(mappingCode: String, lang: String): String = {
+    val outputStream = new ByteArrayOutputStream()
+    launchMappingAndWrite(mappingCode, lang, outputStream)
+    outputStream.toString
+  }
+
+  def launchMappingAndWrite(mappingCode: String, lang: String, outputStream: OutputStream) {
     val startTime = System.currentTimeMillis()
     val dataset = launchMapping(mappingCode)
     val endTime = System.currentTimeMillis()
     logger.info(s"Execution time: ${endTime - startTime}ms")
     logger.info(s"Converting output to $lang")
-    val outputStream = new ByteArrayOutputStream()
     val langValue = RDFLanguages.nameToLang(lang)
-    if(RDFLanguages.isQuads(langValue))
+    if (RDFLanguages.isQuads(langValue))
       RDFDataMgr.write(outputStream, dataset, langValue)
     else RDFDataMgr.write(outputStream, dataset.getDefaultModel, langValue)
-
-    outputStream.toString
   }
 
   def launchMapping(mappingCode: String): Dataset = {
@@ -48,7 +51,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     generateResultingRDF(ast, varTable)
   }
 
-  def launchRMLTranslation(mappingCode: String, prettify: Boolean = false): String = {
+  def launchRMLTranslationAndWrite(mappingCode: String, outputStream: OutputStream, prettify: Boolean = false) {
     logger.info(s"Launching ShExML to RML translation with prettify option to $prettify")
     logger.debug(s"Mapping rules $mappingCode")
     val lexer = createLexer(mappingCode)
@@ -56,9 +59,13 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
     val dataset = generateResultingRML(ast, varTable, prettify)
-    val outputStream = new ByteArrayOutputStream()
     if(prettify) new OrphanBNodeRemover().removeOrphanBNodes(dataset.getDefaultModel)
     RDFDataMgr.write(outputStream, dataset.getDefaultModel, RDFFormat.TURTLE_PRETTY)
+  }
+
+  def launchRMLTranslation(mappingCode: String, prettify: Boolean = false): String = {
+    val outputStream = new ByteArrayOutputStream()
+    launchRMLTranslationAndWrite(mappingCode, outputStream, prettify)
     outputStream.toString
   }
 
@@ -75,6 +82,11 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     new ShExPrinter().print(shex)
   }
 
+  def launchShExGenerationAndWrite(mappingCode: String, outputStream: OutputStream) {
+    val result = launchShExGeneration(mappingCode)
+    outputStream.write(result.getBytes)
+  }
+
   def launchShapeMapGeneration(mappingCode: String): String = {
     logger.info(s"Launching Shape Map generation from mapping rules")
     logger.debug(s"Mapping rules $mappingCode")
@@ -86,7 +98,12 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     new ShapeMapPrinter().print(shapeMaps)
   }
 
-  def launchSHACLGeneration(mappingCode: String, closed: Boolean = false): String = {
+  def launchShapeMapGenerationAndWrite(mappingCode: String, outputStream: OutputStream) {
+    val result = launchShapeMapGeneration(mappingCode)
+    outputStream.write(result.getBytes)
+  }
+
+  def launchSHACLGenerationAndWrite(mappingCode: String, outputStream: OutputStream, closed: Boolean = false) = {
     logger.info(s"Launching SHACL generation from mapping rules")
     logger.debug(s"Mapping rules $mappingCode")
     val lexer = createLexer(mappingCode)
@@ -99,8 +116,12 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val shex = new ShExGeneratorVisitor(inferencesTable.toList).doVisit(ast, null)
     val dataset = DatasetFactory.create()
     new SHACLGenerator(dataset, closed).generate(shex)
-    val outputStream = new ByteArrayOutputStream()
     dataset.getDefaultModel.write(outputStream, "TURTLE")
+  }
+
+  def launchSHACLGeneration(mappingCode: String, closed: Boolean = false): String = {
+    val outputStream = new ByteArrayOutputStream()
+    launchSHACLGenerationAndWrite(mappingCode, outputStream, closed)
     outputStream.toString
   }
 
