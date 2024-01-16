@@ -29,7 +29,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     outputStream.toString
   }
 
-  def launchMappingAndWrite(mappingCode: String, lang: String, outputStream: OutputStream) {
+  def launchMappingAndWrite(mappingCode: String, lang: String, outputStream: OutputStream) = {
     val startTime = System.currentTimeMillis()
     val dataset = launchMapping(mappingCode)
     val endTime = System.currentTimeMillis()
@@ -51,7 +51,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     generateResultingRDF(ast, varTable)
   }
 
-  def launchRMLTranslationAndWrite(mappingCode: String, outputStream: OutputStream, prettify: Boolean = false) {
+  def launchRMLTranslationAndWrite(mappingCode: String, outputStream: OutputStream, prettify: Boolean = false) = {
     logger.info(s"Launching ShExML to RML translation with prettify option to $prettify")
     logger.debug(s"Mapping rules $mappingCode")
     val lexer = createLexer(mappingCode)
@@ -82,7 +82,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     new ShExPrinter().print(shex)
   }
 
-  def launchShExGenerationAndWrite(mappingCode: String, outputStream: OutputStream) {
+  def launchShExGenerationAndWrite(mappingCode: String, outputStream: OutputStream) = {
     val result = launchShExGeneration(mappingCode)
     outputStream.write(result.getBytes)
   }
@@ -98,7 +98,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     new ShapeMapPrinter().print(shapeMaps)
   }
 
-  def launchShapeMapGenerationAndWrite(mappingCode: String, outputStream: OutputStream) {
+  def launchShapeMapGenerationAndWrite(mappingCode: String, outputStream: OutputStream) = {
     val result = launchShapeMapGeneration(mappingCode)
     outputStream.write(result.getBytes)
   }
