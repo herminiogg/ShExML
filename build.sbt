@@ -11,7 +11,6 @@ lazy val shexml = project
       "org.antlr" % "antlr4" % "4.9.2",
       "com.fasterxml.jackson.core" % "jackson-core" % "2.9.4",
       "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.4",
-      ("com.nrinaudo" %% "kantan.xpath" % "0.5.3").cross(CrossVersion.for3Use2_13),
       "org.apache.jena" % "jena-base" % "3.17.0",
       "org.apache.jena" % "jena-core" % "3.17.0",
       "org.apache.jena" % "jena-arq" % "3.17.0",

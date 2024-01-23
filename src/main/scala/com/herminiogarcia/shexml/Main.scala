@@ -82,6 +82,7 @@ class Main extends Callable[Int] {
       } else if(shaclClosedOutput) {
         mappingLauncher.launchSHACLGeneration(fileContent, true)
       } else {
+//        Thread.sleep(20000)
         mappingLauncher.launchMapping(fileContent, format)
       }
       if(output.isEmpty) println(outputContent) else {
