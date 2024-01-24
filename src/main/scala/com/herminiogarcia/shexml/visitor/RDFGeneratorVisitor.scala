@@ -6,15 +6,18 @@ import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncremen
 import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, LoadedSource, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
+import com.jayway.jsonpath.{Configuration, DocumentContext}
 import com.typesafe.scalalogging.Logger
 import kantan.xpath.XPathCompiler
 import kantan.xpath.implicits._
+import net.minidev.json.JSONArray
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
 import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ResultSet}
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
+
 import java.io.{File, StringReader}
 import java.sql.DriverManager
 import scala.collection.JavaConverters._
@@ -385,18 +388,23 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               logger.debug(s"Retrieving cached result for already parsed JSON file")
               jsonNode
             case None =>
-              val jsonNode = new ObjectMapper().readValue(file.fileContent, classOf[JsonNode])
-              jsonObjectMapperCache.save(file, jsonNode)
-              jsonNode
+              val configuration = Configuration.defaultConfiguration()
+                .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
+                .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL);
+              val context = com.jayway.jsonpath.JsonPath.using(configuration).parse(file.fileContent)
+              jsonObjectMapperCache.save(file, context)
+              context
           }
-          val result = io.gatling.jsonpath.JsonPath.query(query, jsonContent)
-          val processedResult = result match {
-            case Left(_) => Nil
-            case Right(r) => val finalList = r.flatMap(j => {
-              if(j.isArray) j.iterator().asScala.flatMap(r => if(!r.isNull) List(r.asText()) else Nil)
-              else if(!j.isNull) List(j.asText()) else Nil
-            }).toList
+          val result = jsonContent.read(query, classOf[java.util.List[Object]])
+          val processedResult = {
+            if(result != null && !result.isEmpty) {
+              val finalList = result.asScala.flatMap({
+                case j: JSONArray => j.asScala.flatMap(r => if (r != null) List(r.toString) else Nil)
+                case default => if (default != null) List(default.toString) else Nil
+              }).toList
               Result(Option(id), rootIds, finalList, None, None, None)
+            }
+            else Nil
           }
           if(processedResult.isInstanceOf[Result]) jsonpathQueryResultsCache.save(query, file, index.toString, processedResult.asInstanceOf[Result])
           processedResult
@@ -1124,13 +1132,13 @@ class JsonPathQueryResultsCache(pushedValues: Boolean) {
 }
 
 class JsonObjectMapperCache {
-  private val table = mutable.HashMap[Int, JsonNode]()
+  private val table = mutable.HashMap[Int, DocumentContext]()
 
-  def search(file: LoadedSource): Option[JsonNode] = {
+  def search(file: LoadedSource): Option[DocumentContext] = {
     table.get(file.filepath.hashCode)
   }
 
-  def save(file: LoadedSource, jsonNode: JsonNode): Unit = {
+  def save(file: LoadedSource, jsonNode: DocumentContext): Unit = {
     val id = file.filepath.hashCode
     table += ((id, jsonNode))
   }
