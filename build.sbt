@@ -9,8 +9,6 @@ lazy val shexml = project
     crossScalaVersions := Seq("2.12.17", "2.13.9", "3.2.0"),
     libraryDependencies ++= Seq(
       "org.antlr" % "antlr4" % "4.9.2",
-      "com.fasterxml.jackson.core" % "jackson-core" % "2.9.4",
-      "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.4",
       "net.sf.saxon" % "Saxon-HE" % "12.4",
       "org.apache.jena" % "jena-base" % "3.17.0",
       "org.apache.jena" % "jena-core" % "3.17.0",
@@ -32,6 +30,7 @@ lazy val shexml = project
       "es.weso" %% "shex" % "0.1.97" % "test",
       "es.weso" %% "srdf4j" % "0.1.104" % "test",
       "es.weso" %% "srdf" % "0.1.104" % "test",
+      "com.jayway.jsonpath" % "json-path" % "2.8.0",
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((3, _)) => "org.scala-lang" % "scala-reflect" % "2.13.9"
         case Some((2, n)) if n >= 12 => "org.scala-lang" % "scala-reflect" % scalaVersion.value
@@ -39,14 +38,6 @@ lazy val shexml = project
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((3, _)) => "org.scala-lang" % "scala-compiler" % "2.13.9"
         case Some((2, n)) if n >= 12 => "org.scala-lang" % "scala-compiler" % scalaVersion.value
-      },
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((3, _)) => "io.gatling" % "gatling-jsonpath" % "3.8.2"
-        case Some((2, n)) if n == 13 => "io.gatling" % "gatling-jsonpath" % "3.8.2"
-        case Some((2, n)) if n == 12 => "io.gatling" % "gatling-jsonpath" % "3.4.2"
-      }) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((m, n)) if m == 3 || (m >= 2 && n >= 13) => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
-        case _ => Seq()
       }),
       assembly / assemblyMergeStrategy := {
         case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
