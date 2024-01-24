@@ -7,18 +7,16 @@ import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, LoadedSource, Sour
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
 import com.typesafe.scalalogging.Logger
+import net.sf.saxon.s9api.{Processor, XdmNode}
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
 import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ResultSet}
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
-import org.w3c.dom.{Document, NodeList}
-
-import java.io.{ByteArrayInputStream, File, StringReader}
+import java.io.{File, StringReader}
 import java.sql.DriverManager
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.xpath.{XPathConstants, XPathFactory}
+import javax.xml.transform.stream.StreamSource
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.immutable.HashSet
@@ -48,6 +46,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val xmlDocumentCache = new XMLDocumentCache()
   protected val defaultModel = dataset.getDefaultModel
+
+  private val xmlProcessor = new Processor(false)
 
   private val logger = Logger[RDFGeneratorVisitor]
 
@@ -424,18 +424,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               logger.debug(s"Retrieving cached result for already parsed XML file")
               parsedXmlDocument
             case None =>
-              val builderFactory = DocumentBuilderFactory.newInstance()
-              val builder = builderFactory.newDocumentBuilder()
-              val parsedXmlDocument = builder.parse(new ByteArrayInputStream(file.fileContent.getBytes()))
+              val parsedXmlDocument = xmlProcessor.newDocumentBuilder().build(new StreamSource(new StringReader(file.fileContent)))
               xmlDocumentCache.save(file, parsedXmlDocument)
               parsedXmlDocument
           }
-          val compilationResult = XPathFactory.newInstance().newXPath().compile(query)
-          val results = compilationResult.evaluate(xmlDocument, XPathConstants.NODESET).asInstanceOf[NodeList]
-          val resultsAsList = for(i <- 0 until results.getLength) yield {
-            results.item(i).getTextContent
-          }
-          val finalResult = Result(Option(id), rootIds, resultsAsList.toList, None, None, None)
+          val results = xmlProcessor.newXPathCompiler().evaluate(query, xmlDocument)
+          val resultsAsList = results.asScala.toList.map(_.getStringValue)
+          val finalResult = Result(Option(id), rootIds, resultsAsList, None, None, None)
           xpathQueryResultsCache.save(query, file, index.toString, finalResult)
           finalResult
       }
@@ -1151,13 +1146,13 @@ class JsonObjectMapperCache {
 }
 
 class XMLDocumentCache {
-  private val table = mutable.HashMap[Int, Document]()
+  private val table = mutable.HashMap[Int, XdmNode]()
 
-  def search(file: LoadedSource): Option[Document] = {
+  def search(file: LoadedSource): Option[XdmNode] = {
     table.get(file.filepath.hashCode)
   }
 
-  def save(file: LoadedSource, xmlDocument: Document): Unit = {
+  def save(file: LoadedSource, xmlDocument: XdmNode): Unit = {
     val id = file.filepath.hashCode
     table += ((id, xmlDocument))
   }
