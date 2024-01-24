@@ -9,7 +9,7 @@ lazy val shexml = project
     crossScalaVersions := Seq("2.12.17", "2.13.9", "3.2.0"),
     libraryDependencies ++= Seq(
       "org.antlr" % "antlr4" % "4.9.2",
-      ("com.nrinaudo" %% "kantan.xpath" % "0.5.3").cross(CrossVersion.for3Use2_13),
+      "net.sf.saxon" % "Saxon-HE" % "12.4",
       "org.apache.jena" % "jena-base" % "3.17.0",
       "org.apache.jena" % "jena-core" % "3.17.0",
       "org.apache.jena" % "jena-arq" % "3.17.0",

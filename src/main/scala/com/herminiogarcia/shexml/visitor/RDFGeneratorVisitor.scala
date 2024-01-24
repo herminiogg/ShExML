@@ -8,8 +8,7 @@ import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatat
 import com.herminiogarcia.shexml.visitor
 import com.jayway.jsonpath.{Configuration, DocumentContext}
 import com.typesafe.scalalogging.Logger
-import kantan.xpath.XPathCompiler
-import kantan.xpath.implicits._
+import net.sf.saxon.s9api.{Processor, XdmNode}
 import net.minidev.json.JSONArray
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
@@ -20,6 +19,7 @@ import org.apache.jena.util.SplitIRI
 
 import java.io.{File, StringReader}
 import java.sql.DriverManager
+import javax.xml.transform.stream.StreamSource
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.immutable.HashSet
@@ -47,7 +47,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val jsonpathQueryResultsCache = new JsonPathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val jsonObjectMapperCache = new JsonObjectMapperCache()
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
+  protected val xmlDocumentCache = new XMLDocumentCache()
   protected val defaultModel = dataset.getDefaultModel
+
+  private val xmlProcessor = new Processor(false)
 
   private val logger = Logger[RDFGeneratorVisitor]
 
@@ -424,14 +427,20 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case None =>
           val id = (iteratorQuery + file.filepath + index).hashCode
           val rootIds = arguments.getOrElse("rootIds", HashSet(id)).asInstanceOf[HashSet[Int]]
-          val compilationResult = XPathCompiler.builtIn.compile(query)
-          compilationResult.toOption match {
-            case Some(value) =>
-              val result = Result(Option(id), rootIds, file.fileContent.evalXPath[List[String]](value).getOrElse(Nil), None, None, None)
-              xpathQueryResultsCache.save(query, file, index.toString, result)
-              result
-            case None => throw new Exception("Bad iterator query: " + query)
+          val xmlDocument = xmlDocumentCache.search(file) match {
+            case Some(parsedXmlDocument) =>
+              logger.debug(s"Retrieving cached result for already parsed XML file")
+              parsedXmlDocument
+            case None =>
+              val parsedXmlDocument = xmlProcessor.newDocumentBuilder().build(new StreamSource(new StringReader(file.fileContent)))
+              xmlDocumentCache.save(file, parsedXmlDocument)
+              parsedXmlDocument
           }
+          val results = xmlProcessor.newXPathCompiler().evaluate(query, xmlDocument)
+          val resultsAsList = results.asScala.toList.map(_.getStringValue)
+          val finalResult = Result(Option(id), rootIds, resultsAsList, None, None, None)
+          xpathQueryResultsCache.save(query, file, index.toString, finalResult)
+          finalResult
       }
 
     }
@@ -1141,6 +1150,19 @@ class JsonObjectMapperCache {
   def save(file: LoadedSource, jsonNode: DocumentContext): Unit = {
     val id = file.filepath.hashCode
     table += ((id, jsonNode))
+  }
+}
+
+class XMLDocumentCache {
+  private val table = mutable.HashMap[Int, XdmNode]()
+
+  def search(file: LoadedSource): Option[XdmNode] = {
+    table.get(file.filepath.hashCode)
+  }
+
+  def save(file: LoadedSource, xmlDocument: XdmNode): Unit = {
+    val id = file.filepath.hashCode
+    table += ((id, xmlDocument))
   }
 }
 
