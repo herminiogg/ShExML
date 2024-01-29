@@ -46,7 +46,7 @@ class FilmsTestIteratorsWithMissingValues extends AnyFunSuite with Matchers with
       |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
       |
       |:Films :[films.id] {
-      |    a :Film ;
+      |    :type :Film ;
       |    :name [films.name] @en ;
       |    :year [films.year]  xsd:gYear ;
       |    :country [films.country] ;
@@ -63,7 +63,7 @@ class FilmsTestIteratorsWithMissingValues extends AnyFunSuite with Matchers with
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", "en")))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "null", XSDDatatype.XSDgYear)))
+    assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "goodReview", "good", XSDDatatype.XSDstring)))
@@ -74,16 +74,17 @@ class FilmsTestIteratorsWithMissingValues extends AnyFunSuite with Matchers with
     assert(output.contains(createStatement(prefix, "2", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "name", "Interstellar", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDgYear)))
-    assert(output.contains(createStatementWithLiteral(prefix, "2", "country", "null", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "2", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "director", "Jonathan Nolan", XSDDatatype.XSDstring)))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "goodReview", "good", XSDDatatype.XSDstring)))
-    assert(!output.contains(createStatementWithLiteral(prefix, "1", "badReview", "bad", XSDDatatype.XSDstring)))
+    assert(output.contains(createStatementWithLiteral(prefix, "2", "goodReview", "good", XSDDatatype.XSDstring)))
+    assert(!output.contains(createStatementWithLiteral(prefix, "2", "badReview", "bad", XSDDatatype.XSDstring)))
   }
 
   test("Shape 3 is translated correctly") {
     assert(output.contains(createStatement(prefix, "3", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "name", "Inception", "en")))
+    assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "goodReview", "good", XSDDatatype.XSDstring)))
@@ -94,6 +95,7 @@ class FilmsTestIteratorsWithMissingValues extends AnyFunSuite with Matchers with
     assert(output.contains(createStatement(prefix, "4", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "name", "The Prestige", "en")))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDgYear)))
+    assert(output.contains(createStatementWithLiteral(prefix, "4", "country", "USA", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Jonathan Nolan", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "goodReview", "good", XSDDatatype.XSDstring)))
@@ -101,7 +103,7 @@ class FilmsTestIteratorsWithMissingValues extends AnyFunSuite with Matchers with
   }
 
   test("No additional triples are generated") {
-    val triplesCount = 30
+    val triplesCount = 28
     assert(output.size() == triplesCount)
   }
 
