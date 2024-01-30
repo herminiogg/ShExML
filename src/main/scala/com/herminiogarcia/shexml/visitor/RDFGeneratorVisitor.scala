@@ -393,21 +393,22 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             case None =>
               val configuration = Configuration.defaultConfiguration()
                 .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
-                .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL);
+                .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
+                .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
               val context = com.jayway.jsonpath.JsonPath.using(configuration).parse(file.fileContent)
               jsonObjectMapperCache.save(file, context)
               context
           }
           val result = jsonContent.read(query, classOf[java.util.List[Object]])
           val processedResult = {
-            if(result != null && !result.isEmpty) {
-              val finalList = result.asScala.flatMap({
-                case j: JSONArray => j.asScala.flatMap(r => if (r != null) List(r.toString) else Nil)
-                case default => if (default != null) List(default.toString) else Nil
-              }).toList
-              Result(Option(id), rootIds, finalList, None, None, None)
-            }
-            else Nil
+            val finalList =
+              if(result != null && !result.isEmpty) {
+                result.asScala.flatMap({
+                  case j: JSONArray => j.asScala.flatMap(r => if (r != null) List(r.toString) else Nil)
+                  case default => if (default != null) List(default.toString) else Nil
+                }).toList
+              } else Nil
+            Result(Option(id), rootIds, finalList, None, None, None)
           }
           if(processedResult.isInstanceOf[Result]) jsonpathQueryResultsCache.save(query, file, index.toString, processedResult.asInstanceOf[Result])
           processedResult
