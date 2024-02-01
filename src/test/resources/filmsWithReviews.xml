@@ -1,0 +1,41 @@
+<films>
+    <film id="1">
+        <name>Dunkirk</name>
+        <year>2017</year>
+        <country>USA</country>
+        <directors>
+            <director>Christopher Nolan</director>
+        </directors>
+        <reviews>
+            <goodReviews>
+                <review>
+                    <user>user1</user>
+                    <review>good</review>
+                </review>
+            </goodReviews>
+            <badReviews>
+                <review>
+                    <user>user2</user>
+                    <review>bad</review>
+                </review>
+            </badReviews>
+        </reviews>
+    </film>
+    <film id="2">
+        <name>Interstellar</name>
+        <year>2014</year>
+        <country>USA</country>
+        <directors>
+            <director>Christopher Nolan</director>
+            <director>Jonathan Nolan</director>
+        </directors>
+        <reviews>
+            <goodReviews>
+                <review>
+                    <user>user1</user>
+                    <review>good</review>
+                </review>
+            </goodReviews>
+        </reviews>
+    </film>
+</films>
