@@ -1106,7 +1106,6 @@ class QueryResultsCache() {
 
 class IteratorQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Map[String, List[Result]]]()
-  private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
   def search(iteratorQuery: String, file: LoadedSource): Option[Map[String, List[Result]]] = {
     table.get((iteratorQuery + file.filepath).hashCode)
@@ -1114,9 +1113,7 @@ class IteratorQueryResultsCache(pushedValues: Boolean) {
 
   def save(iteratorQuery: String, file: LoadedSource, results: Map[String, List[Result]]): Unit = {
     val id = (iteratorQuery + file.filepath).hashCode
-    if(!listNotPersistFirstTime.contains(id) && pushedValues) {
-      listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
-    } else {
+    if(!pushedValues) {
       table += ((id, results))
     }
 
@@ -1125,7 +1122,6 @@ class IteratorQueryResultsCache(pushedValues: Boolean) {
 
 class JsonPathQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Result]()
-  private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
   def search(query: String, file: LoadedSource, index: String): Option[Result] = {
     table.get((query + file.filepath + index).hashCode)
@@ -1133,9 +1129,7 @@ class JsonPathQueryResultsCache(pushedValues: Boolean) {
 
   def save(query: String, file: LoadedSource, index: String, result: Result): Unit = {
     val id = (query + file.filepath + index).hashCode
-    if(!listNotPersistFirstTime.contains(id) && pushedValues) {
-      listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
-    } else {
+    if(!pushedValues) {
       table += ((id, result))
     }
   }
@@ -1169,7 +1163,6 @@ class XMLDocumentCache {
 
 class XpathQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Result]()
-  private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
   def search(query: String, file: LoadedSource, index: String): Option[Result] = {
     table.get((query + file.filepath + index).hashCode)
@@ -1177,9 +1170,7 @@ class XpathQueryResultsCache(pushedValues: Boolean) {
 
   def save(query: String, file: LoadedSource, index: String, result: Result): Unit = {
     val id = (query + file.filepath + index).hashCode
-    if(!listNotPersistFirstTime.contains(id) && pushedValues) {
-      listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
-    } else {
+    if(!pushedValues) {
       table += ((id, result))
     }
   }
