@@ -12,10 +12,10 @@ class PushedValueWithMultipleEntities extends AnyFunSuite with Matchers with RDF
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
       |SOURCE file <https://raw.githubusercontent.com/herminiogg/ShExML/bug-%23173/src/test/resources/pushedValueWithMultipleEntities.json>
       |ITERATOR it <jsonpath: $> {
-      |    PUSHED_FIELD id <identifier>
+      |    PUSHED_FIELD identifier <identifier>
       |    ITERATOR nested <nestedEntities[*]> {
       |        FIELD name <name>
-      |        POPPED_FIELD parent <id>
+      |        POPPED_FIELD parent <identifier>
       |    }
       |}
       |EXPRESSION exp <file.it>
