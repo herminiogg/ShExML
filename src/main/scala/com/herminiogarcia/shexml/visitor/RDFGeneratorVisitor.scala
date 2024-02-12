@@ -310,6 +310,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               val values = varTable.keys.filter {
                 case Var(name) => name.contains(iteratorName)
                 case _ => false
+              }.toList.sortWith {
+                case (a: Var, b: Var) => a.name.size < b.name.size
               }.map {
                 case v: Var => v.name.replaceFirst(iteratorName, "") -> {
                   val vars = v.name.split("[.]").map(Var.apply).toList
@@ -735,7 +737,6 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContentOrURL: LoadedSource): List[Result] = {
-    if(pushedOrPoppedFieldsPresent) generateFinalQuery(iteratorVars, "", null) //to generate pushed vars, this can be improved for performance
     val query = generateFinalQuery(iteratorVars, "", null)
     query match {
       case c: CSVPerRow => doPerRowResults(c, fileContentOrURL)
@@ -1106,7 +1107,6 @@ class QueryResultsCache() {
 
 class IteratorQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Map[String, List[Result]]]()
-  private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
   def search(iteratorQuery: String, file: LoadedSource): Option[Map[String, List[Result]]] = {
     table.get((iteratorQuery + file.filepath).hashCode)
@@ -1114,9 +1114,7 @@ class IteratorQueryResultsCache(pushedValues: Boolean) {
 
   def save(iteratorQuery: String, file: LoadedSource, results: Map[String, List[Result]]): Unit = {
     val id = (iteratorQuery + file.filepath).hashCode
-    if(!listNotPersistFirstTime.contains(id) && pushedValues) {
-      listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
-    } else {
+    if(!pushedValues) {
       table += ((id, results))
     }
 
@@ -1125,7 +1123,6 @@ class IteratorQueryResultsCache(pushedValues: Boolean) {
 
 class JsonPathQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Result]()
-  private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
   def search(query: String, file: LoadedSource, index: String): Option[Result] = {
     table.get((query + file.filepath + index).hashCode)
@@ -1133,9 +1130,7 @@ class JsonPathQueryResultsCache(pushedValues: Boolean) {
 
   def save(query: String, file: LoadedSource, index: String, result: Result): Unit = {
     val id = (query + file.filepath + index).hashCode
-    if(!listNotPersistFirstTime.contains(id) && pushedValues) {
-      listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
-    } else {
+    if(!pushedValues) {
       table += ((id, result))
     }
   }
@@ -1169,7 +1164,6 @@ class XMLDocumentCache {
 
 class XpathQueryResultsCache(pushedValues: Boolean) {
   private val table = mutable.HashMap[Int, Result]()
-  private val listNotPersistFirstTime = mutable.ListBuffer[Int]()
 
   def search(query: String, file: LoadedSource, index: String): Option[Result] = {
     table.get((query + file.filepath + index).hashCode)
@@ -1177,9 +1171,7 @@ class XpathQueryResultsCache(pushedValues: Boolean) {
 
   def save(query: String, file: LoadedSource, index: String, result: Result): Unit = {
     val id = (query + file.filepath + index).hashCode
-    if(!listNotPersistFirstTime.contains(id) && pushedValues) {
-      listNotPersistFirstTime += id // First time is not persisted to "calculate" the pushed and popped vars
-    } else {
+    if(!pushedValues) {
       table += ((id, result))
     }
   }
