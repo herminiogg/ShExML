@@ -310,6 +310,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               val values = varTable.keys.filter {
                 case Var(name) => name.contains(iteratorName)
                 case _ => false
+              }.toList.sortWith {
+                case (a: Var, b: Var) => a.name.size < b.name.size
               }.map {
                 case v: Var => v.name.replaceFirst(iteratorName, "") -> {
                   val vars = v.name.split("[.]").map(Var.apply).toList
@@ -735,7 +737,6 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   protected def doIteratorQuery(iteratorVars: List[Var], middleArguments: Map[String, Any], fileContentOrURL: LoadedSource): List[Result] = {
-    if(pushedOrPoppedFieldsPresent) generateFinalQuery(iteratorVars, "", null) //to generate pushed vars, this can be improved for performance
     val query = generateFinalQuery(iteratorVars, "", null)
     query match {
       case c: CSVPerRow => doPerRowResults(c, fileContentOrURL)
