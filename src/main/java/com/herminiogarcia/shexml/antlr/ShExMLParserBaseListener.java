@@ -246,13 +246,13 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterJoin(ShExMLParser.JoinContext ctx) { }
+	@Override public void enterSubstitution(ShExMLParser.SubstitutionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitJoin(ShExMLParser.JoinContext ctx) { }
+	@Override public void exitSubstitution(ShExMLParser.SubstitutionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
