@@ -139,7 +139,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     StringOperation(left, right, stringOperator)
   }
 
-  override def visitJoin(ctx: JoinContext): AST = {
+  override def visitSubstitution(ctx: SubstitutionContext): AST = {
     val leftUnion = visit(ctx.iteratorQuery(0)).asInstanceOf[IteratorQuery]
     val rightUnion = visit(ctx.iteratorQuery(1)).asInstanceOf[IteratorQuery]
     val joinClause = visit(ctx.iteratorQuery(2)).asInstanceOf[IteratorQuery]

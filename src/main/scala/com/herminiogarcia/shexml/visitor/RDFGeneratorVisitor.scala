@@ -257,14 +257,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               val leftResult = mr.getOrElse(k, Nil)
               val rightResult = ml.getOrElse(k, Nil)
               val joinResult = mj.getOrElse(k, Nil)
-              val value = s"$expName$k" -> getJoinResults(leftResult, rightResult, joinResult)
+              val value = s"$expName$k" -> getSubstitutionResults(leftResult, rightResult, joinResult)
               iteratorsCombinations += value
             })
             case _ => throw new Exception("Cannot join iterator with non iterator expression. Join clause is not an iterator expression")
           }
           case _ => throw new Exception("Cannot join iterator with non iterator expression. Right clause is not an iterator expression")
         }
-        case left: List[Result] => getJoinResults(left, rightList.asInstanceOf[List[Result]], joinList.asInstanceOf[List[Result]])
+        case left: List[Result] => getSubstitutionResults(left, rightList.asInstanceOf[List[Result]], joinList.asInstanceOf[List[Result]])
       }
     }
 
@@ -855,7 +855,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
   }
 
-  protected def getJoinResults(left: List[Result], right: List[Result], join: List[Result]): List[Result] = {
+  protected def getSubstitutionResults(left: List[Result], right: List[Result], join: List[Result]): List[Result] = {
     val joinUnionList = for(r <- right.asInstanceOf[List[Result]]) yield {
       val filteredJoin = join.asInstanceOf[List[Result]].filter(j => j.results.nonEmpty && j.results == r.results)
       if(filteredJoin.nonEmpty)

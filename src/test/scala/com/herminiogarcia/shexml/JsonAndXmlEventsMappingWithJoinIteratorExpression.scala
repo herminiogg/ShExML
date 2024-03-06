@@ -31,7 +31,7 @@ class JsonAndXmlEventsMappingWithJoinIteratorExpression extends AnyFunSuite with
       |EXPRESSION performances <performances_json.performances_iterator UNION events_xml.events_iterator>
       |EXPRESSION location_union <performances_json.performances_iterator.lat + "-" + performances_json.performances_iterator.long UNION
       |                             events_xml.events_iterator.lat + "-" + events_xml.events_iterator.long>
-      |EXPRESSION venues_union <performances_json.performances_iterator.venues_names UNION events_xml.events_iterator.venues_names JOIN performances_json.performances_iterator.venues_names_json>
+      |EXPRESSION venues_union <performances_json.performances_iterator.venues_names UNION events_xml.events_iterator.venues_names SUBSTITUTING performances_json.performances_iterator.venues_names_json>
       |
       |ex:Performance ex:[performances.ids] {
       |  ex:venue ex:[venues_union] ;

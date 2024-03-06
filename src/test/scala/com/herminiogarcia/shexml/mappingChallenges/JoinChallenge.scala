@@ -27,7 +27,7 @@ class JoinChallenge extends AnyFunSuite with Matchers with RDFStatementCreator {
       |  	FIELD familyname <familyName>
       |}
       |EXPRESSION authors <jsonfile.author UNION jsonfile.people>
-      |EXPRESSION familyName <jsonfile.people.familyname UNION jsonfile.author.firstname JOIN jsonfile.people.firstname>
+      |EXPRESSION familyName <jsonfile.people.familyname UNION jsonfile.author.firstname SUBSTITUTING jsonfile.people.firstname>
       |
       |:Author :[authors.id] {
       |    :affiliation [authors.affiliation] ;

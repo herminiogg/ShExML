@@ -127,11 +127,11 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitQueryClause(ShExMLParser.QueryClauseContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#join}.
+	 * Visit a parse tree produced by {@link ShExMLParser#substitution}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitJoin(ShExMLParser.JoinContext ctx);
+	T visitSubstitution(ShExMLParser.SubstitutionContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#union}.
 	 * @param ctx the parse tree

@@ -29,7 +29,7 @@ class JsonAndXmlEventsMappingWithJoin extends AnyFunSuite with Matchers with RDF
       |   FIELD long_xml <Location/long>
       |}
       |EXPRESSION performances_union <performances_json.performances_iterator.performances_ids UNION events_xml.events_iterator.events_ids>
-      |EXPRESSION venues_union <performances_json.performances_iterator.venues_ids UNION events_xml.events_iterator.venues_names JOIN performances_json.performances_iterator.venues_names_json>
+      |EXPRESSION venues_union <performances_json.performances_iterator.venues_ids UNION events_xml.events_iterator.venues_names SUBSTITUTING performances_json.performances_iterator.venues_names_json>
       |EXPRESSION location_union <performances_json.performances_iterator.lat_json + "-" + performances_json.performances_iterator.long_json UNION
       |                             events_xml.events_iterator.lat_xml + "-" + events_xml.events_iterator.long_xml>
       |EXPRESSION lat_union <performances_json.performances_iterator.lat_json UNION events_xml.events_iterator.lat_xml>
