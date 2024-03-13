@@ -901,7 +901,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         })
       else Some(r)
     }
-    left.concat(joinUnionList.withFilter(_.isDefined).map(_.get))
+    left ++ joinUnionList.withFilter(_.isDefined).map(_.get)
   }
 
   protected def getJoinResults(left: List[Result], right: List[Result], leftCondition: List[Result], rightCondition: List[Result]): List[Result] = {
@@ -912,9 +912,9 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       if(matchingRightIds.isEmpty) List(l)
       else {
         val rightResults = right.filter(r => matchingRightIds.contains(r.id)).flatMap(_.results)
-        List(Result(l.id, matchingRightIds.foldLeft(l.rootIds)((a, b) => b.map(a + _).getOrElse(a)) , l.results.concat(rightResults), l.dataType, l.langTag, l.rdfCollection))
+        List(Result(l.id, matchingRightIds.foldLeft(l.rootIds)((a, b) => b.map(a + _).getOrElse(a)) , l.results ++ rightResults, l.dataType, l.langTag, l.rdfCollection))
       }
-    }).concat(
+    }) ++
       right.flatMap(r => {
         val rightResult = rightCondition.filter(rc => rc.id == r.id || rc.id.exists(r.rootIds.contains))
         val matchingLefts = leftCondition.filter(lc => rightResult.exists(_.results == lc.results))
@@ -922,10 +922,9 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         if (matchingLeftIds.isEmpty) List(r)
         else {
           val leftResults = left.filter(r => matchingLeftIds.contains(r.id)).flatMap(_.results)
-          List(Result(r.id, matchingLeftIds.foldLeft(r.rootIds)((a, b) => b.map(a + _).getOrElse(a)), r.results.concat(leftResults), r.dataType, r.langTag, r.rdfCollection))
+          List(Result(r.id, matchingLeftIds.foldLeft(r.rootIds)((a, b) => b.map(a + _).getOrElse(a)), r.results ++ leftResults, r.dataType, r.langTag, r.rdfCollection))
         }
       })
-    )
   }
 
   private def solveAutoIncrementResults(list: List[Any], actions: List[Result]): Vector[Result] = {
