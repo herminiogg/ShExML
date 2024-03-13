@@ -270,7 +270,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       )
     }
 
-    case Join(left, right, join) => {
+    case Substitution(left, right, join) => {
       val leftMap = doVisit(left, optionalArgument).asInstanceOf[RMLMap]
       val rightMap = doVisit(right, optionalArgument).asInstanceOf[RMLMap]
       val joinMap = doVisit(join, optionalArgument).asInstanceOf[RMLMap]

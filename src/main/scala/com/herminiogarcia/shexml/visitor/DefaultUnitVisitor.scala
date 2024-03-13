@@ -34,10 +34,17 @@ abstract class DefaultUnitVisitor {
       doVisit(right)
     }
 
-    case Join(leftUnion, rightUnion, joinClause) => {
+    case Substitution(leftUnion, rightUnion, joinClause) => {
       doVisit(leftUnion)
       doVisit(rightUnion)
       doVisit(joinClause)
+    }
+
+    case Join(leftUnion, rightUnion, leftJoinClause, rightJoinClause) => {
+      doVisit(leftUnion)
+      doVisit(rightUnion)
+      doVisit(leftJoinClause)
+      doVisit(rightJoinClause)
     }
 
     case StringOperation(left, right, _) => {
