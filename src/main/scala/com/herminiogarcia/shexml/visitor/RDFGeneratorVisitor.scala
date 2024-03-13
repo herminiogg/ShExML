@@ -2,7 +2,7 @@ package com.herminiogarcia.shexml.visitor
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, LoadedSource, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
@@ -245,7 +245,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       }
     }
 
-    case Join(left, right, join) => {
+    case Substitution(left, right, join) => {
       val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
       val leftList = doVisit(left, optionalArgument)
       val rightList = doVisit(right, optionalArgument)
@@ -265,6 +265,32 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           case _ => throw new Exception("Cannot join iterator with non iterator expression. Right clause is not an iterator expression")
         }
         case left: List[Result] => getSubstitutionResults(left, rightList.asInstanceOf[List[Result]], joinList.asInstanceOf[List[Result]])
+      }
+    }
+
+    case Join(left, right, leftClause, rightClause) => {
+      val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
+      val leftList = doVisit(left, optionalArgument)
+      val rightList = doVisit(right, optionalArgument)
+      val leftClauseList = doVisit(leftClause, optionalArgument)
+      val rightClauseList = doVisit(rightClause, optionalArgument)
+      leftList match {
+        case ml: Map[String, List[Result]] => rightList match {
+          case mr: Map[String, List[Result]] => leftClauseList match {
+            case l: List[Result] => rightClauseList match {
+              case r: List[Result] => ml.keySet.union(mr.keySet).foreach(k => {
+                val leftResult = ml.getOrElse(k, Nil)
+                val rightResult = mr.getOrElse(k, Nil)
+                val value = s"$expName$k" -> getJoinResults(leftResult, rightResult, l, r)
+                iteratorsCombinations += value
+              })
+              case _ => throw new Exception("Cannot use an iterator expression for the join condition clause. Right condition is not a plain expression")
+            }
+            case _ => throw new Exception("Cannot use an iterator expression for the join condition clause. Left condition is not a plain expression")
+          }
+          case _ => throw new Exception("Cannot join iterator with non iterator expression. Right clause is not an iterator expression")
+        }
+        case _ => throw new Exception("Cannot join iterator with non iterator expression. Left clause is not an iterator expression")
       }
     }
 
@@ -290,12 +316,15 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       logger.debug(s"Expanding iterator query: ${iteratorQueryToList(i).map(_.name).mkString(".")}")
       val expName = Option(optionalArgument).map(_.asInstanceOf[Map[String, Any]].getOrElse("varName", "")).getOrElse("")
       val arguments = Option(optionalArgument.asInstanceOf[Map[String, Any]])
-      val fileContents = doVisit(i.firstVar, optionalArgument).asInstanceOf[List[Any]]
-      val fileContentsToIterate = fileContents.head match {
-        case _: LoadedSource => fileContents
+      val fileContents = doVisit(i.firstVar, optionalArgument)
+      val fileContentsToIterate = fileContents match {
+        case l: List[_] => l.head match {
+            case _: LoadedSource => fileContents.asInstanceOf[List[Any]]
+            case _ => List ("")
+          }
         case _ => List("")
       }
-      fileContentsToIterate.flatMap(file => {
+      val results = fileContentsToIterate.flatMap(file => {
         val fileMap = Map("file" -> file)
         val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
         val varList = iteratorQueryToList(i)
@@ -338,6 +367,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           throw new Exception("Bad number of vars")
         }
       })
+      val finalResult = results.headOption match {
+        case Some(r) => r match {
+          case _: Result => results.asInstanceOf[List[Result]]
+          case _: (String, List[Result]) => results.asInstanceOf[List[(String, List[Result])]].toMap
+        }
+        case None => List[Result]()
+      }
+      finalResult
     }
 
     case f: FunctionCalling => {
@@ -856,17 +893,46 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   protected def getSubstitutionResults(left: List[Result], right: List[Result], join: List[Result]): List[Result] = {
-    val joinUnionList = for(r <- right.asInstanceOf[List[Result]]) yield {
-      val filteredJoin = join.asInstanceOf[List[Result]].filter(j => j.results.nonEmpty && j.results == r.results)
+    val joinUnionList = for(r <- right if left.nonEmpty && right.nonEmpty && join.nonEmpty) yield {
+      val filteredJoin = join.filter(j => j.results.nonEmpty && j.results == r.results)
       if(filteredJoin.nonEmpty)
-        Result(r.id, r.rootIds, left.filter(l => l.id == filteredJoin.head.id && l.results.nonEmpty).head.results, r.dataType, r.langTag, r.rdfCollection)
-      else r
+        left.find(l => l.id == filteredJoin.head.id && l.results.nonEmpty).map(lr => {
+          Result(r.id, r.rootIds, lr.results, r.dataType, r.langTag, r.rdfCollection)
+        })
+      else Some(r)
     }
-    left.union(joinUnionList)
+    left.concat(joinUnionList.withFilter(_.isDefined).map(_.get))
+  }
+
+  protected def getJoinResults(left: List[Result], right: List[Result], leftCondition: List[Result], rightCondition: List[Result]): List[Result] = {
+    left.flatMap(l => {
+      val leftResult = leftCondition.filter(lc => lc.id == l.id || lc.id.exists(l.rootIds.contains))
+      val matchingRights = rightCondition.filter(rc => leftResult.exists(_.results == rc.results))
+      val matchingRightIds = matchingRights.map(_.id)
+      if(matchingRightIds.isEmpty) List(l)
+      else {
+        val rightResults = right.filter(r => matchingRightIds.contains(r.id)).flatMap(_.results)
+        List(Result(l.id, matchingRightIds.foldLeft(l.rootIds)((a, b) => b.map(a + _).getOrElse(a)) , l.results.concat(rightResults), l.dataType, l.langTag, l.rdfCollection))
+      }
+    }).concat(
+      right.flatMap(r => {
+        val rightResult = rightCondition.filter(rc => rc.id == r.id || rc.id.exists(r.rootIds.contains))
+        val matchingLefts = leftCondition.filter(lc => rightResult.exists(_.results == lc.results))
+        val matchingLeftIds = matchingLefts.map(_.id)
+        if (matchingLeftIds.isEmpty) List(r)
+        else {
+          val leftResults = left.filter(r => matchingLeftIds.contains(r.id)).flatMap(_.results)
+          List(Result(r.id, matchingLeftIds.foldLeft(r.rootIds)((a, b) => b.map(a + _).getOrElse(a)), r.results.concat(leftResults), r.dataType, r.langTag, r.rdfCollection))
+        }
+      })
+    )
   }
 
   private def solveAutoIncrementResults(list: List[Any], actions: List[Result]): Vector[Result] = {
-    val newResultsAutoIncrement = list.collect { case r: ResultAutoIncrement => actions.map(action => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag, None)) }.flatten
+    val newResultsAutoIncrement = list.collect {
+      case r: ResultAutoIncrement =>
+        actions.sortBy(_.results.headOption).map(action => Result(action.id, action.rootIds, r.results, r.dataType, r.langTag, None))
+    }.flatten
     Vector((list.withFilter(!_.isInstanceOf[ResultAutoIncrement]).flatMap(_.asInstanceOf[List[Result]]) ::: newResultsAutoIncrement): _*)
   }
 

@@ -53,7 +53,8 @@ sealed trait RightUnion extends Exp
 
 case class Union(left: LeftUnion, right: RightUnion) extends RightUnion
 case class StringOperation(left: IteratorQuery, right: IteratorQuery, unionString: String) extends LeftUnion with RightUnion
-case class Join(leftUnion: IteratorQuery, rightUnion: IteratorQuery, joinClause: IteratorQuery) extends Exp
+case class Substitution(leftUnion: IteratorQuery, rightUnion: IteratorQuery, joinClause: IteratorQuery) extends Exp
+case class Join(leftUnion: IteratorQuery, rightUnion: IteratorQuery, leftJoinClause: IteratorQuery, rightJoinClause: IteratorQuery) extends Exp
 case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery) extends LeftUnion with RightUnion with VarOrIteratorQuery
 
 sealed trait VarOrIteratorQuery extends AST

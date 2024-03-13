@@ -23,12 +23,13 @@ matcher: MATCHER variable LESS_SYMBOL matchers GREATER_SYMBOL ;
 matchers: replacedStrings AS (STRING_OR_VAR | STRINGOPERATOR)
     | matchers AND replacedStrings AS (STRING_OR_VAR | STRINGOPERATOR) ;
 replacedStrings: (STRING_OR_VAR | STRINGOPERATOR) ',' replacedStrings | (STRING_OR_VAR | STRINGOPERATOR) ;
-exp: union | substitution | stringOperation | iteratorQuery ;
+exp: union | join | substitution | stringOperation | iteratorQuery ;
 stringOperation: iteratorQuery ADD STRINGOPERATOR ADD iteratorQuery ;
 iteratorQuery: variable '.' composedVariable ;
 composedVariable: variable | variable '.' composedVariable ;
 queryClause: JSONPATH QUERY_PART+ | XMLPATH QUERY_PART+ | CSVPERROW | SQL QUERY_PART+ | SPARQL QUERY_PART+ ;
 substitution: iteratorQuery UNION iteratorQuery SUBSTITUTING iteratorQuery ;
+join: iteratorQuery JOIN iteratorQuery ON iteratorQuery EQUAL iteratorQuery ;
 union: leftUnionOption UNION rightUnionOption ;
 leftUnionOption: iteratorQuery | stringOperation ;
 rightUnionOption: iteratorQuery | union | stringOperation ;
