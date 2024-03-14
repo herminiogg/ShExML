@@ -149,7 +149,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               ShapeMapShape(":", splittedShapeName(1))
           val node = Node(shapePrefix, normaliseURI(r))
           val shapeMap = ShapeMapInference(node, shapeMapShape)
-          shapeMapTable += shapeMap
+          if(shapePrefix != "_:") shapeMapTable += shapeMap
         })
       })
       finalActions.map(r => Result(r.id, r.rootIds, r.results.map(ir => {

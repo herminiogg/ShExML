@@ -51,8 +51,18 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
       val shapeName = name.split(':')(1)
       val shapeSubject = shapePrefix + shapeName
       output.add(createStatement(shapeSubject, rdfPrefix + "type", shPrefix + "NodeShape"))
-      //Class-based target, could be also implemented searching for rdf:type predicate
-      output.add(createStatement(shapeSubject, shPrefix + "targetClass", shapeSubject))
+
+      val rdfType = predicateObjects
+        .find(po => po.predicate.prefix == "rdf:" && po.predicate.localname == "type")
+        .flatMap(_.objectElement match {
+          case FixedValue(value) =>
+            val targetClassPrefix = prefixTable(value.split(':')(0) + ":")
+            val targetClassName = name.split(':')(1)
+            Some(targetClassPrefix + targetClassName)
+          case _ => None
+        })
+
+      output.add(createStatement(shapeSubject, shPrefix + "targetClass", rdfType.getOrElse(shapeSubject)))
       if(closed) {
         output.add(createStatementWithLiteral(shapeSubject, shPrefix + "closed", "true", xsdPrefix + "boolean"))
       }

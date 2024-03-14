@@ -19,7 +19,9 @@ class ShExPrinter {
     }
 
     case Shape(name, partialFixedValue, predicateObjects) => {
-      val partialFixedValuePrint = "IRI" //until confirmation this seems not to be working in ShEx -> print(partialFixedValue)
+      val partialFixedValuePrint =
+        if(partialFixedValue.start == "_:") "Bnode"
+        else "IRI" //until confirmation this seems not to be working in ShEx -> print(partialFixedValue)
       val predicateObjectsPrint = predicateObjects.map(print(_, indentation + 1)).mkString("\n")
       generateIndentation(indentation) + name + " " + partialFixedValuePrint + " {\n" +
         predicateObjectsPrint + "\n" + generateIndentation(indentation) + "}"
