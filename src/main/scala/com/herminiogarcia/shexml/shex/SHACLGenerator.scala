@@ -52,12 +52,17 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
       val shapeSubject = shapePrefix + shapeName
       output.add(createStatement(shapeSubject, rdfPrefix + "type", shPrefix + "NodeShape"))
 
+      if(partialFixedValue.start == "_:")
+        output.add(createStatement(shapeSubject, shPrefix + "nodeKind", shPrefix + "BlankNode"))
+      else
+        output.add(createStatement(shapeSubject, shPrefix + "nodeKind", shPrefix + "IRI"))
+
       val rdfType = predicateObjects
         .find(po => po.predicate.prefix == "rdf:" && po.predicate.localname == "type")
         .flatMap(_.objectElement match {
           case FixedValue(value) =>
             val targetClassPrefix = prefixTable(value.split(':')(0) + ":")
-            val targetClassName = name.split(':')(1)
+            val targetClassName = value.split(':')(1)
             Some(targetClassPrefix + targetClassName)
           case _ => None
         })
@@ -91,8 +96,8 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
       val linkedShapeName = linkedShape.split(':')(1)
       val fullShapeName = prefixLinkedShape + linkedShapeName
 
-      output.add(createBNodeStatement(subject, shPrefix + "nodeKind", shPrefix + "IRI"))
-      output.add(createBNodeStatement(subject, shPrefix + "class", fullShapeName))
+      //output.add(createBNodeStatement(subject, shPrefix + "nodeKind", shPrefix + "IRI"))
+      output.add(createBNodeStatement(subject, shPrefix + "node", fullShapeName))
     }
 
     case ObjectDefinition(datatype, cardinality) => {
@@ -109,9 +114,11 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
       val objectValue =
         if(value.contains(":")) {
           val prefix = prefixTable(value.split(':')(0) + ":")
-          prefix + value.split(':')(1)
-        } else value
-      output.add(createBNodeStatementWithList(subject, shPrefix + "in", objectValue))
+          output.add(createBNodeStatementWithList(subject, shPrefix + "in", prefix + value.split(':')(1)))
+        } else {
+          output.add(createBNodeStatementWithList(subject, shPrefix + "languageIn", value.replace("@", "")))
+        }
+
     }
 
     case PartialFixedValue(start, cardinality) => {

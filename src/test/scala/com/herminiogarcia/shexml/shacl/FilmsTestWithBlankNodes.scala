@@ -1,9 +1,8 @@
 package com.herminiogarcia.shexml.shacl
 
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
-class FilmsTest extends AnyFunSuite with SHACLValidation {
+class FilmsTestWithBlankNodes extends AnyFunSuite with SHACLValidation {
 
   private val example =
     """
@@ -62,13 +61,13 @@ class FilmsTest extends AnyFunSuite with SHACLValidation {
       |    schema:actor @:Actress ;
       |}
       |
-      |:Actor dbr:[films.actors.name] {
+      |:Actor _:[films.actors.name] {
       |    a schema:Actor ;
       |    :name [films.actors.name] ;
       |    :appear_on :[films.actors.film] ;
       |}
       |
-      |:Actress dbr:[films.actresses.name] {
+      |:Actress _:[films.actresses.name] {
       |    a schema:Actor ;
       |    :name [films.actresses.name] ;
       |    :appear_on :[films.actresses.film] ;
