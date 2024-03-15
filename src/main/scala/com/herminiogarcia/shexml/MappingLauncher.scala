@@ -2,7 +2,7 @@ package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import com.herminiogarcia.shexml.ast._
-import com.herminiogarcia.shexml.helper.OrphanBNodeRemover
+import com.herminiogarcia.shexml.helper.{OrphanBNodeRemover, SourceHelper}
 import com.herminiogarcia.shexml.parser.ASTCreatorVisitor
 import com.herminiogarcia.shexml.shex._
 import com.herminiogarcia.shexml.visitor.{PushedOrPoppedValueSearchVisitor, RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
@@ -105,8 +105,9 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   private def createLexer(mappingCode: String): ShExMLLexer = {
+    val finalMappingRules = resolveImports(mappingCode)
     logger.info("Applying lexer to tokenize input mapping rules")
-    new ShExMLLexer(CharStreams.fromString(mappingCode))
+    new ShExMLLexer(CharStreams.fromString(finalMappingRules))
   }
 
   private def createParser(lexer: ShExMLLexer): ShExMLParser = {
@@ -182,5 +183,17 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   private def searchForPushedOrPoppedFields(ast: AST): Boolean = new PushedOrPoppedValueSearchVisitor().doVisit(ast, null)
+
+  private def resolveImports(mappingRules: String): String = {
+    val sourceHelper = new SourceHelper()
+    val regex = "[Ii][Mm][Pp][Oo][Rr][Tt]\\s*<(.+)>".r
+    regex.replaceAllIn(mappingRules, matchedPart => {
+      val importSource = matchedPart.group(1)
+      val loadedSource =
+        if(importSource.contains("://")) sourceHelper.getURLContent(importSource)
+        else sourceHelper.getContentFromRelativePath(importSource)
+      java.util.regex.Matcher.quoteReplacement(loadedSource.fileContent)
+    })
+  }
 
 }
