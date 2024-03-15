@@ -24,7 +24,7 @@ class AccessFieldsOutsideIteratorsWithImportsTest extends AnyFunSuite with Match
       |    :actor @:Actor ;
       |    :actor @:Actress ;
       |}
-      |IMPORT <src/test/resources/importTestShapes.shexml>
+      |IMPORT <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%23152/src/test/resources/importTestShapes.shexml>
     """.stripMargin
 
   private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
