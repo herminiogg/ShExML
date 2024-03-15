@@ -1,0 +1,35 @@
+ITERATOR film_xml <xpath: //film> {
+    FIELD id <@id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <crew/directors/director>
+    FIELD screenwritters <crew//screenwritter>
+    FIELD music <crew/music>
+    FIELD photography <crew/photography>
+    ITERATOR actors <cast/actor> {
+        FIELD name <name>
+        FIELD role <role>
+        FIELD film <../../@id>
+    }
+    ITERATOR actresses <cast/actress> {
+        FIELD name <name>
+        FIELD role <role>
+        FIELD film <../../@id>
+    }
+}
+ITERATOR film_json <jsonpath: $.films[*]> {
+    PUSHED_FIELD id <id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <crew.director>
+    FIELD screenwritters <crew.screenwritter>
+    FIELD music <crew.music>
+    FIELD photography <crew.cinematography>
+    ITERATOR actors <cast[*]> {
+        FIELD name <name>
+        FIELD role <role>
+        POPPED_FIELD film <id>
+    }
+}
