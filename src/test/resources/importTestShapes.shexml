@@ -1,0 +1,9 @@
+:Actor :[films.actors.name] {
+    :name [films.actors.name] ;
+    :appear_on :[films.actors.film] ;
+}
+
+:Actress :[films.actresses.name] {
+    :name [films.actresses.name] ;
+    :appear_on :[films.actresses.film] ;
+}

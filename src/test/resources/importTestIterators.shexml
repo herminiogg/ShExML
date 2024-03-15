@@ -4,9 +4,6 @@ ITERATOR film_xml <xpath: //film> {
     FIELD year <year>
     FIELD country <country>
     FIELD directors <crew/directors/director>
-    FIELD screenwritters <crew//screenwritter>
-    FIELD music <crew/music>
-    FIELD photography <crew/photography>
     ITERATOR actors <cast/actor> {
         FIELD name <name>
         FIELD role <role>
@@ -24,9 +21,6 @@ ITERATOR film_json <jsonpath: $.films[*]> {
     FIELD year <year>
     FIELD country <country>
     FIELD directors <crew.director>
-    FIELD screenwritters <crew.screenwritter>
-    FIELD music <crew.music>
-    FIELD photography <crew.cinematography>
     ITERATOR actors <cast[*]> {
         FIELD name <name>
         FIELD role <role>
