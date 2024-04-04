@@ -16,7 +16,8 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
 
   override def doVisit(ast: com.herminiogarcia.shexml.ast.AST, optionalArgument: HashMap[String, String]): ShExSubsetAST = ast match {
     case ShExML(declarations, graphs, shapes) => {
-      val prefixes = declarations.filter(_.declarationStatement.isInstanceOf[com.herminiogarcia.shexml.ast.Prefix])
+      val prefixes = (declarations :+ Declaration(com.herminiogarcia.shexml.ast.Prefix(Var("rdf:"), URL("http://www.w3.org/1999/02/22-rdf-syntax-ns#"))))
+        .filter(_.declarationStatement.isInstanceOf[com.herminiogarcia.shexml.ast.Prefix])
         .map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Prefix])
       val shexGraphs = graphs.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Graph])
       val shexShapes = shapes.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Shape])

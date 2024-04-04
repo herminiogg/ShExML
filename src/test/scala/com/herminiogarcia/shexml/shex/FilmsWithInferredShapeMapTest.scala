@@ -51,6 +51,7 @@ class FilmsWithInferredShapeMapTest extends AnyFunSuite with ShExValidation {
       |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
       |
       |:Films :[films.id] {
+      |    a schema:Movie ;
       |    schema:name [films.name] @en ;
       |    :year dbr:[films.year] ;
       |    schema:countryOfOrigin dbr:[films.country] ;

@@ -200,6 +200,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitQueryClause(ShExMLParser.QueryClauseContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#substitution}.
+	 * @param ctx the parse tree
+	 */
+	void enterSubstitution(ShExMLParser.SubstitutionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#substitution}.
+	 * @param ctx the parse tree
+	 */
+	void exitSubstitution(ShExMLParser.SubstitutionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#join}.
 	 * @param ctx the parse tree
 	 */

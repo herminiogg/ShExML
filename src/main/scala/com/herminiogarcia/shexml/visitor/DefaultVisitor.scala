@@ -33,10 +33,17 @@ abstract class DefaultVisitor[A, B] {
       doVisit(right, optionalArgument)
     }
 
-    case Join(leftUnion, rightUnion, joinClause) => {
+    case Substitution(leftUnion, rightUnion, joinClause) => {
       doVisit(leftUnion, optionalArgument)
       doVisit(rightUnion, optionalArgument)
       doVisit(joinClause, optionalArgument)
+    }
+
+    case Join(leftUnion, rightUnion, leftJoinClause, rightJoinClause) => {
+      doVisit(leftUnion, optionalArgument)
+      doVisit(rightUnion, optionalArgument)
+      doVisit(leftJoinClause, optionalArgument)
+      doVisit(rightJoinClause, optionalArgument)
     }
 
     case StringOperation(left, right, _) => {

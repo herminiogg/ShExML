@@ -1,9 +1,9 @@
-package com.herminiogarcia.shexml.shacl
+package com.herminiogarcia.shexml.shex
 
+import com.herminiogarcia.shexml.MappingLauncher
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
-class FilmsTest extends AnyFunSuite with SHACLValidation {
+class FilmsWithInferredShapeMapAndBNodesTest extends AnyFunSuite with ShExValidation {
 
   private val example =
     """
@@ -58,29 +58,25 @@ class FilmsTest extends AnyFunSuite with SHACLValidation {
       |    schema:director dbr:[films.directors] ;
       |    :screenwritter dbr:[films.screenwritters] ;
       |    schema:musicBy dbr:[films.music] ;
+      |    :cinematographer dbr:[films.photography] ;
       |    schema:actor @:Actor ;
       |    schema:actor @:Actress ;
       |}
       |
-      |:Actor dbr:[films.actors.name] {
-      |    a schema:Actor ;
+      |:Actor _:[films.actors.name] {
       |    :name [films.actors.name] ;
       |    :appear_on :[films.actors.film] ;
       |}
       |
-      |:Actress dbr:[films.actresses.name] {
-      |    a schema:Actor ;
+      |:Actress _:[films.actresses.name] {
       |    :name [films.actresses.name] ;
       |    :appear_on :[films.actresses.film] ;
       |}
     """.stripMargin
 
   test("Films validate against generated schema") {
-    assert(this.validate(example))
-  }
-
-  test("Films validate against generated schema with closed shapes") {
-    assert(this.validate(example, true))
+    val shapeMap = new MappingLauncher(normaliseURIs = true).launchShapeMapGeneration(example)
+    assert(this.validate(example, shapeMap))
   }
 
 }
