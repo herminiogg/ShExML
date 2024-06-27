@@ -48,6 +48,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val jsonObjectMapperCache = new JsonObjectMapperCache()
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val xmlDocumentCache = new XMLDocumentCache()
+  protected val functionHubExecuterCache = new FunctionHubExecuterCache()
   protected val defaultModel = dataset.getDefaultModel
 
   private val xmlProcessor = new Processor(false)
@@ -379,7 +380,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
     case f: FunctionCalling => {
       val functionsURL = varTable(f.functionHub).asInstanceOf[URL]
-      val functionHub = new FunctionHubExecuter(functionsURL.url)
+      val functionHub = functionHubExecuterCache.search(functionsURL.url) match {
+        case Some(executer) => executer
+        case None =>
+          val executer = new FunctionHubExecuter(functionsURL.url)
+          functionHubExecuterCache.save(functionsURL.url, executer)
+          executer
+      }
       val argumentsResults = f.arguments.arguments.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
       val arguments = for (i <- argumentsResults.head.indices) yield {
         for (j <- argumentsResults.indices) yield {
@@ -1239,6 +1246,18 @@ class XpathQueryResultsCache(pushedValues: Boolean) {
     if(!pushedValues) {
       table += ((id, result))
     }
+  }
+}
+
+class FunctionHubExecuterCache() {
+  private val table = mutable.HashMap[String, FunctionHubExecuter]()
+
+  def search(url: String): Option[FunctionHubExecuter] = {
+    table.get(url)
+  }
+
+  def save(url: String, functionHubExecuter: FunctionHubExecuter): Unit = {
+    table += ((url, functionHubExecuter))
   }
 }
 
