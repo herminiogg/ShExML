@@ -1,7 +1,7 @@
 # ShExML
 [![Master build](https://github.com/herminiogg/shexml/actions/workflows/scala.yml/badge.svg?branch=master)](https://github.com/herminiogg/ShExML/actions/workflows/scala.yml?query=branch%3Amaster)
 [![Maven Central](https://img.shields.io/maven-central/v/com.herminiogarcia/shexml_3?color=blue)](https://central.sonatype.com/artifact/com.herminiogarcia/shexml_3)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11577339.svg)](https://doi.org/10.5281/zenodo.11577339)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11577338.svg)](https://doi.org/10.5281/zenodo.11577338)
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/herminiogg/ShExML/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/herminiogg/ShExML)
 
 Shape Expressions Mapping Language (ShExML) is a DSL that offers a solution
