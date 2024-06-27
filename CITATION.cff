@@ -11,11 +11,11 @@ identifiers:
     value: 'https://shexml.herminiogarcia.com/'
     description: Main webpage
   - type: doi
-    value: 10.5281/zenodo.11577339
+    value: 10.5281/zenodo.11577338
     description: Zenodo's DOI
   - type: swh
-    value: 'swh:1:rev:e62194d3020a9d82253033e45d52427b3650b53e'
-    description: Version 0.5.2 release
+    value: 'swh:1:rev:69285f19a1dee8d4d4141a5ff021c176ef691e90'
+    description: Version 0.5.3 release
 repository-code: 'https://github.com/herminiogg/ShExML'
 url: 'https://shexml.herminiogarcia.com/'
 abstract: >-
