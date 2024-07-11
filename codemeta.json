@@ -1,6 +1,9 @@
 {
   "@context" : {
     "@vocab" : "https://w3id.org/codemeta/3.0/",
+    "schema" : "http://schema.org/",
+    "id" : "@id",
+    "type" : "@type",
     "identifier" : {
       "@type" : "@id"
     },
@@ -15,162 +18,177 @@
     },
     "license" : {
       "@type" : "@id"
+    },
+    "schema:author" : {
+      "@type" : "@id"
+    },
+    "referencePublication" : {
+      "@type" : "@id"
     }
   },
-  "@id" : "https://github.com/herminiogg/ShExML",
-  "@type" : "SoftwareSourceCode",
+  "id" : "https://github.com/herminiogg/ShExML",
+  "type" : "SoftwareSourceCode",
   "applicationCategory" : "Computer Science",
-  "author" : {
-    "@id" : "https://herminiogarcia.com/#me",
-    "@type" : "Person",
+  "author" : [ {
+    "type" : "Role",
+    "schema:author" : "https://herminiogarcia.com/#me",
+    "roleName" : "Main author"
+  }, {
+    "id" : "https://herminiogarcia.com/#me",
+    "type" : "Person",
     "affiliation" : {
-      "@id" : "https://kazernedossin.eu/en",
-      "@type" : "Organization",
+      "id" : "https://kazernedossin.eu/en",
+      "type" : "Organization",
       "name" : "Kazerne Dossin"
     },
     "email" : "herminio.garciagonzalez@kazernedossin.eu",
     "familyName" : "García González",
     "givenName" : "Herminio",
     "identifier" : "https://orcid.org/0000-0001-5590-4857"
-  },
+  } ],
   "codeRepository" : "https://github.com/herminiogg/ShExML",
   "dateCreated" : "2018-02-22",
+  "dateModified" : "2024-06-27",
   "description" : "A heterogeneous data mapping language based on Shape Expressions",
   "developmentStatus" : "active",
+  "downloadUrl" : "https://api.github.com/repos/herminiogg/ShExML/downloads",
+  "issueTracker" : "https://api.github.com/repos/herminiogg/ShExML/issues",
   "license" : "https://api.github.com/licenses/mit",
   "name" : "ShExML",
   "programmingLanguage" : "Scala",
+  "referencePublication" : "https://doi.org/10.7717/peerj-cs.318",
+  "releaseNotes" : "## What's Changed\r\n* Solved a performance problem when executing functions over big data sources",
   "runtimePlatform" : "JVM",
   "softwareRequirements" : [ {
-    "@id" : "http://example.org/scala-compiler",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.scala-lang:scala-compiler",
-    "version" : "2.13.9"
-  }, {
-    "@id" : "http://example.org/jena-base",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.apache.jena:jena-base",
-    "version" : "3.17.0"
-  }, {
-    "@id" : "http://example.org/shex_3",
-    "@type" : "SoftwareSourceCode",
+    "id" : "http://example.org/shex_3",
+    "type" : "SoftwareSourceCode",
     "name" : "es.weso:shex_3",
     "version" : "0.1.97"
   }, {
-    "@id" : "http://example.org/antlr4",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.antlr:antlr4",
-    "version" : "4.9.2"
-  }, {
-    "@id" : "http://example.org/srdf4j_3",
-    "@type" : "SoftwareSourceCode",
-    "name" : "es.weso:srdf4j_3",
-    "version" : "0.1.104"
-  }, {
-    "@id" : "http://example.org/jena-core",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.apache.jena:jena-core",
-    "version" : "3.17.0"
-  }, {
-    "@id" : "http://example.org/scala3-library_3",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.scala-lang:scala3-library_3",
-    "version" : "3.2.0"
-  }, {
-    "@id" : "http://example.org/stringdistance_2.13",
-    "@type" : "SoftwareSourceCode",
-    "name" : "com.github.vickumar1981:stringdistance_2.13",
-    "version" : "1.2.6"
-  }, {
-    "@id" : "http://example.org/rmlmapper",
-    "@type" : "SoftwareSourceCode",
-    "name" : "be.ugent.rml:rmlmapper",
-    "version" : "4.9.0"
-  }, {
-    "@id" : "http://example.org/picocli",
-    "@type" : "SoftwareSourceCode",
-    "name" : "info.picocli:picocli",
-    "version" : "4.0.4"
-  }, {
-    "@id" : "http://example.org/jena-arq",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.apache.jena:jena-arq",
-    "version" : "3.17.0"
-  }, {
-    "@id" : "http://example.org/logback-classic",
-    "@type" : "SoftwareSourceCode",
-    "name" : "ch.qos.logback:logback-classic",
-    "version" : "1.3.5"
-  }, {
-    "@id" : "http://example.org/jena-shacl",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.apache.jena:jena-shacl",
-    "version" : "3.17.0"
-  }, {
-    "@id" : "http://example.org/srdf_3",
-    "@type" : "SoftwareSourceCode",
-    "name" : "es.weso:srdf_3",
-    "version" : "0.1.104"
-  }, {
-    "@id" : "http://example.org/scala-reflect",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.scala-lang:scala-reflect",
-    "version" : "2.13.9"
-  }, {
-    "@id" : "http://example.org/postgresql",
-    "@type" : "SoftwareSourceCode",
+    "id" : "http://example.org/postgresql",
+    "type" : "SoftwareSourceCode",
     "name" : "org.postgresql:postgresql",
     "version" : "42.5.0"
   }, {
-    "@id" : "http://example.org/scalatest_3",
-    "@type" : "SoftwareSourceCode",
+    "id" : "http://example.org/picocli",
+    "type" : "SoftwareSourceCode",
+    "name" : "info.picocli:picocli",
+    "version" : "4.0.4"
+  }, {
+    "id" : "http://example.org/srdf4j_3",
+    "type" : "SoftwareSourceCode",
+    "name" : "es.weso:srdf4j_3",
+    "version" : "0.1.104"
+  }, {
+    "id" : "http://example.org/rmlmapper",
+    "type" : "SoftwareSourceCode",
+    "name" : "be.ugent.rml:rmlmapper",
+    "version" : "4.9.0"
+  }, {
+    "id" : "http://example.org/scala-logging_3",
+    "type" : "SoftwareSourceCode",
+    "name" : "com.typesafe.scala-logging:scala-logging_3",
+    "version" : "3.9.5"
+  }, {
+    "id" : "http://example.org/stringdistance_2.13",
+    "type" : "SoftwareSourceCode",
+    "name" : "com.github.vickumar1981:stringdistance_2.13",
+    "version" : "1.2.6"
+  }, {
+    "id" : "http://example.org/srdf_3",
+    "type" : "SoftwareSourceCode",
+    "name" : "es.weso:srdf_3",
+    "version" : "0.1.104"
+  }, {
+    "id" : "http://example.org/jena-arq",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.apache.jena:jena-arq",
+    "version" : "3.17.0"
+  }, {
+    "id" : "http://example.org/jena-shacl",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.apache.jena:jena-shacl",
+    "version" : "3.17.0"
+  }, {
+    "id" : "http://example.org/scalatest_3",
+    "type" : "SoftwareSourceCode",
     "name" : "org.scalatest:scalatest_3",
     "version" : "3.2.9"
   }, {
-    "@id" : "http://example.org/mariadb-java-client",
-    "@type" : "SoftwareSourceCode",
+    "id" : "http://example.org/mariadb-java-client",
+    "type" : "SoftwareSourceCode",
     "name" : "org.mariadb.jdbc:mariadb-java-client",
     "version" : "2.6.2"
   }, {
-    "@id" : "http://example.org/mysql-connector-java",
-    "@type" : "SoftwareSourceCode",
-    "name" : "mysql:mysql-connector-java",
-    "version" : "8.0.21"
-  }, {
-    "@id" : "http://example.org/mssql-jdbc",
-    "@type" : "SoftwareSourceCode",
-    "name" : "com.microsoft.sqlserver:mssql-jdbc",
-    "version" : "8.4.1.jre8"
-  }, {
-    "@id" : "http://example.org/scala-csv_2.13",
-    "@type" : "SoftwareSourceCode",
-    "name" : "com.github.tototoshi:scala-csv_2.13",
-    "version" : "1.3.6"
-  }, {
-    "@id" : "http://example.org/slf4j-nop",
-    "@type" : "SoftwareSourceCode",
+    "id" : "http://example.org/slf4j-nop",
+    "type" : "SoftwareSourceCode",
     "name" : "org.slf4j:slf4j-nop",
     "version" : "1.7.27"
   }, {
-    "@id" : "http://example.org/sqlite-jdbc",
-    "@type" : "SoftwareSourceCode",
-    "name" : "org.xerial:sqlite-jdbc",
-    "version" : "3.32.3.2"
+    "id" : "http://example.org/logback-classic",
+    "type" : "SoftwareSourceCode",
+    "name" : "ch.qos.logback:logback-classic",
+    "version" : "1.3.5"
   }, {
-    "@id" : "http://example.org/json-path",
-    "@type" : "SoftwareSourceCode",
-    "name" : "com.jayway.jsonpath:json-path",
-    "version" : "2.8.0"
+    "id" : "http://example.org/scala3-library_3",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.scala-lang:scala3-library_3",
+    "version" : "3.2.0"
   }, {
-    "@id" : "http://example.org/Saxon-HE",
-    "@type" : "SoftwareSourceCode",
+    "id" : "http://example.org/Saxon-HE",
+    "type" : "SoftwareSourceCode",
     "name" : "net.sf.saxon:Saxon-HE",
     "version" : "12.4"
   }, {
-    "@id" : "http://example.org/scala-logging_3",
-    "@type" : "SoftwareSourceCode",
-    "name" : "com.typesafe.scala-logging:scala-logging_3",
-    "version" : "3.9.5"
+    "id" : "http://example.org/sqlite-jdbc",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.xerial:sqlite-jdbc",
+    "version" : "3.32.3.2"
+  }, {
+    "id" : "http://example.org/scala-reflect",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.scala-lang:scala-reflect",
+    "version" : "2.13.9"
+  }, {
+    "id" : "http://example.org/scala-csv_2.13",
+    "type" : "SoftwareSourceCode",
+    "name" : "com.github.tototoshi:scala-csv_2.13",
+    "version" : "1.3.6"
+  }, {
+    "id" : "http://example.org/antlr4",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.antlr:antlr4",
+    "version" : "4.9.2"
+  }, {
+    "id" : "http://example.org/json-path",
+    "type" : "SoftwareSourceCode",
+    "name" : "com.jayway.jsonpath:json-path",
+    "version" : "2.8.0"
+  }, {
+    "id" : "http://example.org/jena-core",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.apache.jena:jena-core",
+    "version" : "3.17.0"
+  }, {
+    "id" : "http://example.org/jena-base",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.apache.jena:jena-base",
+    "version" : "3.17.0"
+  }, {
+    "id" : "http://example.org/mysql-connector-java",
+    "type" : "SoftwareSourceCode",
+    "name" : "mysql:mysql-connector-java",
+    "version" : "8.0.21"
+  }, {
+    "id" : "http://example.org/scala-compiler",
+    "type" : "SoftwareSourceCode",
+    "name" : "org.scala-lang:scala-compiler",
+    "version" : "2.13.9"
+  }, {
+    "id" : "http://example.org/mssql-jdbc",
+    "type" : "SoftwareSourceCode",
+    "name" : "com.microsoft.sqlserver:mssql-jdbc",
+    "version" : "8.4.1.jre8"
   } ],
   "version" : "0.5.3"
 }
