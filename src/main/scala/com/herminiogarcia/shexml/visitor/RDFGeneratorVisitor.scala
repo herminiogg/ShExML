@@ -190,10 +190,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
       }
-      val conditionsResultList = condition match {
-        case Some(conditionExpression) => doVisit(conditionExpression, optionalArgument).asInstanceOf[List[Result]]
-        case None => List()
-      }
+      val conditionsResultList = condition.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
       val dataTypeResult = dataType.map(doVisit(_, optionalArgument))
       val langTagResult = langTag.map(doVisit(_, optionalArgument))
       result match {
@@ -208,7 +205,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               case langTagResults: List[Result] => langTagResults.filter(_.id == result.id).head.results.head
               case value: String => value
             })
-            val toBeGenerated = conditionsResultList.find(_.id == result.id).map(_.results.head.toBoolean).getOrElse(true)
+            val toBeGenerated = conditionsResultList match {
+              case Some(crl) => crl.find(c => c.id == result.id || result.id.exists(c.rootIds.contains)).exists(_.results.head.toBoolean)
+              case None => true
+            }
             if(toBeGenerated)
               Result(result.id, result.rootIds, newResults, normaliseDataType(dataTypeValue), langTagValue, rdfCollection)
             else Nil
@@ -972,9 +972,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None, None))
         }
       } else {
-        val conditions = a.condition.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]]).getOrElse(List())
-        doVisit(action, optionalArgument).asInstanceOf[List[Result]]
-          .filterNot(r => conditions.exists(c => r.id == c.id && !c.results.head.toBoolean))
+        val conditionsOption = a.condition.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
+        val actionResults = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+        conditionsOption match {
+          case Some(conditions) => actionResults
+            .filter(r => conditions.exists(c => r.id == c.id || r.id.exists(c.rootIds.contains))) // This filters the ones that do not return a value for that condition because the value is missing
+            .filterNot(r => conditions.exists(c => (r.id == c.id || r.id.exists(c.rootIds.contains)) && !c.results.head.toBoolean))
+          case None => actionResults
+        }
       }
     }
     case l: LiteralSubject => {

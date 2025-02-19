@@ -183,7 +183,7 @@ Testing against all the cross-compiled versions:
 $ sbt "+ test"
 ```
 
-Testing against a specific version where <version> is one of the configured versions in the build.sbt file:
+Testing against a specific version where `<version>` is one of the configured versions in the build.sbt file:
 ```
 $ sbt "++<version> test"
 ```
@@ -212,6 +212,7 @@ The following dependencies are used by this library:
 | com.jayway.jsonpath / json-path            | Apache License 2.0                      |
 | org.scala-lang / scala-reflect             | Apache License 2.0                      |
 | org.scala-lang / scala-compiler            | Apache License 2.0                      |
+| ch.qos.logback / logback-classic           | Eclipse Public License v1.0 or LGPL-2.1 |
 
 For performing a more exhaustive licenses check, including subdependecies and testing ones the 
 [sbt-license-report](https://github.com/sbt/sbt-license-report) plugin is included in the project, enabling the generation
