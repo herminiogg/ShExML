@@ -12,7 +12,7 @@ class ConditionalGenerationSubjectTestHierarchical extends AnyFunSuite with Matc
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |SOURCE films_xml_incomplete_data <src/test/resources/filmsIncompleteDataHierarchical.xml>
-      |FUNCTIONS helper <scala: https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%23122/src/test/resources/functions.scala>
+      |FUNCTIONS helper <scala: src/test/resources/functions.scala>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD id <@id>
       |    FIELD name <name>

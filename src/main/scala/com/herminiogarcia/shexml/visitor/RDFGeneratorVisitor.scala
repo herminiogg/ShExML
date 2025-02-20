@@ -2,7 +2,7 @@ package com.herminiogarcia.shexml.visitor
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, FilePath, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, LoadedSource, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
@@ -78,8 +78,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case Prefix(variable, url) => {
-      prefixTable += ((variable.name, url.url))
-      defaultModel.setNsPrefix(variable.name.replace(":", ""), url.url)
+      prefixTable += ((variable.name, url.value))
+      defaultModel.setNsPrefix(variable.name.replace(":", ""), url.value)
     }
 
     case Graph(graphName, shapes) => {
@@ -329,7 +329,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         val fileMap = Map("file" -> file)
         val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
         val varList = iteratorQueryToList(i)
-        if (varTable(varList.head).isInstanceOf[IRI] && varList.size == 2) {
+        if (varTable(varList.head).isInstanceOf[FilePath] && varList.size == 2) {
           val iteratorQueryStringRepresentation = iteratorQueryToList(i).map(_.name).mkString(".")
           iteratorQueryResultsCache.search(iteratorQueryStringRepresentation, file.asInstanceOf[LoadedSource]) match {
             case Some(value) =>
@@ -379,13 +379,20 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case f: FunctionCalling => {
-      val functionsURL = varTable(f.functionHub).asInstanceOf[URL]
-      val functionHub = functionHubExecuterCache.search(functionsURL.url) match {
-        case Some(executer) => executer
+      val functionsIRI = varTable(f.functionHub).asInstanceOf[FilePath]
+      val functionHub = functionHubExecuterCache.search(functionsIRI.value) match {
+        case Some(executor) => executor
         case None =>
-          val executer = new FunctionHubExecuter(functionsURL.url)
-          functionHubExecuterCache.save(functionsURL.url, executer)
-          executer
+          val loadedSource = functionsIRI match {
+            case JdbcURL(jdbcURL) => throw new Exception(s"The JDBC URL $jdbcURL cannot be used as the source of functions.")
+            case fp: FilePath => doVisit(fp, optionalArgument).asInstanceOf[List[LoadedSource]].headOption match {
+              case Some(ls) => ls
+              case None => throw new Exception(s"There is no functions code in the provided path: ${fp.value}")
+            }
+          }
+          val executor = new FunctionHubExecuter(loadedSource)
+          functionHubExecuterCache.save(functionsIRI.value, executor)
+          executor
       }
       val argumentsResults = f.arguments.arguments.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
       val arguments = for (i <- argumentsResults.head.indices) yield {
@@ -1257,12 +1264,12 @@ class XpathQueryResultsCache(pushedValues: Boolean) {
 class FunctionHubExecuterCache() {
   private val table = mutable.HashMap[String, FunctionHubExecuter]()
 
-  def search(url: String): Option[FunctionHubExecuter] = {
-    table.get(url)
+  def search(iri: String): Option[FunctionHubExecuter] = {
+    table.get(iri)
   }
 
-  def save(url: String, functionHubExecuter: FunctionHubExecuter): Unit = {
-    table += ((url, functionHubExecuter))
+  def save(iri: String, functionHubExecuter: FunctionHubExecuter): Unit = {
+    table += ((iri, functionHubExecuter))
   }
 }
 

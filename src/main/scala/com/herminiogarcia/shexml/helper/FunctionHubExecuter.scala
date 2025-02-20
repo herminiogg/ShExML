@@ -11,19 +11,18 @@ import scala.reflect.runtime._
 import scala.reflect.runtime
 import scala.reflect.runtime.universe._
 
-class FunctionHubExecuter(val pathToFile: String) {
+class FunctionHubExecuter(val functionsCode: LoadedSource) {
 
-  private val functionsCode = new SourceHelper().getURLContent(pathToFile).fileContent
   private val cm = universe.runtimeMirror(getClass.getClassLoader)
   private val toolBox = cm.mkToolBox()
-  private val tree = toolBox.parse(functionsCode)
+  private val tree = toolBox.parse(functionsCode.fileContent)
   private val symbol = toolBox.define(tree.asInstanceOf[toolBox.u.ImplDef])
-  private val theClass = toolBox.eval(toolBox.parse(functionsCode + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
+  private val theClass = toolBox.eval(toolBox.parse(functionsCode.fileContent + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
 
   private val logger = Logger[FunctionHubExecuter]
 
   def callFunction(name: String, args: String*): List[String] = {
-    logger.debug(s"Executing function $name in source code $pathToFile")
+    logger.debug(s"Executing function $name in source code ${functionsCode.filepath}")
     val instance = theClass.getConstructors()(0).newInstance().asInstanceOf[AnyRef]
     val method = theClass.getMethods.toList.filter(_.getName.matches(".*" + name + ".*"))
       .sortWith((a, b) => {
