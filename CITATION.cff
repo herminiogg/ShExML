@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+title: ShExML
+type: software
+authors:
+  - given-names: Herminio
+    family-names: García-González
+    affiliation: Kazerne Dossin
+    orcid: 'https://orcid.org/0000-0001-5590-4857'
+identifiers:
+  - type: url
+    value: 'https://shexml.herminiogarcia.com/'
+    description: Main webpage
+  - type: doi
+    value: 10.5281/zenodo.11577338
+    description: Zenodo's DOI
+  - type: swh
+    value: 'swh:1:rev:69285f19a1dee8d4d4141a5ff021c176ef691e90'
+    description: Version 0.5.3 release
+repository-code: 'https://github.com/herminiogg/ShExML'
+url: 'https://shexml.herminiogarcia.com/'
+abstract: >-
+  Shape Expressions Mapping Language (ShExML) is a DSL that
+  offers a solution for mapping and merging heterogeneous
+  data sources. As being based on ShEx the shape is the main
+  foundation to define the transformations.
+license: MIT
