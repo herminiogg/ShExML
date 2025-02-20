@@ -95,7 +95,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       varTable(firstVar) match {
         case u: Union => doVisit(u, arguments + ("composedVar" -> composedVar))
         case i: IteratorQuery => List(doVisit(i, arguments + ("composedVar" -> composedVar)))
-        case source: IRI => {
+        case source: FilePath => {
           val iterator = composedVar match {
             case IteratorQuery(iteratorVar, _) =>
               if(varTable.get(iteratorVar).isDefined && iteratorVar.name.contains(".")) {
@@ -113,8 +113,8 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               val dbSubjectID = mapPrefixOrBNode + "db_" + dbIndex.next()
               val datasource = List(
                 createStatementWithLiteral(dbSubjectID, rdfPrefix + "type", d2rqPrefix + "Database"),
-                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].url)),
-                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDSN", source.asInstanceOf[JdbcURL].url),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].value)),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDSN", source.asInstanceOf[JdbcURL].value),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "username", username),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "password", password)
                 // user and password to be inputted here
@@ -139,7 +139,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               else Nil
               List(
                 createStatement(logicalSourceName, rdfPrefix + "type", rmlPrefix + "LogicalSource"),
-                createStatementWithLiteral(logicalSourceName, rmlPrefix + "source", source.asInstanceOf[URL].url),
+                createStatementWithLiteral(logicalSourceName, rmlPrefix + "source", source.asInstanceOf[URL].value),
                 createStatement(logicalSourceName, rmlPrefix + "referenceFormulation", qlPrefix + referenceFormulation)
               ) ::: iteratorStatement
             }
