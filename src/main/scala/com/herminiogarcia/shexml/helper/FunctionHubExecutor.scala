@@ -11,7 +11,7 @@ import scala.reflect.runtime._
 import scala.reflect.runtime
 import scala.reflect.runtime.universe._
 
-class FunctionHubExecuter(val functionsCode: LoadedSource) {
+class FunctionHubExecutor(val functionsCode: LoadedSource) {
 
   private val cm = universe.runtimeMirror(getClass.getClassLoader)
   private val toolBox = cm.mkToolBox()
@@ -19,7 +19,7 @@ class FunctionHubExecuter(val functionsCode: LoadedSource) {
   private val symbol = toolBox.define(tree.asInstanceOf[toolBox.u.ImplDef])
   private val theClass = toolBox.eval(toolBox.parse(functionsCode.fileContent + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
 
-  private val logger = Logger[FunctionHubExecuter]
+  private val logger = Logger[FunctionHubExecutor]
 
   def callFunction(name: String, args: String*): List[String] = {
     logger.debug(s"Executing function $name in source code ${functionsCode.filepath}")

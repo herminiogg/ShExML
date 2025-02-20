@@ -3,7 +3,7 @@ package com.herminiogarcia.shexml.visitor
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
 import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, FilePath, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
-import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, LoadedSource, SourceHelper}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, LoadedSource, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
 import com.jayway.jsonpath.{Configuration, DocumentContext}
@@ -48,7 +48,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val jsonObjectMapperCache = new JsonObjectMapperCache()
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val xmlDocumentCache = new XMLDocumentCache()
-  protected val functionHubExecuterCache = new FunctionHubExecuterCache()
+  protected val functionHubExecuterCache = new FunctionHubExecutorCache()
   protected val defaultModel = dataset.getDefaultModel
 
   private val xmlProcessor = new Processor(false)
@@ -390,7 +390,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               case None => throw new Exception(s"There is no functions code in the provided path: ${fp.value}")
             }
           }
-          val executor = new FunctionHubExecuter(loadedSource)
+          val executor = new FunctionHubExecutor(loadedSource)
           functionHubExecuterCache.save(functionsIRI.value, executor)
           executor
       }
@@ -1261,15 +1261,15 @@ class XpathQueryResultsCache(pushedValues: Boolean) {
   }
 }
 
-class FunctionHubExecuterCache() {
-  private val table = mutable.HashMap[String, FunctionHubExecuter]()
+class FunctionHubExecutorCache() {
+  private val table = mutable.HashMap[String, FunctionHubExecutor]()
 
-  def search(iri: String): Option[FunctionHubExecuter] = {
-    table.get(iri)
+  def search(filepath: String): Option[FunctionHubExecutor] = {
+    table.get(filepath)
   }
 
-  def save(iri: String, functionHubExecuter: FunctionHubExecuter): Unit = {
-    table += ((iri, functionHubExecuter))
+  def save(filepath: String, functionHubExecutor: FunctionHubExecutor): Unit = {
+    table += ((filepath, functionHubExecutor))
   }
 }
 
