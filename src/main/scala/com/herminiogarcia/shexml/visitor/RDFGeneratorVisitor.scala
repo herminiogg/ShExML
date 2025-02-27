@@ -975,9 +975,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         val conditionsOption = a.condition.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
         val actionResults = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
         conditionsOption match {
-          case Some(conditions) => actionResults
-            .filter(r => conditions.exists(c => r.id == c.id || r.id.exists(c.rootIds.contains))) // This filters the ones that do not return a value for that condition because the value is missing
-            .filterNot(r => conditions.exists(c => (r.id == c.id || r.id.exists(c.rootIds.contains)) && !c.results.head.toBoolean))
+          case Some(conditions) =>
+            actionResults.filter(r => conditions.exists(c => (r.id == c.id && c.results.head.toBoolean) || conditions.exists(c => r.id.exists(c.rootIds.contains) && c.results.head.toBoolean)))
           case None => actionResults
         }
       }
