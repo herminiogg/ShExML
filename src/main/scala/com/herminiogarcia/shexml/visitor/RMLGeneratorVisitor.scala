@@ -89,7 +89,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       doVisit(action, optionalArgument).asInstanceOf[List[RMLMap]].filter(_.logicalSource.nonEmpty)
     }
 
-    case IteratorQuery(firstVar, composedVar) => {
+    case IteratorQuery(firstVar, composedVar, _) => {
       val receivedArguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
       val arguments = if(receivedArguments.isDefinedAt("rmlType")) receivedArguments else receivedArguments.+("rmlType" -> "object")
       varTable(firstVar) match {
@@ -97,7 +97,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case i: IteratorQuery => List(doVisit(i, arguments + ("composedVar" -> composedVar)))
         case source: FilePath => {
           val iterator = composedVar match {
-            case IteratorQuery(iteratorVar, _) =>
+            case IteratorQuery(iteratorVar, _, _) =>
               if(varTable.get(iteratorVar).isDefined && iteratorVar.name.contains(".")) {
                 val query = transformNestedIterator(getQueryFromVarTable(iteratorVar), iteratorVar)
                 val rootQuery = getQueryFromVarTable(Var(iteratorVar.name.splitAt(iteratorVar.name.lastIndexOf("."))._1))

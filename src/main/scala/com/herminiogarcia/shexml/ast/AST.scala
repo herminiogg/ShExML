@@ -55,7 +55,7 @@ case class Union(left: LeftUnion, right: RightUnion) extends RightUnion
 case class StringOperation(left: IteratorQuery, right: IteratorQuery, unionString: String) extends LeftUnion with RightUnion
 case class Substitution(leftUnion: IteratorQuery, rightUnion: IteratorQuery, joinClause: IteratorQuery) extends Exp
 case class Join(leftUnion: IteratorQuery, rightUnion: IteratorQuery, leftJoinClause: IteratorQuery, rightJoinClause: IteratorQuery) extends Exp
-case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery) extends LeftUnion with RightUnion with VarOrIteratorQuery
+case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery, builtinFunction: Option[BuiltinFunction] = None) extends LeftUnion with RightUnion with VarOrIteratorQuery
 
 sealed trait VarOrIteratorQuery extends AST
 sealed trait ExpOrVar extends AST
@@ -113,3 +113,6 @@ case class RDFList() extends RDFCollection
 case class RDFBag() extends RDFCollection
 case class RDFAlt() extends RDFCollection
 case class RDFSeq() extends RDFCollection
+
+sealed trait BuiltinFunction extends AST
+case class Index() extends BuiltinFunction
