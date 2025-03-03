@@ -234,6 +234,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterBuiltinFunction(ShExMLParser.BuiltinFunctionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBuiltinFunction(ShExMLParser.BuiltinFunctionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterQueryClause(ShExMLParser.QueryClauseContext ctx) { }
 	/**
 	 * {@inheritDoc}

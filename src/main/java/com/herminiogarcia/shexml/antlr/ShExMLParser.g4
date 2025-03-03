@@ -25,8 +25,9 @@ matchers: replacedStrings AS (STRING_OR_VAR | STRINGOPERATOR)
 replacedStrings: (STRING_OR_VAR | STRINGOPERATOR) ',' replacedStrings | (STRING_OR_VAR | STRINGOPERATOR) ;
 exp: union | join | substitution | stringOperation | iteratorQuery ;
 stringOperation: iteratorQuery ADD STRINGOPERATOR ADD iteratorQuery ;
-iteratorQuery: variable '.' composedVariable ;
+iteratorQuery: variable '.' composedVariable ('.' builtinFunction)?;
 composedVariable: variable | variable '.' composedVariable ;
+builtinFunction: INDEX ;
 queryClause: JSONPATH QUERY_PART+ | XMLPATH QUERY_PART+ | CSVPERROW | SQL QUERY_PART+ | SPARQL QUERY_PART+ ;
 substitution: iteratorQuery UNION iteratorQuery SUBSTITUTING iteratorQuery ;
 join: iteratorQuery JOIN iteratorQuery ON iteratorQuery EQUAL iteratorQuery ;

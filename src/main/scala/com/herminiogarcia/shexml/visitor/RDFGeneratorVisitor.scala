@@ -2,7 +2,7 @@ package com.herminiogarcia.shexml.visitor
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, FilePath, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, LoadedSource, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
@@ -370,7 +370,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       })
       val finalResult = results.headOption match {
         case Some(r) => r match {
-          case _: Result => results.asInstanceOf[List[Result]]
+          case _: Result => results.asInstanceOf[List[Result]].map(r => i.builtinFunction match {
+            case Some(bf) => executeBuiltinFunction(r, bf)
+            case None => r
+          })
           case _: (String, List[Result]) => results.asInstanceOf[List[(String, List[Result])]].toMap
         }
         case None => List[Result]()
@@ -796,8 +799,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       case _ => {
         val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
         val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, HashSet(), fileContentOrURL)
-        queries.map(q => doVisit(q.query, middleArguments.+(
-          "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
+        queries.map(q => {
+            doVisit(q.query, middleArguments.+(
+              "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery))
+              .asInstanceOf[Result]
+              .addResultContext(ResultContext(q.index, q.query, q.iteratorQuery))
+          })
           .filter(_.results.nonEmpty)
       }
     }
@@ -1135,6 +1142,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     case LiteralSubject(prefix, _) => prefix.name
   }
 
+  private def executeBuiltinFunction(result: Result, builtinFunction: BuiltinFunction): Result = builtinFunction match {
+    case Index() => result.resultContext match {
+      case Some(rc) => Result(result.id, result.rootIds, result.results.map(_ => rc.index), result.dataType, result.langTag, result.rdfCollection)
+      case None => result
+    }
+  }
+
   override def doVisitDefault(): Any = Nil
 
 }
@@ -1276,11 +1290,16 @@ sealed trait Resultable {
   def results: List[String]
 }
 case class Result(id: Option[Int], rootIds: HashSet[Int], results: List[String], dataType: Option[String],
-                  langTag: Option[String], rdfCollection: Option[RDFCollection]) extends Resultable {
+                  langTag: Option[String], rdfCollection: Option[RDFCollection], resultContext: Option[ResultContext] = None) extends Resultable {
   override def equals(that: Any): Boolean = {
     canEqual(that) && id == that.asInstanceOf[Result].id
   }
+
+  def addResultContext(resultContext: ResultContext): Result = {
+    Result(id, rootIds, results, dataType, langTag, rdfCollection, Some(resultContext))
+  }
 }
+
 case class ResultWithIteratorQuery(id: Option[Int], rootIds: HashSet[Int], results: List[String], iteratorQuery: String) extends Resultable
 case class ResultWithNested(id: Option[Int], rootIds: HashSet[Int], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
 case class QueryByID(id: Int, query: String)
@@ -1293,3 +1312,4 @@ case class ResultAutoIncrement(iterator: AutoIncrement, predicate: String, names
     List(predicateWithSpace + namespace + precedentString + iterator.iterator.next() + closingString)
   }
 }
+case class ResultContext(index: String, query: QueryClause, iteratorQuery: String)

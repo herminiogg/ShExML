@@ -121,6 +121,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitComposedVariable(ShExMLParser.ComposedVariableContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#builtinFunction}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBuiltinFunction(ShExMLParser.BuiltinFunctionContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#queryClause}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
