@@ -332,7 +332,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   override def visitFunctionArguments(ctx: FunctionArgumentsContext): AST = {
     val argument =
       (if(ctx.exp() != null) visit(ctx.exp())
-      else visit(ctx.variable())).asInstanceOf[ExpOrVar]
+      else createVar(ctx.variable())).asInstanceOf[ExpOrVar]
     val arguments =
       if(ctx.functionArguments() != null) argument +: visit(ctx.functionArguments()).asInstanceOf[Arguments].arguments
       else List(argument)

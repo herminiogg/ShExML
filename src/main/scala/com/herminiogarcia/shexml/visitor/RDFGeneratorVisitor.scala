@@ -397,10 +397,30 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
           functionHubExecuterCache.save(functionsIRI.value, executor)
           executor
       }
-      val argumentsResults = f.arguments.arguments.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
-      val arguments = for (i <- argumentsResults.head.indices) yield {
-        for (j <- argumentsResults.indices) yield {
-          argumentsResults(j)(i)
+      val argumentsResults = f.arguments.arguments.map(a => {
+        val result = doVisit(a, optionalArgument)
+        if(result.isInstanceOf[ResultAutoIncrement]) List(result.asInstanceOf[ResultAutoIncrement])
+        else result.asInstanceOf[List[Resultable]]
+      })
+      val sizeArguments = argumentsResults.filter(_.forall(_.isInstanceOf[Result])).map(_.size)
+      val maxSize = if(sizeArguments.isEmpty) 1 else argumentsResults.filter(_.forall(_.isInstanceOf[Result])).map(_.size).max
+      val sameSizeArguments = argumentsResults.exists(rl => rl.forall(r => r.isInstanceOf[Result]) && rl.size != maxSize)
+      if(sameSizeArguments) throw new Exception(s"The results of the function arguments are not equal in size. This prevents a correct execution of the function.")
+      val argumentsHead = argumentsResults.find(_.forall(_.isInstanceOf[Result]))
+      val argumentsResultsFinal = argumentsResults.map(r => {
+        if(r.nonEmpty && r.head.isInstanceOf[ResultAutoIncrement]) {
+          val rai = r.head.asInstanceOf[ResultAutoIncrement]
+          (0 until maxSize).map(_ => {
+            if(argumentsHead.isDefined) {
+              val referenceResult = argumentsHead.get.head.asInstanceOf[Result]
+              Result(referenceResult.id, referenceResult.rootIds, rai.results, rai.dataType, rai.langTag, None, None)
+            } else Result(None, HashSet.empty, rai.results, rai.dataType, rai.langTag, None, None)
+          }).toList
+        } else r
+      }.asInstanceOf[List[Result]])
+      val arguments = for (i <- argumentsResultsFinal.head.indices) yield {
+        for (j <- argumentsResultsFinal.indices) yield {
+          argumentsResultsFinal(j)(i)
         }
       }.toList
       arguments.map(a => {
