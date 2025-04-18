@@ -32,4 +32,12 @@ class Helper {
     country != "USA"
   }
 
+  def concatenate(a: String, b: String): String = {
+    a + b
+  }
+
+  def addOneAutoIncrement(number: String): Int = {
+    number.toInt + 1
+  }
+
 }
