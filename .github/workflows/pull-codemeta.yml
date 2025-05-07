@@ -1,0 +1,22 @@
+name: Pull CodeMeta
+
+on: push
+
+jobs:
+  generate-codemeta:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Pull CodeMeta file from the codemeta-shexml repository
+        run: wget -O codemeta.json https://raw.githubusercontent.com/herminiogg/codemeta-shexml/refs/heads/main/shexml-codemeta/generated/codemeta.json
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Pulled latest version of the ShExML CodeMeta file
