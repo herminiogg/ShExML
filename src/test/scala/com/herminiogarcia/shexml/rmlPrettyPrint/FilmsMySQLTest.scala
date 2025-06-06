@@ -13,7 +13,7 @@ class FilmsMySQLTest extends AnyFunSuite with Matchers with RDFStatementCreator 
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_database <jdbc:mysql://localhost:3306/films>
+      |SOURCE films_database <jdbc:mysql://localhost:53306/films>
       |ITERATOR films_iterator <sql: SELECT * FROM films;> {
       |    FIELD id <id>
       |    FIELD name <name>

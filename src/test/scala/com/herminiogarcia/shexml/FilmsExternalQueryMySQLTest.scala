@@ -12,7 +12,7 @@ class FilmsExternalQueryMySQLTest extends AnyFunSuite with Matchers with RDFStat
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_database <jdbc:mysql://localhost:3306/films>
+      |SOURCE films_database <jdbc:mysql://localhost:53306/films>
       |QUERY film_query <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%2363/src/test/resources/filmQuery.sql>
       |ITERATOR films_iterator <film_query> {
       |    FIELD id <id>
