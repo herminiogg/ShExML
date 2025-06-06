@@ -1,6 +1,5 @@
 package com.herminiogarcia.shexml.visitor
 
-import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
 import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, LoadedSource, SourceHelper}
@@ -50,6 +49,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   protected val xmlDocumentCache = new XMLDocumentCache()
   protected val functionHubExecuterCache = new FunctionHubExecuterCache()
   protected val defaultModel = dataset.getDefaultModel
+  protected val jsonPathConfiguration = Configuration.defaultConfiguration()
+    .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
+    .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
+    .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
 
   private val xmlProcessor = new Processor(false)
 
@@ -437,11 +440,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               logger.debug(s"Retrieving cached result for already parsed JSON file")
               jsonNode
             case None =>
-              val configuration = Configuration.defaultConfiguration()
-                .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
-                .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
-                .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
-              val context = com.jayway.jsonpath.JsonPath.using(configuration).parse(file.fileContent)
+              val context = com.jayway.jsonpath.JsonPath.using(jsonPathConfiguration).parse(file.fileContent)
               jsonObjectMapperCache.save(file, context)
               context
           }

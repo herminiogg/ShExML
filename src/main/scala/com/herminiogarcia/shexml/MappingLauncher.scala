@@ -1,5 +1,6 @@
 package com.herminiogarcia.shexml
 
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.herminiogarcia.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import com.herminiogarcia.shexml.ast._
 import com.herminiogarcia.shexml.helper.{OrphanBNodeRemover, SourceHelper}
@@ -11,7 +12,7 @@ import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
 import com.typesafe.scalalogging.Logger
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import scala.collection.mutable
 
 /**
@@ -46,6 +47,24 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
     generateResultingRDF(ast, varTable)
+  }
+
+  def launchMappingFromJsonData(mappingCode: String, data: JsonNode): Dataset = {
+    logger.info(s"Launching mapping with data")
+    logger.debug(s"Mapping rules $mappingCode")
+    val lexer = createLexer(mappingCode)
+    val parser = createParser(lexer)
+    val ast = createAST(parser)
+    val varTable = createVarTable(ast)
+    try {
+      val bytes = new ObjectMapper().writeValueAsBytes(data)
+      logger.trace(s"Data: ${data.toString}")
+      val inputBytes = new ByteArrayInputStream(bytes)
+      System.setIn(inputBytes)
+      generateResultingRDF(ast, varTable)
+    } finally {
+      System.setIn(System.in)
+    }
   }
 
   def launchRMLTranslation(mappingCode: String, prettify: Boolean = false): String = {

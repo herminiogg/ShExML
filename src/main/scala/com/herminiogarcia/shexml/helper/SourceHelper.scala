@@ -23,7 +23,9 @@ class SourceHelper {
   def getContentFromRelativePath(path: String): LoadedSource = searchFileResult(path) match {
     case Some(result) => result
     case None =>
-      val file = scala.io.Source.fromFile(path, "UTF-8")
+      val file = if (path.equals("-"))
+        scala.io.Source.fromInputStream(System.in, "UTF-8")
+      else scala.io.Source.fromFile(path, "UTF-8")
       try {
         val content = LoadedSource(file.mkString, path)
         saveFileResult(path, content)
