@@ -64,6 +64,9 @@ class Main extends Callable[Int] {
   @Option(names = Array("-nu", "--normaliseURIs"), description = Array("Activate the URI normalisation system which allows to avoid malformed URIs when using strings for URI creation"))
   private var normaliseURIs: Boolean = false
 
+  @Option(names = Array("-pc", "--precompile"), description = Array("Create a single version including all the imported files, useful for debugging purposes"))
+  private var preCompile: Boolean = false
+
   override def call(): Int = {
     val fileHandler = scala.io.Source.fromFile(file)
     try {
@@ -81,6 +84,8 @@ class Main extends Callable[Int] {
         mappingLauncher.launchSHACLGeneration(fileContent)
       } else if(shaclClosedOutput) {
         mappingLauncher.launchSHACLGeneration(fileContent, true)
+      } else if(preCompile) {
+        mappingLauncher.precompile(fileContent)
       } else {
         mappingLauncher.launchMapping(fileContent, format)
       }
