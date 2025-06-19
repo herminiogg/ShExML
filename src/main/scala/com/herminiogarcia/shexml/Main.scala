@@ -89,7 +89,7 @@ class Main extends Callable[Int] {
         pw.print(outputContent)
         pw.close()
       }
-      1 // well finished
+      0 // well finished
     } finally { fileHandler.close() }
   }
 }
