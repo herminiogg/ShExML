@@ -109,10 +109,16 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     logger.debug(s"Mapping rules $mappingCode")
     val precompiledMappingRules = resolveImports(mappingCode)
     logger.debug(s"Precompiled mapping rules $precompiledMappingRules")
-    val lexer = createLexer(mappingCode)
-    val parser = createParser(lexer)
-    val ast = createAST(parser)
-    precompiledMappingRules
+    try {
+      val lexer = createLexer(mappingCode)
+      val parser = createParser(lexer)
+      val ast = createAST(parser)
+      precompiledMappingRules
+    } catch {
+      case e: Exception =>
+        logger.error("Error while parsing the mapping rules, check the syntax of your input!", e)
+        precompiledMappingRules
+    }
   }
 
   private def createLexer(mappingCode: String): ShExMLLexer = {
