@@ -9,8 +9,8 @@ class FilmsAlt extends AnyFunSuite with Matchers with RDFStatementCreator {
   private val example =
     """
       PREFIX : <http://example.com/>
-      |SOURCE films_xml_file <https://raw.githubusercontent.com/herminiogg/ShExML/develop/src/test/resources/filmsAlt.xml>
-      |SOURCE films_json_file <https://raw.githubusercontent.com/herminiogg/ShExML/develop/src/test/resources/filmsAlt.json>
+      |SOURCE films_xml_file <./src/test/resources/filmsAlt.xml>
+      |SOURCE films_json_file <./src/test/resources/filmsAlt.json>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD name <name>
       |    FIELD year <year>
