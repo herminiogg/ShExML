@@ -36,8 +36,8 @@ class SHACLGenerator(dataset: Dataset, closed: Boolean) {
     }
 
     case Prefix(name, url) => {
-      prefixTable += (name -> url.url)
-      output.setNsPrefix(name.replace(":", ""), url.url)
+      prefixTable += (name -> url.value)
+      output.setNsPrefix(name.replace(":", ""), url.value)
     }
 
     case Graph(name, shapes) => {

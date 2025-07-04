@@ -1,0 +1,6 @@
+<films>
+    <film id="99">
+        <name>Incomplete film</name>
+        <country>USA</country>
+    </film>
+</films>

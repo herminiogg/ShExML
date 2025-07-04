@@ -185,7 +185,10 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   override def visitIteratorQuery(ctx: IteratorQueryContext): AST = {
     val firstVar = createVar(ctx.variable())
     val varOrIteratorQuery = visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
-    IteratorQuery(firstVar, varOrIteratorQuery)
+    val builtinFunction =
+      if(ctx.builtinFunction() != null) Some(visit(ctx.builtinFunction()).asInstanceOf[BuiltinFunction])
+      else None
+    IteratorQuery(firstVar, varOrIteratorQuery, builtinFunction)
   }
 
   override def visitComposedVariable(ctx: ComposedVariableContext): AST = {
@@ -195,6 +198,12 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
     else null
     if(otherVariables != null) IteratorQuery(variable, otherVariables) else variable
+  }
+
+  override def visitBuiltinFunction(ctx: BuiltinFunctionContext): AST = {
+    if(ctx.INDEX() != null) {
+      Index()
+    } else null
   }
 
   override def visitGraph(ctx: GraphContext): AST = {
@@ -323,7 +332,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   override def visitFunctionArguments(ctx: FunctionArgumentsContext): AST = {
     val argument =
       (if(ctx.exp() != null) visit(ctx.exp())
-      else visit(ctx.variable())).asInstanceOf[ExpOrVar]
+      else createVar(ctx.variable())).asInstanceOf[ExpOrVar]
     val arguments =
       if(ctx.functionArguments() != null) argument +: visit(ctx.functionArguments()).asInstanceOf[Arguments].arguments
       else List(argument)

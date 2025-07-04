@@ -27,9 +27,9 @@ class QuerySearcher(val varTable: mutable.HashMap[Variable, VarResult]) {
   }
 
   private def getURLContents(u: URL): QueryClause = {
-    val parts = u.url.split('.')
+    val parts = u.value.split('.')
     val extension = parts(parts.length - 1)
-    val file = new SourceHelper().getURLContent(u.url)
+    val file = new SourceHelper().getURLContent(u.value)
     if(extension == "xpath") {
       XmlPath(file.fileContent)
     } else if(extension == "jsonpath") {
