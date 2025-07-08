@@ -49,7 +49,9 @@ class FilmsSparqlTest extends AnyFunSuite with Matchers with RDFStatementCreator
     assert(output.contains(createStatement(prefix, "Q166262", "type", "Film")))
     assert(output.contains(createStatementWithLiteral(prefix, "Q166262", "name", "Batman Begins", "en")))
     //assert(output.contains(createStatementWithLiteral(prefix, "9", "year", "2005", XSDDatatype.XSDgYear)))
-    assert(output.contains(createStatementWithLiteral(prefix, "Q166262", "country", "United States of America", XSDDatatype.XSDstring)))
+    assert(
+      output.contains(createStatementWithLiteral(prefix, "Q166262", "country", "United States", XSDDatatype.XSDstring)) ||
+        output.contains(createStatementWithLiteral(prefix, "Q166262", "country", "United States of America", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "Q166262", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
   }
 

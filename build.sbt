@@ -4,7 +4,7 @@ lazy val shexml = project
   .in(file("."))
   .settings(
     name := "ShExML",
-    version := "0.5.3",
+    version := "0.5.4",
     scalaVersion := "3.2.0",
     crossScalaVersions := Seq("2.12.17", "2.13.9", "3.2.0"),
     libraryDependencies ++= Seq(
@@ -15,7 +15,7 @@ lazy val shexml = project
       "org.apache.jena" % "jena-arq" % "3.17.0",
       "org.apache.jena" % "jena-shacl" % "3.17.0",
       ("org.scalatest" %% "scalatest" % "3.2.9" % "test"),
-      "info.picocli" % "picocli" % "4.0.4",
+      "info.picocli" % "picocli" % "4.7.7",
       "org.slf4j" % "slf4j-nop" % "1.7.27",
       ("com.github.tototoshi" %% "scala-csv" % "1.3.6").cross(CrossVersion.for3Use2_13),
       "org.xerial" % "sqlite-jdbc" % "3.32.3.2",

@@ -8,25 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up JDK 8
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v4
       with:
         java-version: '8'
         distribution: 'adopt'
-    - name: Set up MySQL
-      run: sudo service mysql start  &&
-            mysql -e "CREATE DATABASE films;" -u root -proot &&
-            mysql -e "USE films; CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));" -u root -proot &&
-            mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" -u root -proot &&
-            mysql -e "USE films; INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');" -u root -proot
-    - name: Set up PostgreSQL
-      run:  sudo systemctl restart postgresql &&
-            sudo -u postgres psql -c "create user root with encrypted password 'root';" &&
-            sudo -u postgres psql -c "CREATE DATABASE films;" &&
-            sudo -u postgres psql -c "CREATE TABLE films (id int, name varchar(48), year int, country varchar(48), director varchar(48));" films &&
-            sudo -u postgres psql -c "grant all privileges on table films to root;" films &&
-            sudo -u postgres psql -c "INSERT INTO films (id, name, year, country, director) VALUES (8, 'Tenet', 2020, 'UK', 'Christopher Nolan');" films &&
-            sudo -u postgres psql -c "INSERT INTO films (id, name, year, country, director) VALUES (9, 'Batman Begins', 2005, 'USA', 'Christopher Nolan');" films
+    - uses: sbt/setup-sbt@v1
+    - name: Build the docker compose stack
+      run: docker compose up -d
     - name: Run tests
       run: sbt --mem 2048 "+ test"

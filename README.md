@@ -64,39 +64,46 @@ The full specification with all the supported features and examples can be consu
 ### CLI
 A command line interface is offered under the jar library with the following options available:
 ```
-Usage: ShExML [-hrsV] [-id] [-nu] [-rp] [-sh] [-shc] [-sm] [-d=<drivers>]
-              [-f=<format>] -m=<file> [-o=<output>] [-p=<password>]
-              [-u=<username>]
+Usage: ShExML [-h] [-id] [-nu] [-V] [-d=<drivers>] [-f=<format>] -m=<file>
+              [-o=<output>] [-p=<password>] [-u=<username>] [-pc | -r | -rp |
+              -s | -sm | -sh | -shc]
 Map and merge heterogeneous data sources with a Shape Expressions based syntax
-  -d, --drivers=<drivers>    Add more JDBC database drivers in the form of
-                               <startJDBCURL>%<driver> and separating them with
-                               ";". Example: jdbc:postgresql%org.postgresql.
-                               Driver;jdbc:oracle%oracle.jdbc.OracleDriver
-  -f, --format=<format>      Output format for RDF graph. Turtle, RDF/XML,
-                               N-Triples, ...
-  -h, --help                 Show this help message and exit.
-      -id, --inferenceDatatypes
-                             Use the inference system for choosing the best
-                               suited datatype for the generated literal.
-                               Without this option, and not declaring a
-                               datatype in the mapping rules, all the literals
-                               will be outputted as strings
-  -m, --mapping=<file>       Path to the file with the mappings
-      -nu, --normaliseURIs   Activate the URI normalisation system which allows
-                               to avoid malformed URIs when using strings for
-                               URI creation
-  -o, --output=<output>      Path where the output file should be created
-  -p, --password=<password>  Password in case of using a database
-  -r, --rml                  Generate RML output
-      -rp, --rmlPrettified   Generate RML output using Blank nodes for better
-                               readability
-  -s, --shex                 Generate ShEx validation
-      -sh, --shacl           Generate SHACL validation
-      -shc, --shaclClosed    Generate SHACL validation with closed shapes as
-                               default
-      -sm, --shapeMap        Generate Shape Map for ShEx validation
-  -u, --username=<username>  Username in case of using a database
-  -V, --version              Print version information and exit.
+  -m, --mapping=<file>         Path to the file with the mappings
+  -h, --help                   Show this help message and exit.
+  -V, --version                Print version information and exit.
+Options for the transformation to RDF
+  -id, --inferenceDatatypes    Use the inference system for choosing the best
+                                 suited datatype for the generated literal.
+                                 Without this option, and not declaring a
+                                 datatype in the mapping rules, all the
+                                 literals will be outputted as strings
+  -nu, --normaliseURIs         Activate the URI normalisation system which
+                                 allows to avoid malformed URIs when using
+                                 strings for URI creation
+  -f, --format=<format>        Output format for RDF graph. Turtle, RDF/XML,
+                                 N-Triples, ...
+Other transformation options
+  -pc, --precompile            Create a single version including all the
+                                 imported files, useful for debugging purposes.
+                                 Additionally it checks the input for syntactic
+                                 and grammatical errors
+  -r, --rml                    Generate RML output
+  -rp, --rmlPrettified         Generate RML output using Blank nodes for better
+                                 readability
+  -s, --shex                   Generate ShEx validation
+  -sm, --shapeMap              Generate Shape Map for ShEx validation
+  -sh, --shacl                 Generate SHACL validation
+  -shc, --shaclClosed          Generate SHACL validation with closed shapes as
+                                 default
+General configuration options applying to all the available transformations
+  -o, --output=<output>        Path where the output file should be created
+  -u, --username=<username>    Username in case of using a database
+  -p, --password=<password>    Password in case of using a database
+  -d, --drivers=<drivers>      Add more JDBC database drivers in the form of
+                                 <startJDBCURL>%<driver> and separating them
+                                 with ";". Example: jdbc:postgresql%org.
+                                 postgresql.Driver;jdbc:oracle%oracle.jdbc.
+                                 OracleDriver
 ```
 Therefore, to execute the films example: ```java -jar shexml.jar -m films.shexml```
 
@@ -110,7 +117,7 @@ val output = mappingLauncher.launchMapping(file, "TURTLE")
 ```
 ### Requirements
 The minimal versions for this software to work are:
-- JDK 8 (or the Open JDK 8)
+- JDK 17, or the Open JDK 17. (Versions matching earlier JDK version can be generated following the [Build](#build) instructions or provided upon request.) 
 - Scala 2.12.17
 - SBT 1.7.2
 
@@ -127,12 +134,18 @@ PeerJ Computer Science, 6, e318. https://doi.org/10.7717/peerj-cs.318
 ```
 
 Other possible publications per topic are:
+* Optimisatin of the ShExML engine
+```
+García-González, H. (2025). Optimising the ShExML engine through code profiling: From turtle’s pace 
+to state-of-the-art performance. Semantic Web, (Preprint), 1-30. https://doi.org/10.3233/SW-243736
+```
 * Translation from ShExML to RML
 ```
 García-González, H., & Dimou, A. (2022, September). Why to tie to a single data mapping language? 
 enabling a transformation from shexml to rml. In Proceedings of Poster and Demo Track and Workshop 
 Track of the 18th International Conference on Semantic Systems co-located with 18th International 
-Conference on Semantic Systems (SEMANTiCS 2022) (Vol. 3235, pp. paper-11). https://ceur-ws.org/Vol-3235/paper11.pdf
+Conference on Semantic Systems (SEMANTiCS 2022) (Vol. 3235, pp. paper-11). 
+https://ceur-ws.org/Vol-3235/paper11.pdf
 ```
 * Addressing mapping challenges with ShExML
 ```
@@ -157,8 +170,8 @@ To run the project from within sbt you can use the command below, where `<option
 $ sbt "run <options>"
 ```
 To generate an executable JAR file you can call the following command. Take into account that if you want to test the library before
-generating the artifact you need to set up the testing environment as explained in the [Testing](#testing) section and omit 
-the `"set test in assembly := {}"` option from the command.
+generating the artifact you need to set up the testing environment as explained in the [Testing](#testing) section. Alternatively, you can use 
+the `"set test in assembly := {}"` option to omit the tests during the build process.
 ```
 $ sbt "set test in assembly := {}" clean update assembly
 ```
@@ -166,13 +179,17 @@ $ sbt "set test in assembly := {}" clean update assembly
 The project contains a full suite of tests that checks that all the features included in the engine work as expected. These
 tests units are included under the src/test/scala folder. To run them you can use the command below. Notice that it is of utmost
 importance to test that the project pass the test for all the cross-compiled versions used within the project 
-(see the [Cross-compilation](#cross-compilation) section for more details.)
+(see the [Cross-compilation](#cross-compilation) section for more details).
 ```
 $ sbt test
 ```
 The test environment uses some external resources that need to be set up before running them. This mainly involves starting 
-a MySQL and a PostreSQL database, creating the relational schema and filling the tables up with the dummy data. This process is
-described on the [Github workflow file](https://github.com/herminiogg/ShExML/blob/master/.github/workflows/scala.yml).
+a MySQL/MariaDB and a PostreSQL database, creating the relational schema and filling the tables up with the dummy data. This process is
+enclosed in a Docker contain and can be set up using the following command:
+```
+$ docker compose up -d
+```
+
 ### Cross-compilation
 The project is enabled to work with three different versions of Scala (i.e., 2.12.x, 2.13.x and 3.x) so it can be used across different
 Scala environments. Therefore, all the commands will work by default with the 3.x version but it is possible to run the same command 
@@ -183,7 +200,7 @@ Testing against all the cross-compiled versions:
 $ sbt "+ test"
 ```
 
-Testing against a specific version where <version> is one of the configured versions in the build.sbt file:
+Testing against a specific version where `<version>` is one of the configured versions in the build.sbt file:
 ```
 $ sbt "++<version> test"
 ```
@@ -212,6 +229,7 @@ The following dependencies are used by this library:
 | com.jayway.jsonpath / json-path            | Apache License 2.0                      |
 | org.scala-lang / scala-reflect             | Apache License 2.0                      |
 | org.scala-lang / scala-compiler            | Apache License 2.0                      |
+| ch.qos.logback / logback-classic           | Eclipse Public License v1.0 or LGPL-2.1 |
 
 For performing a more exhaustive licenses check, including subdependecies and testing ones the 
 [sbt-license-report](https://github.com/sbt/sbt-license-report) plugin is included in the project, enabling the generation

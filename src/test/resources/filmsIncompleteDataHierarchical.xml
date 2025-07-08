@@ -1,0 +1,32 @@
+<films>
+    <film id="1">
+        <name>Complete film 1</name>
+        <country>USA</country>
+        <years>
+            <year1>2000</year1>
+            <year2>2000</year2>
+        </years>
+    </film>
+    <film id="2">
+        <name>Incomplete film 2</name>
+        <country>USA</country>
+        <years>
+            <year1>2000</year1>
+        </years>
+    </film>
+    <film id="3">
+        <name>Incomplete film 3</name>
+        <country>USA</country>
+        <years>
+            <year2>2000</year2>
+        </years>
+    </film>
+    <film id="4">
+        <name>Complete film 4</name>
+        <country>USA</country>
+        <years>
+            <year1>2011</year1>
+            <year2>2011</year2>
+        </years>
+    </film>
+</films>

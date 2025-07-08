@@ -18,7 +18,7 @@ ThisBuild / developers := List(
   )
 )
 
-ThisBuild / description := "An heterogeneous data mapping language based on Shape Expressions."
+ThisBuild / description := "A heterogeneous data mapping language based on Shape Expressions."
 ThisBuild / licenses := List("MIT License" -> new URL("https://opensource.org/licenses/MIT"))
 ThisBuild / homepage := Some(url("http://shexml.herminiogarcia.com"))
 
@@ -26,9 +26,9 @@ ThisBuild / homepage := Some(url("http://shexml.herminiogarcia.com"))
 ThisBuild / pomIncludeRepository := { _ => false }
 
 ThisBuild / publishTo := {
-  val nexus = "https://s01.oss.sonatype.org/"
-  if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-  else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
 }
 
 ThisBuild / publishMavenStyle := true

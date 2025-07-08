@@ -32,7 +32,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
     }
 
     case com.herminiogarcia.shexml.ast.Prefix(name, url) => {
-      prefixTable += (name.name -> url.url)
+      prefixTable += (name.name -> url.value)
       com.herminiogarcia.shexml.shex.Prefix(name.name, url)
     }
 

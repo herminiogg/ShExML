@@ -30,10 +30,6 @@
   "type" : "SoftwareSourceCode",
   "applicationCategory" : "Computer Science",
   "author" : [ {
-    "type" : "Role",
-    "schema:author" : "https://herminiogarcia.com/#me",
-    "roleName" : "Main author"
-  }, {
     "id" : "https://herminiogarcia.com/#me",
     "type" : "Person",
     "affiliation" : {
@@ -45,6 +41,10 @@
     "familyName" : "García González",
     "givenName" : "Herminio",
     "identifier" : "https://orcid.org/0000-0001-5590-4857"
+  }, {
+    "type" : "Role",
+    "schema:author" : "https://herminiogarcia.com/#me",
+    "roleName" : "Main author"
   } ],
   "codeRepository" : "https://github.com/herminiogg/ShExML",
   "dateCreated" : "2018-02-22",
@@ -52,6 +52,7 @@
   "description" : "A heterogeneous data mapping language based on Shape Expressions",
   "developmentStatus" : "active",
   "downloadUrl" : "https://api.github.com/repos/herminiogg/ShExML/downloads",
+  "identifier" : "https://doi.org/10.5281/zenodo.12569454",
   "issueTracker" : "https://api.github.com/repos/herminiogg/ShExML/issues",
   "license" : "https://api.github.com/licenses/mit",
   "name" : "ShExML",

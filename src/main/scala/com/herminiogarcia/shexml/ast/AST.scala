@@ -17,9 +17,9 @@ case class LiteralSubject(prefix: Var, value: String) extends ActionOrLiteral
 sealed trait DeclarationStatement extends AST
 
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
-case class Source(name: Var, path: IRI) extends DeclarationStatement
+case class Source(name: Var, path: FilePath) extends DeclarationStatement
 case class Query(name: Var, query: QueryOrURL) extends DeclarationStatement
-case class Functions(name: Var, query: IRI) extends DeclarationStatement
+case class Functions(name: Var, query: FilePath) extends DeclarationStatement
 case class Iterator(name: Var, queryClause: QueryOrVar, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
 case class Field(name: Var, queryClause: QueryClause, pushed: Boolean, popped: Boolean) extends AST
@@ -55,7 +55,7 @@ case class Union(left: LeftUnion, right: RightUnion) extends RightUnion
 case class StringOperation(left: IteratorQuery, right: IteratorQuery, unionString: String) extends LeftUnion with RightUnion
 case class Substitution(leftUnion: IteratorQuery, rightUnion: IteratorQuery, joinClause: IteratorQuery) extends Exp
 case class Join(leftUnion: IteratorQuery, rightUnion: IteratorQuery, leftJoinClause: IteratorQuery, rightJoinClause: IteratorQuery) extends Exp
-case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery) extends LeftUnion with RightUnion with VarOrIteratorQuery
+case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery, builtinFunction: Option[BuiltinFunction] = None) extends LeftUnion with RightUnion with VarOrIteratorQuery
 
 sealed trait VarOrIteratorQuery extends AST
 sealed trait ExpOrVar extends AST
@@ -98,10 +98,12 @@ sealed trait Iterators extends AST {
   def iterators: List[NestedIterator]
 }
 
-sealed trait IRI extends VarResult
-case class URL(url: String) extends IRI with QueryOrURL
-case class JdbcURL(url: String) extends IRI
-case class RelativePath(path: String) extends IRI
+sealed trait FilePath extends VarResult {
+  def value: String
+}
+case class URL(value: String) extends FilePath with QueryOrURL
+case class JdbcURL(value: String) extends FilePath
+case class RelativePath(value: String) extends FilePath
 case class ReplacedStrings(strings: List[String]) extends AST
 case class ComposedVariable(variables: List[Var]) extends AST
 case class MatcherList(matchers: List[Matcher]) extends AST
@@ -111,3 +113,6 @@ case class RDFList() extends RDFCollection
 case class RDFBag() extends RDFCollection
 case class RDFAlt() extends RDFCollection
 case class RDFSeq() extends RDFCollection
+
+sealed trait BuiltinFunction extends AST
+case class Index() extends BuiltinFunction
