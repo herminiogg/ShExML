@@ -1,11 +1,15 @@
 package com.herminiogarcia.shexml.mappingChallenges
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
+import com.herminiogarcia.shexml.{ParallelConfigInferenceDatatypesNormaliseURIsFixture, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class AccessFieldsOutsideIterators extends AnyFunSuite with Matchers with RDFStatementCreator {
+class AccessFieldsOutsideIterators extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
@@ -66,9 +70,14 @@ class AccessFieldsOutsideIterators extends AnyFunSuite with Matchers with RDFSta
 
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+
+  private var output: Model = _
   private val prefix = "http://example.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))

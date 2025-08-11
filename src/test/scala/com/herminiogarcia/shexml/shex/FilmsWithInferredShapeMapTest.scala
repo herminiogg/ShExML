@@ -1,9 +1,9 @@
 package com.herminiogarcia.shexml.shex
 
-import com.herminiogarcia.shexml.MappingLauncher
+import com.herminiogarcia.shexml.{MappingLauncher, ParallelConfigValidation}
 import org.scalatest.funsuite.AnyFunSuite
 
-class FilmsWithInferredShapeMapTest extends AnyFunSuite with ShExValidation {
+class FilmsWithInferredShapeMapTest extends AnyFunSuite with ShExValidation with ParallelConfigValidation {
 
   private val example =
     """
@@ -76,7 +76,7 @@ class FilmsWithInferredShapeMapTest extends AnyFunSuite with ShExValidation {
 
   test("Films validate against generated schema") {
     val shapeMap = new MappingLauncher(normaliseURIs = true).launchShapeMapGeneration(example)
-    assert(this.validate(example, shapeMap))
+    assert(this.validate(example, shapeMap, parallelConfiguration = parallelConfiguration))
   }
 
 }

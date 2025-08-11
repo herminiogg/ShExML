@@ -12,10 +12,16 @@ jobs:
     - name: Set up JDK 8
       uses: actions/setup-java@v4
       with:
-        java-version: '8'
+        java-version: '17'
         distribution: 'adopt'
     - uses: sbt/setup-sbt@v1
     - name: Build the docker compose stack
       run: docker compose up -d
     - name: Run tests
       run: sbt --mem 2048 "+ test"
+    - name: Run tests parallel all
+      run: sbt --mem 2048 "+ testOnly * -- -Dparallel=all"
+    - name: Run tests parallel shapes
+      run: sbt --mem 2048 "+ testOnly * -- -Dparallel=shapes"
+    - name: Run tests parallel queries
+      run: sbt --mem 2048 "+ testOnly * -- -Dparallel=queries"

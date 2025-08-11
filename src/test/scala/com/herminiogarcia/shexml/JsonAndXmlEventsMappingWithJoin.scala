@@ -1,13 +1,17 @@
 package com.herminiogarcia.shexml
 
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMappingWithJoin extends AnyFunSuite with Matchers with RDFStatementCreator {
+class JsonAndXmlEventsMappingWithJoin extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   val example =
     """
@@ -45,9 +49,13 @@ class JsonAndXmlEventsMappingWithJoin extends AnyFunSuite with Matchers with RDF
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+  private var output: Model = _
   private val prefix = "http://ex.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Location shape is translated correctly") {
     assert(output.contains(createStatementWithLiteral(prefix, "51.043613-3.717333", "lat", "51.043613", XSDDatatype.XSDdecimal)))

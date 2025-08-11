@@ -1,10 +1,14 @@
 package com.herminiogarcia.shexml
 
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class ConditionalGenerationPredicateTest extends AnyFunSuite with Matchers with RDFStatementCreator {
+class ConditionalGenerationPredicateTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
@@ -31,9 +35,13 @@ class ConditionalGenerationPredicateTest extends AnyFunSuite with Matchers with 
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+  private var output: Model = _
   private val prefix = "http://example.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Shape 99 is generated without name") {
     assert(!output.contains(createStatementWithLiteral(prefix, "99", "name", "Incomplete film", XSDDatatype.XSDstring)))
