@@ -20,8 +20,8 @@ jobs:
     - name: Run tests
       run: sbt --mem 2048 "+ test"
     - name: Run tests parallel all
-      run: sbt --mem 2048 "+ testOnly * -- -Dparallel=all"
+      run: sbt --mem 4096 "+ testOnly * -- -Dparallel=all"
     - name: Run tests parallel shapes
-      run: sbt --mem 2048 "+ testOnly * -- -Dparallel=shapes"
+      run: sbt --mem 4096 "+ testOnly * -- -Dparallel=shapes"
     - name: Run tests parallel queries
-      run: sbt --mem 2048 "+ testOnly * -- -Dparallel=queries"
+      run: sbt --mem 4096 "+ testOnly * -- -Dparallel=queries"
