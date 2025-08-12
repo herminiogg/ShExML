@@ -3,11 +3,9 @@ package com.herminiogarcia.shexml.visitor
 import com.herminiogarcia.shexml.ast._
 import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.Dataset
-import org.apache.jena.rdf.model.{AnonId, Resource, ResourceFactory, Statement}
+import org.apache.jena.rdf.model.{Resource, Statement}
 
-import scala.collection.mutable
-
-class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], prettify: Boolean ,username: String, password: String)
+class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], prettify: Boolean ,username: String, password: String)
   extends RDFGeneratorVisitor(dataset, varTable, username, password) with JdbcDriverRegistry {
 
   private val mapPrefix = "http://mapping.example.com/"

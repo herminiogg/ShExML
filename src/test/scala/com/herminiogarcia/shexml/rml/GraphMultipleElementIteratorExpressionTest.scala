@@ -1,11 +1,15 @@
 package com.herminiogarcia.shexml.rml
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
+import com.herminiogarcia.shexml.{ParallelConfigInferenceDatatypesNormaliseURIsFixture, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture with RMLTestConversion {
 
   private val example =
     """
@@ -48,12 +52,17 @@ class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite with Matche
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val result = mappingLauncher.launchRMLTranslation(example)
+  private var output: Model = _
+  private var graphMyFilms: Model = _
   private val prefix = "http://example.com/"
-  private val dataset = doTranslation(result, prefix)
-  private val output = dataset.getDefaultModel
-  private val graphMyFilms = dataset.getNamedModel(prefix + "MyFilms")
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    val result = mappingLauncher.launchRMLTranslation(example, true)
+    val dataset = doTranslation(result, prefix)
+    output = dataset.getDefaultModel
+    graphMyFilms = dataset.getNamedModel(prefix + "MyFilms")
+  }
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))

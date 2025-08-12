@@ -1,10 +1,14 @@
 package com.herminiogarcia.shexml
 
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite with Matchers with RDFStatementCreator {
+class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
@@ -50,11 +54,16 @@ class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite with Matche
       |}
     """.stripMargin
 
+  private var output: Model = _
+  private var myFilmsGraph: Model = _
   private val prefix = "http://example.com/"
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val dataset = mappingLauncher.launchMapping(example)
-  private val output = dataset.getDefaultModel
-  private val myFilmsGraph = dataset.getNamedModel(prefix + "MyFilms")
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    val dataset = mappingLauncher.launchMapping(example)
+    output = dataset.getDefaultModel
+    myFilmsGraph = dataset.getNamedModel(prefix + "MyFilms")
+  }
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))

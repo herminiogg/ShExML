@@ -38,6 +38,9 @@ lazy val shexml = project
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((3, _)) => "org.scala-lang" % "scala-compiler" % "2.13.9"
         case Some((2, n)) if n >= 12 => "org.scala-lang" % "scala-compiler" % scalaVersion.value
+      }) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((m, n)) if m >= 3 || m >= 2 && n >= 13 => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
+      case _ => Nil
       }),
       assembly / assemblyMergeStrategy := {
         case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat

@@ -2,7 +2,7 @@ package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import com.herminiogarcia.shexml.ast._
-import com.herminiogarcia.shexml.helper.{OrphanBNodeRemover, SourceHelper}
+import com.herminiogarcia.shexml.helper.{OrphanBNodeRemover, ParallelExecutionConfigurator, SourceHelper}
 import com.herminiogarcia.shexml.parser.ASTCreatorVisitor
 import com.herminiogarcia.shexml.shex._
 import com.herminiogarcia.shexml.visitor.{PushedOrPoppedValueSearchVisitor, RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
@@ -11,7 +11,9 @@ import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
 import com.typesafe.scalalogging.Logger
 
+import scala.collection.JavaConverters._
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.mutable
 
 /**
@@ -19,7 +21,8 @@ import scala.collection.mutable
   */
 class MappingLauncher(val username: String = "", val password: String = "", drivers: String = "",
                       val inferenceDatatype: Boolean = false,
-                      val normaliseURIs: Boolean = false) {
+                      val normaliseURIs: Boolean = false,
+                      val parallelCollectionConfigurator: ParallelExecutionConfigurator = new ParallelExecutionConfigurator(Map(), None)) {
 
   private val logger = Logger[MappingLauncher]
 
@@ -69,9 +72,9 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
-    val inferencesTable = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
+    val inferencesTable = new ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]()
     generateInferencesFromShExML(ast, varTable, inferencesTable)
-    val shex = new ShExGeneratorVisitor(inferencesTable.toList).doVisit(ast, null)
+    val shex = new ShExGeneratorVisitor(inferencesTable.asScala.toList).doVisit(ast, null)
     new ShExPrinter().print(shex)
   }
 
@@ -93,10 +96,10 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
-    val inferencesTable = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
+    val inferencesTable = new ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]()
     generateInferencesFromShExML(ast, varTable, inferencesTable)
     logger.info(s"Executing ShEx extraction process as base for the SHACL conversion")
-    val shex = new ShExGeneratorVisitor(inferencesTable.toList).doVisit(ast, null)
+    val shex = new ShExGeneratorVisitor(inferencesTable.asScala.toList).doVisit(ast, null)
     val dataset = DatasetFactory.create()
     new SHACLGenerator(dataset, closed).generate(shex)
     val outputStream = new ByteArrayOutputStream()
@@ -152,10 +155,11 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
 
     val dataset = DatasetFactory.create()
     val pushedOrPoppedFields = searchForPushedOrPoppedFields(ast)
-    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(),
+    new RDFGeneratorVisitor(dataset, varTable.toMap, username, password, generateDriversMap(),
       pushedOrPoppedFieldsPresent = pushedOrPoppedFields,
       inferenceDatatype = inferenceDatatype,
-      normaliseURIs = normaliseURIs).doVisit(ast, null)
+      normaliseURIs = normaliseURIs,
+      parallelCollectionConfigurator = parallelCollectionConfigurator).doVisit(ast, null)
     //val in = new ByteArrayInputStream(output.toString().getBytes)
     //val model = ModelFactory.createDefaultModel()
     //model.read(in, null, "TURTLE")
@@ -164,31 +168,32 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
 
   private def generateResultingRML(ast: AST, varTable: mutable.HashMap[Variable, VarResult], prettify: Boolean): Dataset = {
     val output = DatasetFactory.create()
-    new RMLGeneratorVisitor(output, varTable, prettify, username, password).doVisit(ast, null)
+    new RMLGeneratorVisitor(output, varTable.toMap, prettify, username, password).doVisit(ast, null)
     output
   }
 
   private def generateInferencesFromShExML(ast: AST, varTable: mutable.HashMap[Variable, VarResult],
-                                           inferences: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes]): Unit = {
+                                           inferences: ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]): Unit = {
     logger.info("Executing RDF Generator to get more accurate inferences")
     val dataset = DatasetFactory.create()
-    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences,
+    new RDFGeneratorVisitor(dataset, varTable.toMap, username, password, generateDriversMap(), Some(inferences),
       pushedOrPoppedFieldsPresent = searchForPushedOrPoppedFields(ast),
-      registerDatatypesAndCardinalities = true,
       inferenceDatatype = inferenceDatatype,
-      normaliseURIs = normaliseURIs).doVisit(ast, null)
+      normaliseURIs = normaliseURIs,
+      parallelCollectionConfigurator = parallelCollectionConfigurator).doVisit(ast, null)
   }
 
   private def generateShapeMaps(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): List[ShapeMapInference] = {
-    val shapeMapTable = mutable.ListBuffer.empty[ShapeMapInference]
-    val inferences = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes]
+    val shapeMapTable = new ConcurrentLinkedQueue[ShapeMapInference]()
+    val inferences = new ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]()
     val dataset = DatasetFactory.create()
     logger.info("Executing RDF Generator to get more accurate inferences")
-    new RDFGeneratorVisitor(dataset, varTable, username, password, generateDriversMap(), inferences, shapeMapTable,
+    new RDFGeneratorVisitor(dataset, varTable.toMap, username, password, generateDriversMap(), Some(inferences), Some(shapeMapTable),
       pushedOrPoppedFieldsPresent = searchForPushedOrPoppedFields(ast),
       inferenceDatatype = inferenceDatatype,
-      normaliseURIs = normaliseURIs).doVisit(ast, null)
-    shapeMapTable.result()
+      normaliseURIs = normaliseURIs,
+      parallelCollectionConfigurator = parallelCollectionConfigurator).doVisit(ast, null)
+    shapeMapTable.asScala.toList
   }
 
   private def generateDriversMap(): Map[String, String] = {

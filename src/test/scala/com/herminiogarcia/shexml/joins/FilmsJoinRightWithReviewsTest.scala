@@ -1,11 +1,15 @@
 package com.herminiogarcia.shexml.joins
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
+import com.herminiogarcia.shexml.{ParallelConfigNormaliseURIsFixture, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class FilmsJoinRightWithReviewsTest extends AnyFunSuite with Matchers with RDFStatementCreator {
+class FilmsJoinRightWithReviewsTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigNormaliseURIsFixture {
 
   private val example =
     """
@@ -62,9 +66,14 @@ class FilmsJoinRightWithReviewsTest extends AnyFunSuite with Matchers with RDFSt
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = false, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+
+  private var output: Model = _
   private val prefix = "http://example.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Film Inception is translated correctly") {
     assert(output.contains(createStatementWithLiteral(prefix, "Inception", "name", "Inception", XSDDatatype.XSDstring)))

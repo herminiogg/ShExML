@@ -1,8 +1,9 @@
 package com.herminiogarcia.shexml.shex
 
+import com.herminiogarcia.shexml.ParallelConfigValidation
 import org.scalatest.funsuite.AnyFunSuite
 
-class MultipleElementIteratorExpressionWithCSVAndDBTest extends AnyFunSuite with ShExValidation {
+class MultipleElementIteratorExpressionWithCSVAndDBTest extends AnyFunSuite with ShExValidation with ParallelConfigValidation {
 
   private val example =
     """
@@ -57,7 +58,7 @@ class MultipleElementIteratorExpressionWithCSVAndDBTest extends AnyFunSuite with
                           "ex:6@ex:Films,ex:7@ex:Films,ex:8@ex:Films,ex:9@ex:Films"
 
   test("Films validate against generated schema") {
-    assert(this.validate(example, shapeMap))
+    assert(this.validate(example, shapeMap, parallelConfiguration = parallelConfiguration))
   }
 
 }
