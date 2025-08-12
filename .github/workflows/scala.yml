@@ -9,19 +9,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up JDK 8
+    - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
-        distribution: 'adopt'
+        java-version: '21'
+        distribution: 'temurin'
     - uses: sbt/setup-sbt@v1
     - name: Build the docker compose stack
       run: docker compose up -d
     - name: Run tests
       run: sbt --mem 2048 "+ test"
     - name: Run tests parallel all
-      run: sbt --mem 8192 "+ testOnly * -- -Dparallel=all"
+      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(30).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=all"
     - name: Run tests parallel shapes
-      run: sbt --mem 8192 "+ testOnly * -- -Dparallel=shapes"
+      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(30).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=shapes"
     - name: Run tests parallel queries
-      run: sbt --mem 8192 "+ testOnly * -- -Dparallel=queries"
+      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(30).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=queries"
