@@ -20,8 +20,8 @@ jobs:
     - name: Run tests
       run: sbt --mem 2048 "+ test"
     - name: Run tests parallel all
-      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(30).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=all"
+      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(20).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=all"
     - name: Run tests parallel shapes
-      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(30).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=shapes"
+      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(20).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=shapes"
     - name: Run tests parallel queries
-      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(30).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=queries"
+      run: sbt --mem 8192 "set fork := true" "set Test / testGrouping := { (Test / definedTests).value.grouped(20).map { group => Tests.Group(group.head.name + \"-batch\", group, Tests.SubProcess(ForkOptions())) }.toSeq }" "+ testOnly * -- -Dparallel=queries"
