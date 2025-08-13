@@ -1,0 +1,11 @@
+{
+  "films": [
+    {
+      "id": 2,
+      "name": "Interstellar",
+      "year": "2014",
+      "country": "USA",
+      "director": ["Christopher Nolan", "Jonathan Nolan"]
+    }
+  ]
+}

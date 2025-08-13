@@ -997,20 +997,15 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   }
 
   private def getAllFilesContents(url: String): List[LoadedSource] = {
-    val slices = url.split("\\*")
-    val windows = slices(0).lastIndexOf("/") < slices(0).lastIndexOf("\\")
-    val path = if(windows)
-      slices(0).splitAt(slices(0).lastIndexOf("\\"))._1.replace("file:///", "")
-      else slices(0).splitAt(slices(0).lastIndexOf("/"))._1.replace("file://", "")
-    val fileBeginning = if(windows)
-      slices(0).splitAt(slices(0).lastIndexOf("\\"))._2.replace("\\", "")
-      else slices(0).splitAt(slices(0).lastIndexOf("/"))._2.replace("/", "")
+    val slices = url.split("\\*").map(_.replaceAll("\\\\", "/"))
+    val path = slices(0).splitAt(slices(0).lastIndexOf("/"))._1.replaceFirst("file:///?", "")
+    val fileBeginning = slices(0).splitAt(slices(0).lastIndexOf("/"))._2.replace("/", "")
     val fileEnding = slices(1).splitAt(slices(1).lastIndexOf("."))._1
     val fileExtension = slices(1).splitAt(slices(1).lastIndexOf("."))._2
     val files = new File(path).listFiles().filter(_.isFile)
       .filter(_.getName.endsWith(fileEnding + fileExtension)).filter(_.getName.startsWith(fileBeginning))
-    val fileProtocol = if(windows) "file:///" else "file://"
-    files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath)).toList
+    val fileProtocol = if(path.startsWith("/")) "file://" else "file:///"
+    files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath.replaceAll("\\\\", "/"))).toList
   }
 
   private def visitAction(actionOrLiteral: ActionOrLiteral, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = actionOrLiteral match {
