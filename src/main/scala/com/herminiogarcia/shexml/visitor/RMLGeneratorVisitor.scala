@@ -3,11 +3,9 @@ package com.herminiogarcia.shexml.visitor
 import com.herminiogarcia.shexml.ast._
 import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.Dataset
-import org.apache.jena.rdf.model.{AnonId, Resource, ResourceFactory, Statement}
+import org.apache.jena.rdf.model.{Resource, Statement}
 
-import scala.collection.mutable
-
-class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], prettify: Boolean ,username: String, password: String)
+class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], prettify: Boolean ,username: String, password: String)
   extends RDFGeneratorVisitor(dataset, varTable, username, password) with JdbcDriverRegistry {
 
   private val mapPrefix = "http://mapping.example.com/"
@@ -89,15 +87,15 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       doVisit(action, optionalArgument).asInstanceOf[List[RMLMap]].filter(_.logicalSource.nonEmpty)
     }
 
-    case IteratorQuery(firstVar, composedVar) => {
+    case IteratorQuery(firstVar, composedVar, _) => {
       val receivedArguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
       val arguments = if(receivedArguments.isDefinedAt("rmlType")) receivedArguments else receivedArguments.+("rmlType" -> "object")
       varTable(firstVar) match {
         case u: Union => doVisit(u, arguments + ("composedVar" -> composedVar))
         case i: IteratorQuery => List(doVisit(i, arguments + ("composedVar" -> composedVar)))
-        case source: IRI => {
+        case source: FilePath => {
           val iterator = composedVar match {
-            case IteratorQuery(iteratorVar, _) =>
+            case IteratorQuery(iteratorVar, _, _) =>
               if(varTable.get(iteratorVar).isDefined && iteratorVar.name.contains(".")) {
                 val query = transformNestedIterator(getQueryFromVarTable(iteratorVar), iteratorVar)
                 val rootQuery = getQueryFromVarTable(Var(iteratorVar.name.splitAt(iteratorVar.name.lastIndexOf("."))._1))
@@ -113,8 +111,8 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               val dbSubjectID = mapPrefixOrBNode + "db_" + dbIndex.next()
               val datasource = List(
                 createStatementWithLiteral(dbSubjectID, rdfPrefix + "type", d2rqPrefix + "Database"),
-                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].url)),
-                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDSN", source.asInstanceOf[JdbcURL].url),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].value)),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDSN", source.asInstanceOf[JdbcURL].value),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "username", username),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "password", password)
                 // user and password to be inputted here
@@ -139,7 +137,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               else Nil
               List(
                 createStatement(logicalSourceName, rdfPrefix + "type", rmlPrefix + "LogicalSource"),
-                createStatementWithLiteral(logicalSourceName, rmlPrefix + "source", source.asInstanceOf[URL].url),
+                createStatementWithLiteral(logicalSourceName, rmlPrefix + "source", source.asInstanceOf[URL].value),
                 createStatement(logicalSourceName, rmlPrefix + "referenceFormulation", qlPrefix + referenceFormulation)
               ) ::: iteratorStatement
             }

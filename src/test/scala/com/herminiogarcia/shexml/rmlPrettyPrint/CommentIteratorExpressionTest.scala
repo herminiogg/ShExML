@@ -1,11 +1,15 @@
 package com.herminiogarcia.shexml.rmlPrettyPrint
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
+import com.herminiogarcia.shexml.{ParallelConfigInferenceDatatypesNormaliseURIsFixture, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class CommentIteratorExpressionTest extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class CommentIteratorExpressionTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture with RMLTestConversion {
 
   private val example =
     """
@@ -40,10 +44,15 @@ class CommentIteratorExpressionTest extends AnyFunSuite with Matchers with RDFSt
       |  #ex:long [performances.long] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val result = mappingLauncher.launchRMLTranslation(example, true)
+
+  private var output: Model = _
   private val prefix = "http://ex.com/"
-  private val output = doTranslation(result, prefix).getDefaultModel
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    val result = mappingLauncher.launchRMLTranslation(example, true)
+    output = doTranslation(result, prefix).getDefaultModel
+  }
 
   test("Location shape is translated correctly") {
     assert(output.contains(createStatementWithLiteral(prefix, "51.043613-3.717333", "lat", "51.043613", XSDDatatype.XSDstring)))

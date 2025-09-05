@@ -1,9 +1,9 @@
 package com.herminiogarcia.shexml.shacl
 
+import com.herminiogarcia.shexml.ParallelConfigValidation
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
-class FilmsTest extends AnyFunSuite with SHACLValidation {
+class FilmsTest extends AnyFunSuite with SHACLValidation with ParallelConfigValidation {
 
   private val example =
     """
@@ -76,11 +76,11 @@ class FilmsTest extends AnyFunSuite with SHACLValidation {
     """.stripMargin
 
   test("Films validate against generated schema") {
-    assert(this.validate(example))
+    assert(this.validate(example, parallelConfiguration = parallelConfiguration))
   }
 
   test("Films validate against generated schema with closed shapes") {
-    assert(this.validate(example, true))
+    assert(this.validate(example, true, parallelConfiguration = parallelConfiguration))
   }
 
 }

@@ -1,10 +1,14 @@
 package com.herminiogarcia.shexml
 
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class ConditionalGenerationTest extends AnyFunSuite with Matchers with RDFStatementCreator {
+class ConditionalGenerationTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
@@ -13,6 +17,7 @@ class ConditionalGenerationTest extends AnyFunSuite with Matchers with RDFStatem
       |PREFIX schema: <http://schema.org/>
       |SOURCE films_xml_file <https://shexml.herminiogarcia.com/files/films.xml>
       |SOURCE films_json_file <https://shexml.herminiogarcia.com/files/films.json>
+      |SOURCE films_xml_incomplete_data <src/test/resources/filmsIncompleteData.xml>
       |FUNCTIONS helper <scala: https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%23122/src/test/resources/functions.scala>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD id <@id>
@@ -34,7 +39,7 @@ class ConditionalGenerationTest extends AnyFunSuite with Matchers with RDFStatem
       |    FIELD music <crew.music>
       |    FIELD photography <crew.cinematography>
       |}
-      |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
+      |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json UNION films_xml_incomplete_data.film_xml>
       |
       |:Films :[films.id IF helper.isBefore2010(films.year)] {
       |    :name [films.name] ;
@@ -47,9 +52,13 @@ class ConditionalGenerationTest extends AnyFunSuite with Matchers with RDFStatem
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+  private var output: Model = _
   private val prefix = "http://example.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Shape 4 is generated without country") {
     assert(output.contains(createStatementWithLiteral(prefix, "4", "director", "Christopher Nolan", XSDDatatype.XSDstring)))
@@ -61,10 +70,11 @@ class ConditionalGenerationTest extends AnyFunSuite with Matchers with RDFStatem
     assert(!output.contains(createStatementWithLiteral(prefix, "4", "countryOfOrigin", "USA", XSDDatatype.XSDinteger)))
   }
 
-  test("Shape 1, 2 and 3 are not generated") {
+  test("Shape 1, 2, 3 and 99 are not generated") {
     assert(output.listSubjects().filterKeep(s => s.hasURI(prefix + "1")).toSet.size() == 0)
     assert(output.listSubjects().filterKeep(s => s.hasURI(prefix + "2")).toSet.size() == 0)
     assert(output.listSubjects().filterKeep(s => s.hasURI(prefix + "3")).toSet.size() == 0)
+    assert(output.listSubjects().filterKeep(s => s.hasURI(prefix + "99")).toSet.size() == 0)
   }
 
 

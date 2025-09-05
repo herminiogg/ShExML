@@ -58,7 +58,7 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
   }
 
   private def getQueryFromVarTable(variable: Var): QueryClause = {
-    new QuerySearcher(variableMap).getQueryFromVarTable(variable)
+    new QuerySearcher(variableMap.toMap).getQueryFromVarTable(variable)
   }
 
   override def doVisitDefault(): Unit = ???

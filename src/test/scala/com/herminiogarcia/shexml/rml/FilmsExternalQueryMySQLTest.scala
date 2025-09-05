@@ -1,11 +1,15 @@
 package com.herminiogarcia.shexml.rml
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
+import com.herminiogarcia.shexml.{ParallelConfigDatabase, RDFStatementCreator}
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class FilmsExternalQueryMySQLTest extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class FilmsExternalQueryMySQLTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigDatabase with RMLTestConversion {
 
   private val example =
     """
@@ -13,7 +17,7 @@ class FilmsExternalQueryMySQLTest extends AnyFunSuite with Matchers with RDFStat
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_database <jdbc:mysql://localhost:3306/films>
+      |SOURCE films_database <jdbc:mysql://localhost:53306/films>
       |QUERY film_query <https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%2363/src/test/resources/filmQuery.sql>
       |ITERATOR films_iterator <film_query> {
       |    FIELD id <id>
@@ -34,10 +38,14 @@ class FilmsExternalQueryMySQLTest extends AnyFunSuite with Matchers with RDFStat
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher("root", "root", inferenceDatatype = true, normaliseURIs = true)
-  private val result = mappingLauncher.launchRMLTranslation(example)
+  private var output: Model = _
   private val prefix = "http://example.com/"
-  private val output = doTranslation(result, prefix).getDefaultModel
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    val result = mappingLauncher.launchRMLTranslation(example)
+    output = doTranslation(result, prefix).getDefaultModel
+  }
 
   test("Shape 8 is translated correctly") {
     assert(output.contains(createStatement(prefix, "8", "type", "Film")))

@@ -1,14 +1,17 @@
 package com.herminiogarcia.shexml.collectionsandcontainers
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
-import org.apache.jena.rdf.model.ResourceFactory
+import com.herminiogarcia.shexml.{ParallelConfigInferenceDatatypesNormaliseURIsFixture, RDFStatementCreator}
+import org.apache.jena.rdf.model.{Model, ResourceFactory}
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class RDFSeqTest extends AnyFunSuite with Matchers with RDFStatementCreator {
+class RDFSeqTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
@@ -41,9 +44,14 @@ class RDFSeqTest extends AnyFunSuite with Matchers with RDFStatementCreator {
       |    ex:hasAuthors ex:[labValues.articles.authors.name AS RDFSeq] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+
+  private var output: Model = _
   private val prefix = "http://example.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Lab shape is correctly translated") {
     assert(output.contains(createStatement(prefix, "AmazingLab1", "hasArticles", "article1")))

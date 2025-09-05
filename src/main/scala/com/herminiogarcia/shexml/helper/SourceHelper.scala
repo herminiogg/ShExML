@@ -12,7 +12,8 @@ class SourceHelper {
   def getURLContent(url: String): LoadedSource = searchFileResult(url) match {
     case Some(result) => result
     case None =>
-      val file = scala.io.Source.fromURL(url, "UTF-8")
+      val parsedURL = new java.net.URL(url)
+      val file = scala.io.Source.fromURL(parsedURL, "UTF-8")
       try {
         val content = LoadedSource(file.mkString, url)
         saveFileResult(url, content)

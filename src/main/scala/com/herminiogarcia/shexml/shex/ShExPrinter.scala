@@ -10,7 +10,7 @@ class ShExPrinter {
     }
 
     case Prefix(name, url) => {
-      "PREFIX " + name + " <" + url.url + ">"
+      "PREFIX " + name + " <" + url.value + ">"
     }
 
     case Graph(name, shapes) => {

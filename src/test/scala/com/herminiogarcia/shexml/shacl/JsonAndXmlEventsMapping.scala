@@ -1,12 +1,12 @@
 package com.herminiogarcia.shexml.shacl
 
+import com.herminiogarcia.shexml.ParallelConfigValidation
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMapping extends AnyFunSuite with SHACLValidation {
+class JsonAndXmlEventsMapping extends AnyFunSuite with SHACLValidation with ParallelConfigValidation {
 
   private val example =
     """
@@ -46,11 +46,11 @@ class JsonAndXmlEventsMapping extends AnyFunSuite with SHACLValidation {
     """.stripMargin
 
   test("Events validate against created schema") {
-    assert(this.validate(example))
+    assert(this.validate(example, parallelConfiguration = parallelConfiguration))
   }
 
   test("Events validate against created schema with closed shapes") {
-    assert(this.validate(example, true))
+    assert(this.validate(example, true, parallelConfiguration = parallelConfiguration))
   }
 
 }

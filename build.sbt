@@ -4,9 +4,9 @@ lazy val shexml = project
   .in(file("."))
   .settings(
     name := "ShExML",
-    version := "0.5.3",
-    scalaVersion := "3.2.0",
-    crossScalaVersions := Seq("2.12.17", "2.13.9", "3.2.0"),
+    version := "0.5.5-SNAPSHOT",
+    scalaVersion := "3.3.6",
+    crossScalaVersions := Seq("2.12.20", "2.13.16", "3.3.6"),
     libraryDependencies ++= Seq(
       "org.antlr" % "antlr4" % "4.9.2",
       "net.sf.saxon" % "Saxon-HE" % "12.4",
@@ -15,7 +15,7 @@ lazy val shexml = project
       "org.apache.jena" % "jena-arq" % "3.17.0",
       "org.apache.jena" % "jena-shacl" % "3.17.0",
       ("org.scalatest" %% "scalatest" % "3.2.9" % "test"),
-      "info.picocli" % "picocli" % "4.0.4",
+      "info.picocli" % "picocli" % "4.7.7",
       "org.slf4j" % "slf4j-nop" % "1.7.27",
       ("com.github.tototoshi" %% "scala-csv" % "1.3.6").cross(CrossVersion.for3Use2_13),
       "org.xerial" % "sqlite-jdbc" % "3.32.3.2",
@@ -38,6 +38,9 @@ lazy val shexml = project
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((3, _)) => "org.scala-lang" % "scala-compiler" % "2.13.9"
         case Some((2, n)) if n >= 12 => "org.scala-lang" % "scala-compiler" % scalaVersion.value
+      }) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((m, n)) if m >= 3 || m >= 2 && n >= 13 => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
+      case _ => Nil
       }),
       assembly / assemblyMergeStrategy := {
         case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat

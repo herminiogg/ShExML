@@ -1,8 +1,8 @@
 package com.herminiogarcia.shexml.visitor
 
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FunctionCalling, Graph, IRI, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
-import com.herminiogarcia.shexml.helper.{FunctionHubExecuter, LoadedSource, SourceHelper}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, LoadedSource, ParallelExecutionConfigurator, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
 import com.jayway.jsonpath.{Configuration, DocumentContext}
@@ -11,48 +11,50 @@ import net.sf.saxon.s9api.{Processor, XdmNode}
 import net.minidev.json.JSONArray
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
-import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ResultSet}
+import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ReadWrite, ResultSet, TxnType}
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
 
+import scala.collection.concurrent
 import java.io.{File, StringReader}
 import java.sql.DriverManager
+import java.util.concurrent.ConcurrentLinkedQueue
 import javax.xml.transform.stream.StreamSource
-import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.collection.immutable.HashSet
 import scala.util.Try
+import scala.collection.JavaConverters._
 
 /**
   * Created by herminio on 26/12/17.
   */
-class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, VarResult], username: String, password: String,
+class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], username: String, password: String,
                           driversMap: Map[String, String] = Map[String, String](),
-                          shexInferredPropertiesTable: mutable.ListBuffer[ShExMLInferredCardinalitiesAndDatatypes] = mutable.ListBuffer.empty[ShExMLInferredCardinalitiesAndDatatypes],
-                          shapeMapTable: mutable.ListBuffer[ShapeMapInference] = mutable.ListBuffer.empty[ShapeMapInference],
+                          shexInferredPropertiesTable: Option[ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]] = None,
+                          shapeMapTable: Option[ConcurrentLinkedQueue[ShapeMapInference]] = None,
                           pushedOrPoppedFieldsPresent: Boolean = true,
-                          registerDatatypesAndCardinalities: Boolean = false,
                           inferenceDatatype: Boolean = false,
-                          normaliseURIs: Boolean = false)
+                          normaliseURIs: Boolean = false,
+                          parallelCollectionConfigurator: ParallelExecutionConfigurator = new ParallelExecutionConfigurator(Map(), None))
   extends DefaultVisitor[Any, Any] with JdbcDriverRegistry {
 
-  protected val prefixTable = mutable.HashMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
-  protected val iteratorsCombinations = mutable.HashMap[String, List[Result]]()
-  protected val pushedQueries = mutable.HashMap[String, QueryClause]()
+  protected val prefixTable = concurrent.TrieMap[String, String](("rdf:", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"))
+  protected val iteratorsCombinations = concurrent.TrieMap[String, List[Result]]()
+  protected val pushedQueries = concurrent.TrieMap[String, QueryClause]()
   protected val queryResultCache = new QueryResultsCache()
-  protected val alreadyGeneratedCollections = mutable.ListBuffer[String]()
+  protected val alreadyGeneratedCollections = new ConcurrentLinkedQueue[String]()
   protected val iteratorQueryResultsCache = new IteratorQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val jsonpathQueryResultsCache = new JsonPathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val jsonObjectMapperCache = new JsonObjectMapperCache()
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val xmlDocumentCache = new XMLDocumentCache()
-  protected val functionHubExecuterCache = new FunctionHubExecuterCache()
+  protected val functionHubExecuterCache = new FunctionHubExecutorCache()
   protected val defaultModel = dataset.getDefaultModel
   protected val jsonPathConfiguration = Configuration.defaultConfiguration()
     .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
     .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
     .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
+
 
   private val xmlProcessor = new Processor(false)
 
@@ -67,7 +69,16 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case ShapeLink(shapeVar) => List(shapeVar)
         case _ => List()
       }))
-      val firstShape = shapes.filterNot(s => linkedShapes.contains(s.shapeName)).map(doVisit(_, optionalArgument)).headOption
+      val filteredShapes = shapes.filterNot(s => linkedShapes.contains(s.shapeName))
+      val shapesHead = filteredShapes.headOption
+      val shapesTail = filteredShapes.tail
+      val firstShape = shapesHead.map(doVisit(_, optionalArgument))
+      parallelCollectionConfigurator
+        .asParallelCollection("shapes", shapesTail)
+        .fold(
+          l => l.map(doVisit(_, optionalArgument)),
+          r => r.map(doVisit(_, optionalArgument))
+        )
       val numberOfTriples =
         (graphs.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).map(dataset.getNamedModel(_))
           :+ defaultModel).map(_.size()).sum
@@ -81,13 +92,21 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case Prefix(variable, url) => {
-      prefixTable += ((variable.name, url.url))
-      defaultModel.setNsPrefix(variable.name.replace(":", ""), url.url)
+      prefixTable += ((variable.name, url.value))
+      defaultModel.setNsPrefix(variable.name.replace(":", ""), url.value)
     }
 
     case Graph(graphName, shapes) => {
       logger.info(s"Generating ${shapes.size} shapes within $graphName graph")
-      shapes.map(doVisit(_, optionalArgument))
+      val shapesHead = shapes.headOption
+      val shapesTail = shapes.tail
+      shapesHead.map(doVisit(_, optionalArgument))
+      parallelCollectionConfigurator
+        .asParallelCollection("shapes", shapesTail)
+        .fold(
+          l => l.map(doVisit(_, optionalArgument)),
+          r => r.map(doVisit(_, optionalArgument))
+        )
     }
 
     case Shape(shapeName, action, predicateObjects, holdingGraph) => {
@@ -95,7 +114,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       val shapePrefix = getShapePrefix(action)
       val graphName = holdingGraph.map(g => prefixTable.getOrElse(g.graphName.prefix, "") + g.graphName.name).getOrElse("")
       val output = if(holdingGraph.isEmpty) defaultModel else dataset.getNamedModel(graphName)
-      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument))
+      val predicateObjectsList = predicateObjects.map(doVisit(_, optionalArgument)).toList
       logger.info(s"Expanded ${predicateObjects.size} predicate-object statements in ${predicateObjectsList.collect { case r: List[Result] => r.size }.sum} results")
       val actions = visitAction(action, predicateObjectsList, optionalArgument)
       val predicateObjectsWithAutoIncrements = solveAutoIncrementResults(predicateObjectsList, actions)
@@ -130,8 +149,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               val groupedPredicateObjects = predicateObjectsList.groupBy(i => i(0))
               val keys = groupedPredicateObjects.keys
               for (key <- keys) {
-                if(!alreadyGeneratedCollections.contains(key + groupedPredicateObjects(key).map(_(1)).mkString(""))) {
-                  alreadyGeneratedCollections += key + groupedPredicateObjects(key).map(_(1)).mkString("")
+                if (!alreadyGeneratedCollections.contains(key + groupedPredicateObjects(key).map(_(1)).mkString(""))) {
+                  alreadyGeneratedCollections.add(key + groupedPredicateObjects(key).map(_(1)).mkString(""))
                   registerCardinalityAndDatatype(shapeName.name, groupedPredicateObjects(key).head, result)
                   createTripleWithCollection(shapePrefix, action, groupedPredicateObjects(key).toList, result, output, rdfCollection)
                 }
@@ -153,7 +172,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               ShapeMapShape(":", splittedShapeName(1))
           val node = Node(shapePrefix, normaliseURI(r))
           val shapeMap = ShapeMapInference(node, shapeMapShape)
-          if(shapePrefix != "_:") shapeMapTable += shapeMap
+          if(shapePrefix != "_:") shapeMapTable.map(_.add(shapeMap))
         })
       })
       finalActions.map(r => Result(r.id, r.rootIds, r.results.map(ir => {
@@ -193,10 +212,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         case Some(matcherVar) => doVisit(matcherVar, result)
         case None => result
       }
-      val conditionsResultList = condition match {
-        case Some(conditionExpression) => doVisit(conditionExpression, optionalArgument).asInstanceOf[List[Result]]
-        case None => List()
-      }
+      val conditionsResultList = condition.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
       val dataTypeResult = dataType.map(doVisit(_, optionalArgument))
       val langTagResult = langTag.map(doVisit(_, optionalArgument))
       result match {
@@ -211,7 +227,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
               case langTagResults: List[Result] => langTagResults.filter(_.id == result.id).head.results.head
               case value: String => value
             })
-            val toBeGenerated = conditionsResultList.find(_.id == result.id).map(_.results.head.toBoolean).getOrElse(true)
+            val toBeGenerated = conditionsResultList match {
+              case Some(crl) => crl.find(c => c.id == result.id || result.id.exists(c.rootIds.contains)).exists(_.results.head.toBoolean)
+              case None => true
+            }
             if(toBeGenerated)
               Result(result.id, result.rootIds, newResults, normaliseDataType(dataTypeValue), langTagValue, rdfCollection)
             else Nil
@@ -332,7 +351,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
         val fileMap = Map("file" -> file)
         val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
         val varList = iteratorQueryToList(i)
-        if (varTable(varList.head).isInstanceOf[IRI] && varList.size == 2) {
+        if (varTable(varList.head).isInstanceOf[FilePath] && varList.size == 2) {
           val iteratorQueryStringRepresentation = iteratorQueryToList(i).map(_.name).mkString(".")
           iteratorQueryResultsCache.search(iteratorQueryStringRepresentation, file.asInstanceOf[LoadedSource]) match {
             case Some(value) =>
@@ -359,7 +378,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
                   case None => iteratorsCombinations += s"$expName$k" -> v
                 }
               }
-              iteratorQueryResultsCache.save(iteratorQueryStringRepresentation, file.asInstanceOf[LoadedSource], values)
+              iteratorQueryResultsCache.save(iteratorQueryStringRepresentation, file.asInstanceOf[LoadedSource], values.toList.toMap)
               values
             }
           }
@@ -373,7 +392,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       })
       val finalResult = results.headOption match {
         case Some(r) => r match {
-          case _: Result => results.asInstanceOf[List[Result]]
+          case _: Result => results.asInstanceOf[List[Result]].map(r => i.builtinFunction match {
+            case Some(bf) => executeBuiltinFunction(r, bf)
+            case None => r
+          })
           case _: (String, List[Result]) => results.asInstanceOf[List[(String, List[Result])]].toMap
         }
         case None => List[Result]()
@@ -382,18 +404,45 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     }
 
     case f: FunctionCalling => {
-      val functionsURL = varTable(f.functionHub).asInstanceOf[URL]
-      val functionHub = functionHubExecuterCache.search(functionsURL.url) match {
-        case Some(executer) => executer
+      val functionsIRI = varTable(f.functionHub).asInstanceOf[FilePath]
+      val functionHub = functionHubExecuterCache.search(functionsIRI.value) match {
+        case Some(executor) => executor
         case None =>
-          val executer = new FunctionHubExecuter(functionsURL.url)
-          functionHubExecuterCache.save(functionsURL.url, executer)
-          executer
+          val loadedSource = functionsIRI match {
+            case JdbcURL(jdbcURL) => throw new Exception(s"The JDBC URL $jdbcURL cannot be used as the source of functions.")
+            case fp: FilePath => doVisit(fp, optionalArgument).asInstanceOf[List[LoadedSource]].headOption match {
+              case Some(ls) => ls
+              case None => throw new Exception(s"There is no functions code in the provided path: ${fp.value}")
+            }
+          }
+          val executor = new FunctionHubExecutor(loadedSource)
+          functionHubExecuterCache.save(functionsIRI.value, executor)
+          executor
       }
-      val argumentsResults = f.arguments.arguments.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
-      val arguments = for (i <- argumentsResults.head.indices) yield {
-        for (j <- argumentsResults.indices) yield {
-          argumentsResults(j)(i)
+      val argumentsResults = f.arguments.arguments.map(a => {
+        val result = doVisit(a, optionalArgument)
+        if(result.isInstanceOf[ResultAutoIncrement]) List(result.asInstanceOf[ResultAutoIncrement])
+        else result.asInstanceOf[List[Resultable]]
+      })
+      val sizeArguments = argumentsResults.filter(_.forall(_.isInstanceOf[Result])).map(_.size)
+      val maxSize = if(sizeArguments.isEmpty) 1 else argumentsResults.filter(_.forall(_.isInstanceOf[Result])).map(_.size).max
+      val sameSizeArguments = argumentsResults.exists(rl => rl.forall(r => r.isInstanceOf[Result]) && rl.size != maxSize)
+      if(sameSizeArguments) throw new Exception(s"The results of the function arguments are not equal in size. This prevents a correct execution of the function.")
+      val argumentsHead = argumentsResults.find(_.forall(_.isInstanceOf[Result]))
+      val argumentsResultsFinal = argumentsResults.map(r => {
+        if(r.nonEmpty && r.head.isInstanceOf[ResultAutoIncrement]) {
+          val rai = r.head.asInstanceOf[ResultAutoIncrement]
+          (0 until maxSize).map(_ => {
+            if(argumentsHead.isDefined) {
+              val referenceResult = argumentsHead.get.head.asInstanceOf[Result]
+              Result(referenceResult.id, referenceResult.rootIds, rai.results, rai.dataType, rai.langTag, None, None)
+            } else Result(None, HashSet.empty, rai.results, rai.dataType, rai.langTag, None, None)
+          }).toList
+        } else r
+      }.asInstanceOf[List[Result]])
+      val arguments = for (i <- argumentsResultsFinal.head.indices) yield {
+        for (j <- argumentsResultsFinal.indices) yield {
+          argumentsResultsFinal(j)(i)
         }
       }.toList
       arguments.map(a => {
@@ -788,9 +837,15 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
       case _ => {
         val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
         val queries = iteratorResultsToQueries(iteratorQueries.filter(_.results.nonEmpty), query, HashSet(), fileContentOrURL)
-        queries.map(q => doVisit(q.query, middleArguments.+(
-          "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery)).asInstanceOf[Result])
-          .filter(_.results.nonEmpty)
+        val transformationFunction: QueryWithIndex => Result = q =>
+          doVisit(q.query, middleArguments.+(
+            "index" -> q.index, "rootIds" -> q.rootIds, "iteratorQuery" -> q.iteratorQuery))
+            .asInstanceOf[Result]
+            .addResultContext(ResultContext(q.index, q.query, q.iteratorQuery))
+        parallelCollectionConfigurator.asParallelCollection("queries", queries).fold(
+          l => l.map(transformationFunction).filter(_.results.nonEmpty).toList,
+          r => r.map(transformationFunction).filter(_.results.nonEmpty).toList
+        )
       }
     }
   }
@@ -942,20 +997,15 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def getAllFilesContents(url: String): List[LoadedSource] = {
-    val slices = url.split("\\*")
-    val windows = slices(0).lastIndexOf("/") < slices(0).lastIndexOf("\\")
-    val path = if(windows)
-      slices(0).splitAt(slices(0).lastIndexOf("\\"))._1.replace("file:///", "")
-      else slices(0).splitAt(slices(0).lastIndexOf("/"))._1.replace("file://", "")
-    val fileBeginning = if(windows)
-      slices(0).splitAt(slices(0).lastIndexOf("\\"))._2.replace("\\", "")
-      else slices(0).splitAt(slices(0).lastIndexOf("/"))._2.replace("/", "")
+    val slices = url.split("\\*").map(_.replaceAll("\\\\", "/"))
+    val path = slices(0).splitAt(slices(0).lastIndexOf("/"))._1.replaceFirst("file:///?", "")
+    val fileBeginning = slices(0).splitAt(slices(0).lastIndexOf("/"))._2.replace("/", "")
     val fileEnding = slices(1).splitAt(slices(1).lastIndexOf("."))._1
     val fileExtension = slices(1).splitAt(slices(1).lastIndexOf("."))._2
     val files = new File(path).listFiles().filter(_.isFile)
       .filter(_.getName.endsWith(fileEnding + fileExtension)).filter(_.getName.startsWith(fileBeginning))
-    val fileProtocol = if(windows) "file:///" else "file://"
-    files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath)).toList
+    val fileProtocol = if(path.startsWith("/")) "file://" else "file:///"
+    files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath.replaceAll("\\\\", "/"))).toList
   }
 
   private def visitAction(actionOrLiteral: ActionOrLiteral, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = actionOrLiteral match {
@@ -971,9 +1021,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             doVisit(action, optionalArgument).asInstanceOf[ResultAutoIncrement].results.map(re => Result(id, rootIds, List(re), None, None, None))
         }
       } else {
-        val conditions = a.condition.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]]).getOrElse(List())
-        doVisit(action, optionalArgument).asInstanceOf[List[Result]]
-          .filterNot(r => conditions.exists(c => r.id == c.id && !c.results.head.toBoolean))
+        val conditionsOption = a.condition.map(doVisit(_, optionalArgument).asInstanceOf[List[Result]])
+        val actionResults = doVisit(action, optionalArgument).asInstanceOf[List[Result]]
+        conditionsOption match {
+          case Some(conditions) =>
+            actionResults.filter(r => conditions.exists(c => (r.id == c.id && c.results.head.toBoolean) || conditions.exists(c => r.id.exists(c.rootIds.contains) && c.results.head.toBoolean)))
+          case None => actionResults
+        }
       }
     }
     case l: LiteralSubject => {
@@ -983,7 +1037,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
 
 
   private def getMaxOccurrencesPredicateObjectList(list: List[Any]) = {
-    val mostCommonSize = mutable.HashMap[Int, Int]()
+    val mostCommonSize = concurrent.TrieMap[Int, Int]()
     list.filter(_ != Nil).foreach {
       case lr: List[Result] if lr.nonEmpty => mostCommonSize += ((lr.size, mostCommonSize.getOrElse(lr.size, 0) + 1))
       case ra: ResultAutoIncrement if ra.results.nonEmpty =>
@@ -1002,7 +1056,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
   }
 
   private def registerCardinalityAndDatatype(shapeName: String, predicateObject: Array[String], result: Result) = {
-    if(registerDatatypesAndCardinalities) {
+    if(shexInferredPropertiesTable.isDefined) {
       val datatype = result.dataType match {
         case Some(value) => Some(value)
         case None => {
@@ -1013,68 +1067,80 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
             None
         }
       }
-      shexInferredPropertiesTable += ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, datatype)
+      shexInferredPropertiesTable.map(_.add(ShExMLInferredCardinalitiesAndDatatypes(shapeName, predicateObject(0), result.results.size, datatype)))
     }
   }
 
   private def createTriple(shapePrefix: String, action: String, predicateObject: Array[String], result: Result, output: Model): Unit = {
-    if(shapePrefix == "_:") {
-      if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).contains("_:"))
-        output.add(createBNodeStatement(action, predicateObject(0), normaliseURI(predicateObject(1))))
-      else
-        output.add(createBNodeStatementWithLiteral(
-          action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
-    } else {
-      if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:"))
-        output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
-      else
-        output.add(createStatementWithLiteral(
-          prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+    dataset.begin(TxnType.WRITE)
+    try {
+      if(shapePrefix == "_:") {
+        if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).contains("_:"))
+          output.add(createBNodeStatement(action, predicateObject(0), normaliseURI(predicateObject(1))))
+        else
+          output.add(createBNodeStatementWithLiteral(
+            action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+      } else {
+        if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:"))
+          output.add(createStatement(prefixTable(shapePrefix) + action, predicateObject(0), normaliseURI(predicateObject(1))))
+        else
+          output.add(createStatementWithLiteral(
+            prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
+      }
+      dataset.commit()
+    } finally {
+      dataset.end()
     }
   }
 
   private def createTripleWithCollection(shapePrefix: String, action: String, predicateObjects: List[Array[String]],
                                          result: Result, output: Model, rdfCollection: RDFCollection): Unit = {
-    val predicateObject = predicateObjects.head
-    if(shapePrefix == "_:") {
-      if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:")) {
-        val values = predicateObjects.map(i => output.createResource(normaliseURI(i(1))))
-        val collection = collectionConstructor(output, values.toIterator, rdfCollection)
-        output.add(createBNodeStatementWithCollection(action, predicateObject(0), collection))
+    dataset.begin(TxnType.WRITE)
+    try {
+      val predicateObject = predicateObjects.head
+      if (shapePrefix == "_:") {
+        if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:")) {
+          val values = predicateObjects.map(i => output.createResource(normaliseURI(i(1))))
+          val collection = collectionConstructor(output, values.toIterator, rdfCollection)
+          output.add(createBNodeStatementWithCollection(action, predicateObject(0), collection))
+        }
+        else {
+          val values = predicateObjects.map(i => {
+            if (result.langTag.isDefined) output.createLiteral(i(1), result.langTag.get)
+            else if (result.dataType.isDefined) {
+              val xsdType = result.dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
+                .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(i(1)))
+              output.createTypedLiteral(i(1), xsdType)
+            }
+            else output.createTypedLiteral(i(1), searchForXSDType(i(1)))
+          })
+          val collection = collectionConstructor(output, values.toIterator, rdfCollection)
+          output.add(createBNodeStatementWithCollection(action, predicateObject(0), collection))
+        }
+      } else {
+        if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:")) {
+          val values = predicateObjects.map(i => output.createResource(normaliseURI(i(1))))
+          val collection = collectionConstructor(output, values.toIterator, rdfCollection)
+          output.add(createStatementWithCollection(prefixTable(shapePrefix) + action, predicateObject(0), collection))
+        }
+        else {
+          val values = predicateObjects.map(i => {
+            if (result.langTag.isDefined) output.createLiteral(i(1), result.langTag.get)
+            else if (result.dataType.isDefined) {
+              val xsdType = result.dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
+                .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(i(1)))
+              output.createTypedLiteral(i(1), xsdType)
+            }
+            else output.createTypedLiteral(i(1), searchForXSDType(i(1)))
+          })
+          val collection = collectionConstructor(output, values.toIterator, rdfCollection)
+          output.add(createStatementWithCollection(
+            prefixTable(shapePrefix) + action, predicateObject(0), collection))
+        }
       }
-      else {
-        val values = predicateObjects.map(i => {
-          if(result.langTag.isDefined) output.createLiteral(i(1), result.langTag.get)
-          else if(result.dataType.isDefined) {
-            val xsdType = result.dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
-              .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(i(1)))
-            output.createTypedLiteral(i(1), xsdType)
-          }
-          else output.createTypedLiteral(i(1), searchForXSDType(i(1)))
-        })
-        val collection = collectionConstructor(output, values.toIterator, rdfCollection)
-        output.add(createBNodeStatementWithCollection(action, predicateObject(0), collection))
-      }
-    } else {
-      if (predicateObject(1).startsWith("http://") || predicateObject(1).startsWith("https://") || predicateObject(1).startsWith("_:")) {
-        val values = predicateObjects.map(i => output.createResource(normaliseURI(i(1))))
-        val collection = collectionConstructor(output, values.toIterator, rdfCollection)
-        output.add(createStatementWithCollection(prefixTable(shapePrefix) + action, predicateObject(0), collection))
-      }
-      else {
-        val values = predicateObjects.map(i => {
-          if(result.langTag.isDefined) output.createLiteral(i(1), result.langTag.get)
-          else if(result.dataType.isDefined) {
-            val xsdType = result.dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
-              .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(i(1)))
-            output.createTypedLiteral(i(1), xsdType)
-          }
-          else output.createTypedLiteral(i(1), searchForXSDType(i(1)))
-        })
-        val collection = collectionConstructor(output, values.toIterator, rdfCollection)
-        output.add(createStatementWithCollection(
-          prefixTable(shapePrefix) + action, predicateObject(0), collection))
-      }
+      dataset.commit()
+    } finally {
+      dataset.end()
     }
   }
 
@@ -1123,12 +1189,19 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: mutable.HashMap[Variable, 
     case LiteralSubject(prefix, _) => prefix.name
   }
 
+  private def executeBuiltinFunction(result: Result, builtinFunction: BuiltinFunction): Result = builtinFunction match {
+    case Index() => result.resultContext match {
+      case Some(rc) => Result(result.id, result.rootIds, result.results.map(_ => rc.index), result.dataType, result.langTag, result.rdfCollection)
+      case None => result
+    }
+  }
+
   override def doVisitDefault(): Any = Nil
 
 }
 
 class QueryResultsCache() {
-  private val table = mutable.HashMap[Int, Object]()
+  private val table = concurrent.TrieMap[Int, Object]()
 
   def search(query: String, file: LoadedSource): Option[Object] = {
     table.get((query + file.filepath).hashCode)
@@ -1140,7 +1213,7 @@ class QueryResultsCache() {
   }
 
   def save(query: String, file: LoadedSource, resultSet: java.sql.ResultSet): Unit = {
-    val results = mutable.HashMap[String, List[String]]()
+    val results = concurrent.TrieMap[String, List[String]]()
     val columns = resultSet.getMetaData.getColumnCount
     val columnsNames = (1 to columns).map(resultSet.getMetaData.getColumnName)
     while(resultSet.next()) {
@@ -1155,7 +1228,7 @@ class QueryResultsCache() {
   }
 
   def save(query: String, file: LoadedSource, resultSet: ResultSet): Unit = {
-    val results = mutable.HashMap[String, List[String]]()
+    val results = concurrent.TrieMap[String, List[String]]()
     val columnsNames = resultSet.getResultVars
     while(resultSet.hasNext) {
       val row = resultSet.next()
@@ -1177,7 +1250,7 @@ class QueryResultsCache() {
 }
 
 class IteratorQueryResultsCache(pushedValues: Boolean) {
-  private val table = mutable.HashMap[Int, Map[String, List[Result]]]()
+  private val table = concurrent.TrieMap[Int, Map[String, List[Result]]]()
 
   def search(iteratorQuery: String, file: LoadedSource): Option[Map[String, List[Result]]] = {
     table.get((iteratorQuery + file.filepath).hashCode)
@@ -1193,7 +1266,7 @@ class IteratorQueryResultsCache(pushedValues: Boolean) {
 }
 
 class JsonPathQueryResultsCache(pushedValues: Boolean) {
-  private val table = mutable.HashMap[Int, Result]()
+  private val table = concurrent.TrieMap[Int, Result]()
 
   def search(query: String, file: LoadedSource, index: String): Option[Result] = {
     table.get((query + file.filepath + index).hashCode)
@@ -1208,7 +1281,7 @@ class JsonPathQueryResultsCache(pushedValues: Boolean) {
 }
 
 class JsonObjectMapperCache {
-  private val table = mutable.HashMap[Int, DocumentContext]()
+  private val table = concurrent.TrieMap[Int, DocumentContext]()
 
   def search(file: LoadedSource): Option[DocumentContext] = {
     table.get(file.filepath.hashCode)
@@ -1221,7 +1294,7 @@ class JsonObjectMapperCache {
 }
 
 class XMLDocumentCache {
-  private val table = mutable.HashMap[Int, XdmNode]()
+  private val table = concurrent.TrieMap[Int, XdmNode]()
 
   def search(file: LoadedSource): Option[XdmNode] = {
     table.get(file.filepath.hashCode)
@@ -1234,7 +1307,7 @@ class XMLDocumentCache {
 }
 
 class XpathQueryResultsCache(pushedValues: Boolean) {
-  private val table = mutable.HashMap[Int, Result]()
+  private val table = concurrent.TrieMap[Int, Result]()
 
   def search(query: String, file: LoadedSource, index: String): Option[Result] = {
     table.get((query + file.filepath + index).hashCode)
@@ -1248,15 +1321,15 @@ class XpathQueryResultsCache(pushedValues: Boolean) {
   }
 }
 
-class FunctionHubExecuterCache() {
-  private val table = mutable.HashMap[String, FunctionHubExecuter]()
+class FunctionHubExecutorCache() {
+  private val table = concurrent.TrieMap[String, FunctionHubExecutor]()
 
-  def search(url: String): Option[FunctionHubExecuter] = {
-    table.get(url)
+  def search(filepath: String): Option[FunctionHubExecutor] = {
+    table.get(filepath)
   }
 
-  def save(url: String, functionHubExecuter: FunctionHubExecuter): Unit = {
-    table += ((url, functionHubExecuter))
+  def save(filepath: String, functionHubExecutor: FunctionHubExecutor): Unit = {
+    table += ((filepath, functionHubExecutor))
   }
 }
 
@@ -1264,11 +1337,16 @@ sealed trait Resultable {
   def results: List[String]
 }
 case class Result(id: Option[Int], rootIds: HashSet[Int], results: List[String], dataType: Option[String],
-                  langTag: Option[String], rdfCollection: Option[RDFCollection]) extends Resultable {
+                  langTag: Option[String], rdfCollection: Option[RDFCollection], resultContext: Option[ResultContext] = None) extends Resultable {
   override def equals(that: Any): Boolean = {
     canEqual(that) && id == that.asInstanceOf[Result].id
   }
+
+  def addResultContext(resultContext: ResultContext): Result = {
+    Result(id, rootIds, results, dataType, langTag, rdfCollection, Some(resultContext))
+  }
 }
+
 case class ResultWithIteratorQuery(id: Option[Int], rootIds: HashSet[Int], results: List[String], iteratorQuery: String) extends Resultable
 case class ResultWithNested(id: Option[Int], rootIds: HashSet[Int], results: List[String], nestedResults: List[Resultable], iteratorQuery: String) extends Resultable
 case class QueryByID(id: Int, query: String)
@@ -1281,3 +1359,4 @@ case class ResultAutoIncrement(iterator: AutoIncrement, predicate: String, names
     List(predicateWithSpace + namespace + precedentString + iterator.iterator.next() + closingString)
   }
 }
+case class ResultContext(index: String, query: QueryClause, iteratorQuery: String)

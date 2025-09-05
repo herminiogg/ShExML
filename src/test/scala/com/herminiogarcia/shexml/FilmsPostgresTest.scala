@@ -1,10 +1,14 @@
 package com.herminiogarcia.shexml
 
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class FilmsPostgresTest extends AnyFunSuite with Matchers with RDFStatementCreator {
+class FilmsPostgresTest extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigDatabase {
 
   private val example =
     """
@@ -12,7 +16,7 @@ class FilmsPostgresTest extends AnyFunSuite with Matchers with RDFStatementCreat
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_database <jdbc:postgresql://localhost/films>
+      |SOURCE films_database <jdbc:postgresql://localhost:55432/films>
       |ITERATOR films_iterator <sql: SELECT * FROM films;> {
       |    FIELD id <id>
       |    FIELD name <name>
@@ -32,9 +36,14 @@ class FilmsPostgresTest extends AnyFunSuite with Matchers with RDFStatementCreat
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher("root", "root", inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+
+  private var output: Model = _
   private val prefix = "http://example.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Shape 8 is translated correctly") {
     assert(output.contains(createStatement(prefix, "8", "type", "Film")))
