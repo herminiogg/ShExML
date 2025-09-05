@@ -1,23 +1,22 @@
 package com.herminiogarcia.shexml
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.herminiogarcia.shexml.helper.SourceHelper
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.scalactic.source.Position
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach}
+import org.apache.jena.rdf.model.Model
+import org.scalatest.{BeforeAndAfter, ConfigMap}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
+import java.io.ByteArrayInputStream
 
-import scala.io.Source
-
-class FilmsStdin extends AnyFunSuite with Matchers with RDFStatementCreator with BeforeAndAfter {
-
-  override def after(fun: => Any)(implicit pos: Position): Unit = try System.setIn(System.in) finally super.after(fun)
+class FilmsStdin extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with BeforeAndAfter with ParallelConfigInferenceDatatypesNormaliseURIsFixture{
 
   private val example =
     """
       PREFIX : <http://example.com/>
       |SOURCE films_xml_file <./src/test/resources/filmsAlt.xml>
-      |SOURCE films_json_file <->
+      |SOURCE films_json_file <stdin>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD name <name>
       |    FIELD year <year>
@@ -44,13 +43,17 @@ class FilmsStdin extends AnyFunSuite with Matchers with RDFStatementCreator with
       |}
     """.stripMargin
 
+  private var output: Model = _
   private val prefix = "http://example.com/"
-  val data = Source.fromInputStream(getClass.getClassLoader.getResourceAsStream("filmsAlt.json")).mkString
-  val node = new ObjectMapper().readTree(data)
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMappingFromJsonData(example, node).getDefaultModel
-
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    val stream = new ByteArrayInputStream(new SourceHelper().getContentFromRelativePath("./src/test/resources/filmsAlt.json").fileContent.getBytes())
+    System.setIn(stream)
+    stream.close()
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+    System.setIn(System.in)
+  }
 
   test("Shape film1 contains all the data, literal action, enhancement-#97") {
     assert(output.contains(createStatementWithLiteral(prefix, "film1", "name", "Dunkirk", XSDDatatype.XSDstring)))

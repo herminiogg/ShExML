@@ -1,7 +1,7 @@
 package com.herminiogarcia.shexml.visitor
 
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, LoadedSource, ParallelExecutionConfigurator, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
@@ -11,7 +11,7 @@ import net.sf.saxon.s9api.{Processor, XdmNode}
 import net.minidev.json.JSONArray
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.datatypes.{RDFDatatype, TypeMapper}
-import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ReadWrite, ResultSet, TxnType}
+import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, ResultSet, TxnType}
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
@@ -351,7 +351,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         val fileMap = Map("file" -> file)
         val middleArguments = arguments.map(_.++(fileMap)).getOrElse(fileMap)
         val varList = iteratorQueryToList(i)
-        if (varTable(varList.head).isInstanceOf[FilePath] && varList.size == 2) {
+        if (varTable(varList.head).isInstanceOf[FilePathOrStdin] && varList.size == 2) {
           val iteratorQueryStringRepresentation = iteratorQueryToList(i).map(_.name).mkString(".")
           iteratorQueryResultsCache.search(iteratorQueryStringRepresentation, file.asInstanceOf[LoadedSource]) match {
             case Some(value) =>
@@ -615,6 +615,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         throw new Exception("* wildcard not allowed over remote files")
       else
         List(new SourceHelper().getURLContent(url))
+
     case RelativePath(path) =>
       if(isRDFSource(path)) {
         val fileAbsolutePath = new File(path).getAbsolutePath
@@ -625,7 +626,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       }
       else if(path.contains('*')) getAllFilesContents(path)
       else List(new SourceHelper().getContentFromRelativePath(path))
+
     case JdbcURL(url) => List(LoadedSource("", url))
+
+    case Stdin() => List(new SourceHelper().getStdinContents())
+
 
     case default => visit(default, optionalArgument)
   }
