@@ -50,6 +50,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   protected val xmlDocumentCache = new XMLDocumentCache()
   protected val functionHubExecuterCache = new FunctionHubExecutorCache()
   protected val defaultModel = dataset.getDefaultModel
+  protected val jsonPathConfiguration = Configuration.defaultConfiguration()
+    .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
+    .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
+    .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
 
 
   private val xmlProcessor = new Processor(false)
@@ -485,11 +489,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               logger.debug(s"Retrieving cached result for already parsed JSON file")
               jsonNode
             case None =>
-              val configuration = Configuration.defaultConfiguration()
-                .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
-                .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
-                .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
-              val context = com.jayway.jsonpath.JsonPath.using(configuration).parse(file.fileContent)
+              val context = com.jayway.jsonpath.JsonPath.using(jsonPathConfiguration).parse(file.fileContent)
               jsonObjectMapperCache.save(file, context)
               context
           }
