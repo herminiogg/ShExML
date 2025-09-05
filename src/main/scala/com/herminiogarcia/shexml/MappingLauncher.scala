@@ -10,9 +10,8 @@ import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
 import com.typesafe.scalalogging.Logger
-
-import scala.collection.JavaConverters._
 import java.io.ByteArrayOutputStream
+import scala.collection.JavaConverters._
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.mutable
 
