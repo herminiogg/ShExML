@@ -26,7 +26,7 @@ object Main {
   description = Array("Map and merge heterogeneous data sources with a Shape Expressions based syntax"))
 class Main extends Callable[Int] {
 
-  @Option(names = Array("-m", "--mapping"), required = true, description = Array("Path to the file with the mappings"))
+  @Option(names = Array("-m", "--mapping"), required = true, description = Array("Path to the file with the mappings. If '-' is provided as the path the engine will read from the standard input."))
   private var file: String = ""
 
   @ArgGroup(validate = false, heading = "Options for the transformation to RDF%n")
@@ -39,7 +39,7 @@ class Main extends Callable[Int] {
   private var generalTransformationOptions: GeneralTransformationOptions = new GeneralTransformationOptions()
 
   override def call(): Int = {
-    val fileHandler = scala.io.Source.fromFile(file)
+    val fileHandler = if(file == "-") scala.io.Source.stdin else scala.io.Source.fromFile(file)
     val parallelExecutionConfiguration =
       if(generalTransformationOptions.parallel) ParallelExecutionConfigurator(generalTransformationOptions.parallelAspects, generalTransformationOptions.numberOfThreads)
       else ParallelExecutionConfigurator.empty
