@@ -1,13 +1,17 @@
 package com.herminiogarcia.shexml.mappingChallenges
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
+import com.herminiogarcia.shexml.{ParallelConfigInferenceDatatypesNormaliseURIsFixture, RDFStatementCreator}
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class MultiValueReferencesHierarchicalFile extends AnyFunSuite with Matchers with RDFStatementCreator {
+class MultiValueReferencesHierarchicalFile extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
@@ -46,9 +50,14 @@ class MultiValueReferencesHierarchicalFile extends AnyFunSuite with Matchers wit
       |  	ex:hasAffiliation ex:[labValues.articles.authors.affiliation.label] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+
+  private var output: Model = _
   private val prefix = "http://example.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Lab shape is correctly translated") {
     assert(output.contains(createStatement(prefix, "AmazingLab1", "hasArticles", "article1")))

@@ -1,0 +1,37 @@
+PREFIX : <http://example.com/>
+PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX schema: <http://schema.org/>
+SOURCE films_xml_file <https://shexml.herminiogarcia.com/files/films.xml>
+SOURCE films_json_file <https://shexml.herminiogarcia.com/files/films.json>
+ITERATOR film_xml <xpath: //film> {
+    FIELD id <@id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <crew/directors/director>
+    FIELD screenwritters <crew//screenwritter>
+    FIELD music <crew/music>
+    FIELD photography <crew/photography>
+}
+ITERATOR film_json <jsonpath: $.films[*]> {
+    FIELD id <id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <crew.director>
+    FIELD screenwritters <crew.screenwritter>
+    FIELD music <crew.music>
+    FIELD photography <crew.cinematography>
+}
+EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
+
+:Films :[films.id] {
+    a schema:Movie ;
+    schema:name [films.name] @en ;
+    :year [films.year] ;
+    schema:countryOfOrigin dbr:[films.country] ;
+    schema:director dbr:[films.directors] ;
+    :screenwritter dbr:[films.screenwritters] ;
+    schema:musicBy dbr:[films.music] ;
+}

@@ -17,7 +17,7 @@ case class LiteralSubject(prefix: Var, value: String) extends ActionOrLiteral
 sealed trait DeclarationStatement extends AST
 
 case class Prefix(name: Var, url: URL) extends DeclarationStatement
-case class Source(name: Var, path: FilePath) extends DeclarationStatement
+case class Source(name: Var, path: FilePathOrStdin) extends DeclarationStatement
 case class Query(name: Var, query: QueryOrURL) extends DeclarationStatement
 case class Functions(name: Var, query: FilePath) extends DeclarationStatement
 case class Iterator(name: Var, queryClause: QueryOrVar, fields: List[Field], iterators: List[NestedIterator]) extends Iterators with DeclarationStatement with VarResult
@@ -98,12 +98,15 @@ sealed trait Iterators extends AST {
   def iterators: List[NestedIterator]
 }
 
-sealed trait FilePath extends VarResult {
+sealed trait FilePathOrStdin extends VarResult
+
+sealed trait FilePath extends FilePathOrStdin {
   def value: String
 }
 case class URL(value: String) extends FilePath with QueryOrURL
 case class JdbcURL(value: String) extends FilePath
 case class RelativePath(value: String) extends FilePath
+case class Stdin() extends FilePathOrStdin
 case class ReplacedStrings(strings: List[String]) extends AST
 case class ComposedVariable(variables: List[Var]) extends AST
 case class MatcherList(matchers: List[Matcher]) extends AST

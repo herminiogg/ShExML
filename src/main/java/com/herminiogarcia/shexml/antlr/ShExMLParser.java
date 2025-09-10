@@ -28,11 +28,11 @@ public class ShExMLParser extends Parser {
 		QUOTE=37, AND=38, A=39, AT=40, EQUAL=41, INDEX=42, STRING_OR_VAR=43, URI_VAR=44, 
 		STRINGOPERATOR=45, XMLSCHEMADATATYPE=46, SHAPELINK=47, LANGTAG=48, COMMENT=49, 
 		WS=50, URL=51, JDBC_URL=52, JSONPATH=53, XMLPATH=54, CSVPERROW=55, SQL=56, 
-		SCALA=57, SPARQL=58, QUERY_PART=59, GREATER_SYMBOL_QUERY=60, WS_QUERY=61, 
-		LESS_SYMBOL_QUERY=62, STRING_OR_VAR_QUERY=63, URI_VAR_QUERY=64, WS_DECLARATION=65, 
-		LESS_SYMBOL_AUTOINCREMENT=66, TO=67, BY=68, ADD_AUTOINCREMENT=69, DIGITS=70, 
-		STRING_OR_VAR_AUTOINCREMENT=71, STRINGOPERATOR_AUTOINCREMENT=72, GREATER_SYMBOL_AUTOINCREMENT=73, 
-		WS_AUTOINCREMENT=74;
+		SCALA=57, SPARQL=58, STDIN=59, QUERY_PART=60, GREATER_SYMBOL_QUERY=61, 
+		WS_QUERY=62, LESS_SYMBOL_QUERY=63, STRING_OR_VAR_QUERY=64, URI_VAR_QUERY=65, 
+		WS_DECLARATION=66, LESS_SYMBOL_AUTOINCREMENT=67, TO=68, BY=69, ADD_AUTOINCREMENT=70, 
+		DIGITS=71, STRING_OR_VAR_AUTOINCREMENT=72, STRINGOPERATOR_AUTOINCREMENT=73, 
+		GREATER_SYMBOL_AUTOINCREMENT=74, WS_AUTOINCREMENT=75;
 	public static final int
 		RULE_shExML = 0, RULE_decl = 1, RULE_prefix = 2, RULE_source = 3, RULE_query = 4, 
 		RULE_functions = 5, RULE_iterator = 6, RULE_nestedIterator = 7, RULE_field = 8, 
@@ -83,11 +83,11 @@ public class ShExMLParser extends Parser {
 			"COMMA", "QUOTE", "AND", "A", "AT", "EQUAL", "INDEX", "STRING_OR_VAR", 
 			"URI_VAR", "STRINGOPERATOR", "XMLSCHEMADATATYPE", "SHAPELINK", "LANGTAG", 
 			"COMMENT", "WS", "URL", "JDBC_URL", "JSONPATH", "XMLPATH", "CSVPERROW", 
-			"SQL", "SCALA", "SPARQL", "QUERY_PART", "GREATER_SYMBOL_QUERY", "WS_QUERY", 
-			"LESS_SYMBOL_QUERY", "STRING_OR_VAR_QUERY", "URI_VAR_QUERY", "WS_DECLARATION", 
-			"LESS_SYMBOL_AUTOINCREMENT", "TO", "BY", "ADD_AUTOINCREMENT", "DIGITS", 
-			"STRING_OR_VAR_AUTOINCREMENT", "STRINGOPERATOR_AUTOINCREMENT", "GREATER_SYMBOL_AUTOINCREMENT", 
-			"WS_AUTOINCREMENT"
+			"SQL", "SCALA", "SPARQL", "STDIN", "QUERY_PART", "GREATER_SYMBOL_QUERY", 
+			"WS_QUERY", "LESS_SYMBOL_QUERY", "STRING_OR_VAR_QUERY", "URI_VAR_QUERY", 
+			"WS_DECLARATION", "LESS_SYMBOL_AUTOINCREMENT", "TO", "BY", "ADD_AUTOINCREMENT", 
+			"DIGITS", "STRING_OR_VAR_AUTOINCREMENT", "STRINGOPERATOR_AUTOINCREMENT", 
+			"GREATER_SYMBOL_AUTOINCREMENT", "WS_AUTOINCREMENT"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -422,6 +422,7 @@ public class ShExMLParser extends Parser {
 		public TerminalNode URL() { return getToken(ShExMLParser.URL, 0); }
 		public TerminalNode JDBC_URL() { return getToken(ShExMLParser.JDBC_URL, 0); }
 		public TerminalNode QUERY_PART() { return getToken(ShExMLParser.QUERY_PART, 0); }
+		public TerminalNode STDIN() { return getToken(ShExMLParser.STDIN, 0); }
 		public SourceContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -456,7 +457,7 @@ public class ShExMLParser extends Parser {
 			match(LESS_SYMBOL_QUERY);
 			setState(124);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << URL) | (1L << JDBC_URL) | (1L << QUERY_PART))) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << URL) | (1L << JDBC_URL) | (1L << STDIN) | (1L << QUERY_PART))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -3627,7 +3628,7 @@ public class ShExMLParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3L\u01d6\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3M\u01d6\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -3662,8 +3663,8 @@ public class ShExMLParser extends Parser {
 		"\n&\5&\u01b3\n&\3\'\3\'\3(\3(\5(\u01b9\n(\3)\3)\3)\5)\u01be\n)\3*\3*\3"+
 		"+\3+\5+\u01c4\n+\3,\3,\3,\3-\3-\3-\3-\3-\5-\u01ce\n-\3.\3.\5.\u01d2\n"+
 		".\3/\3/\3/\2\3\32\60\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60"+
-		"\62\64\668:<>@BDFHJLNPRTVXZ\\\2\b\4\2\65\66==\4\2\65\65==\3\2\b\n\4\2"+
-		"--//\3\2\25\30\5\2-.ABII\2\u01e9\2a\3\2\2\2\4s\3\2\2\2\6u\3\2\2\2\b{\3"+
+		"\62\64\668:<>@BDFHJLNPRTVXZ\\\2\b\4\2\65\66=>\4\2\65\65>>\3\2\b\n\4\2"+
+		"--//\3\2\25\30\5\2-.BCJJ\2\u01e9\2a\3\2\2\2\4s\3\2\2\2\6u\3\2\2\2\b{\3"+
 		"\2\2\2\n\u0081\3\2\2\2\f\u008a\3\2\2\2\16\u0091\3\2\2\2\20\u00a7\3\2\2"+
 		"\2\22\u00ba\3\2\2\2\24\u00c4\3\2\2\2\26\u00da\3\2\2\2\30\u00e0\3\2\2\2"+
 		"\32\u00e6\3\2\2\2\34\u00fa\3\2\2\2\36\u0101\3\2\2\2 \u0103\3\2\2\2\"\u0109"+
@@ -3678,37 +3679,37 @@ public class ShExMLParser extends Parser {
 		"\2\2gj\3\2\2\2hf\3\2\2\2hi\3\2\2\2i\3\3\2\2\2jh\3\2\2\2kt\5\b\5\2lt\5"+
 		"\6\4\2mt\5\n\6\2nt\5\26\f\2ot\5\30\r\2pt\5\16\b\2qt\5\24\13\2rt\5\f\7"+
 		"\2sk\3\2\2\2sl\3\2\2\2sm\3\2\2\2sn\3\2\2\2so\3\2\2\2sp\3\2\2\2sq\3\2\2"+
-		"\2sr\3\2\2\2t\5\3\2\2\2uv\7\3\2\2vw\5\\/\2wx\7@\2\2xy\7\65\2\2yz\7>\2"+
-		"\2z\7\3\2\2\2{|\7\4\2\2|}\5\\/\2}~\7@\2\2~\177\t\2\2\2\177\u0080\7>\2"+
+		"\2sr\3\2\2\2t\5\3\2\2\2uv\7\3\2\2vw\5\\/\2wx\7A\2\2xy\7\65\2\2yz\7?\2"+
+		"\2z\7\3\2\2\2{|\7\4\2\2|}\5\\/\2}~\7A\2\2~\177\t\2\2\2\177\u0080\7?\2"+
 		"\2\u0080\t\3\2\2\2\u0081\u0082\7\5\2\2\u0082\u0083\5\\/\2\u0083\u0086"+
-		"\7@\2\2\u0084\u0087\7\65\2\2\u0085\u0087\5(\25\2\u0086\u0084\3\2\2\2\u0086"+
-		"\u0085\3\2\2\2\u0087\u0088\3\2\2\2\u0088\u0089\7>\2\2\u0089\13\3\2\2\2"+
-		"\u008a\u008b\7\7\2\2\u008b\u008c\5\\/\2\u008c\u008d\7@\2\2\u008d\u008e"+
-		"\7;\2\2\u008e\u008f\t\3\2\2\u008f\u0090\7>\2\2\u0090\r\3\2\2\2\u0091\u0092"+
-		"\7\6\2\2\u0092\u0093\5\\/\2\u0093\u009a\7@\2\2\u0094\u009b\5(\25\2\u0095"+
-		"\u0097\7=\2\2\u0096\u0095\3\2\2\2\u0097\u0098\3\2\2\2\u0098\u0096\3\2"+
+		"\7A\2\2\u0084\u0087\7\65\2\2\u0085\u0087\5(\25\2\u0086\u0084\3\2\2\2\u0086"+
+		"\u0085\3\2\2\2\u0087\u0088\3\2\2\2\u0088\u0089\7?\2\2\u0089\13\3\2\2\2"+
+		"\u008a\u008b\7\7\2\2\u008b\u008c\5\\/\2\u008c\u008d\7A\2\2\u008d\u008e"+
+		"\7;\2\2\u008e\u008f\t\3\2\2\u008f\u0090\7?\2\2\u0090\r\3\2\2\2\u0091\u0092"+
+		"\7\6\2\2\u0092\u0093\5\\/\2\u0093\u009a\7A\2\2\u0094\u009b\5(\25\2\u0095"+
+		"\u0097\7>\2\2\u0096\u0095\3\2\2\2\u0097\u0098\3\2\2\2\u0098\u0096\3\2"+
 		"\2\2\u0098\u0099\3\2\2\2\u0099\u009b\3\2\2\2\u009a\u0094\3\2\2\2\u009a"+
-		"\u0096\3\2\2\2\u009b\u009c\3\2\2\2\u009c\u009d\7>\2\2\u009d\u00a2\7!\2"+
+		"\u0096\3\2\2\2\u009b\u009c\3\2\2\2\u009c\u009d\7?\2\2\u009d\u00a2\7!\2"+
 		"\2\u009e\u00a1\5\22\n\2\u009f\u00a1\5\20\t\2\u00a0\u009e\3\2\2\2\u00a0"+
 		"\u009f\3\2\2\2\u00a1\u00a4\3\2\2\2\u00a2\u00a0\3\2\2\2\u00a2\u00a3\3\2"+
 		"\2\2\u00a3\u00a5\3\2\2\2\u00a4\u00a2\3\2\2\2\u00a5\u00a6\7\"\2\2\u00a6"+
-		"\17\3\2\2\2\u00a7\u00a8\7\6\2\2\u00a8\u00a9\5\\/\2\u00a9\u00ab\7@\2\2"+
-		"\u00aa\u00ac\7=\2\2\u00ab\u00aa\3\2\2\2\u00ac\u00ad\3\2\2\2\u00ad\u00ab"+
-		"\3\2\2\2\u00ad\u00ae\3\2\2\2\u00ae\u00af\3\2\2\2\u00af\u00b0\7>\2\2\u00b0"+
+		"\17\3\2\2\2\u00a7\u00a8\7\6\2\2\u00a8\u00a9\5\\/\2\u00a9\u00ab\7A\2\2"+
+		"\u00aa\u00ac\7>\2\2\u00ab\u00aa\3\2\2\2\u00ac\u00ad\3\2\2\2\u00ad\u00ab"+
+		"\3\2\2\2\u00ad\u00ae\3\2\2\2\u00ae\u00af\3\2\2\2\u00af\u00b0\7?\2\2\u00b0"+
 		"\u00b5\7!\2\2\u00b1\u00b4\5\22\n\2\u00b2\u00b4\5\20\t\2\u00b3\u00b1\3"+
 		"\2\2\2\u00b3\u00b2\3\2\2\2\u00b4\u00b7\3\2\2\2\u00b5\u00b3\3\2\2\2\u00b5"+
 		"\u00b6\3\2\2\2\u00b6\u00b8\3\2\2\2\u00b7\u00b5\3\2\2\2\u00b8\u00b9\7\""+
 		"\2\2\u00b9\21\3\2\2\2\u00ba\u00bb\t\4\2\2\u00bb\u00bc\5\\/\2\u00bc\u00be"+
-		"\7@\2\2\u00bd\u00bf\7=\2\2\u00be\u00bd\3\2\2\2\u00bf\u00c0\3\2\2\2\u00c0"+
-		"\u00be\3\2\2\2\u00c0\u00c1\3\2\2\2\u00c1\u00c2\3\2\2\2\u00c2\u00c3\7>"+
+		"\7A\2\2\u00bd\u00bf\7>\2\2\u00be\u00bd\3\2\2\2\u00bf\u00c0\3\2\2\2\u00c0"+
+		"\u00be\3\2\2\2\u00c0\u00c1\3\2\2\2\u00c1\u00c2\3\2\2\2\u00c2\u00c3\7?"+
 		"\2\2\u00c3\23\3\2\2\2\u00c4\u00c5\7\13\2\2\u00c5\u00c6\5\\/\2\u00c6\u00c9"+
-		"\7D\2\2\u00c7\u00c8\7J\2\2\u00c8\u00ca\7G\2\2\u00c9\u00c7\3\2\2\2\u00c9"+
-		"\u00ca\3\2\2\2\u00ca\u00cb\3\2\2\2\u00cb\u00ce\7H\2\2\u00cc\u00cd\7E\2"+
-		"\2\u00cd\u00cf\7H\2\2\u00ce\u00cc\3\2\2\2\u00ce\u00cf\3\2\2\2\u00cf\u00d2"+
-		"\3\2\2\2\u00d0\u00d1\7F\2\2\u00d1\u00d3\7H\2\2\u00d2\u00d0\3\2\2\2\u00d2"+
-		"\u00d3\3\2\2\2\u00d3\u00d6\3\2\2\2\u00d4\u00d5\7G\2\2\u00d5\u00d7\7J\2"+
+		"\7E\2\2\u00c7\u00c8\7K\2\2\u00c8\u00ca\7H\2\2\u00c9\u00c7\3\2\2\2\u00c9"+
+		"\u00ca\3\2\2\2\u00ca\u00cb\3\2\2\2\u00cb\u00ce\7I\2\2\u00cc\u00cd\7F\2"+
+		"\2\u00cd\u00cf\7I\2\2\u00ce\u00cc\3\2\2\2\u00ce\u00cf\3\2\2\2\u00cf\u00d2"+
+		"\3\2\2\2\u00d0\u00d1\7G\2\2\u00d1\u00d3\7I\2\2\u00d2\u00d0\3\2\2\2\u00d2"+
+		"\u00d3\3\2\2\2\u00d3\u00d6\3\2\2\2\u00d4\u00d5\7H\2\2\u00d5\u00d7\7K\2"+
 		"\2\u00d6\u00d4\3\2\2\2\u00d6\u00d7\3\2\2\2\u00d7\u00d8\3\2\2\2\u00d8\u00d9"+
-		"\7K\2\2\u00d9\25\3\2\2\2\u00da\u00db\7\f\2\2\u00db\u00dc\5\\/\2\u00dc"+
+		"\7L\2\2\u00d9\25\3\2\2\2\u00da\u00db\7\f\2\2\u00db\u00dc\5\\/\2\u00dc"+
 		"\u00dd\7\31\2\2\u00dd\u00de\5\36\20\2\u00de\u00df\7\32\2\2\u00df\27\3"+
 		"\2\2\2\u00e0\u00e1\7\20\2\2\u00e1\u00e2\5\\/\2\u00e2\u00e3\7\31\2\2\u00e3"+
 		"\u00e4\5\32\16\2\u00e4\u00e5\7\32\2\2\u00e5\31\3\2\2\2\u00e6\u00e7\b\16"+
@@ -3728,13 +3729,13 @@ public class ShExMLParser extends Parser {
 		"\u010f\3\2\2\2\u010f#\3\2\2\2\u0110\u0116\5\\/\2\u0111\u0112\5\\/\2\u0112"+
 		"\u0113\7$\2\2\u0113\u0114\5$\23\2\u0114\u0116\3\2\2\2\u0115\u0110\3\2"+
 		"\2\2\u0115\u0111\3\2\2\2\u0116%\3\2\2\2\u0117\u0118\7,\2\2\u0118\'\3\2"+
-		"\2\2\u0119\u011b\7\67\2\2\u011a\u011c\7=\2\2\u011b\u011a\3\2\2\2\u011c"+
+		"\2\2\u0119\u011b\7\67\2\2\u011a\u011c\7>\2\2\u011b\u011a\3\2\2\2\u011c"+
 		"\u011d\3\2\2\2\u011d\u011b\3\2\2\2\u011d\u011e\3\2\2\2\u011e\u0133\3\2"+
-		"\2\2\u011f\u0121\78\2\2\u0120\u0122\7=\2\2\u0121\u0120\3\2\2\2\u0122\u0123"+
+		"\2\2\u011f\u0121\78\2\2\u0120\u0122\7>\2\2\u0121\u0120\3\2\2\2\u0122\u0123"+
 		"\3\2\2\2\u0123\u0121\3\2\2\2\u0123\u0124\3\2\2\2\u0124\u0133\3\2\2\2\u0125"+
-		"\u0133\79\2\2\u0126\u0128\7:\2\2\u0127\u0129\7=\2\2\u0128\u0127\3\2\2"+
+		"\u0133\79\2\2\u0126\u0128\7:\2\2\u0127\u0129\7>\2\2\u0128\u0127\3\2\2"+
 		"\2\u0129\u012a\3\2\2\2\u012a\u0128\3\2\2\2\u012a\u012b\3\2\2\2\u012b\u0133"+
-		"\3\2\2\2\u012c\u012e\7<\2\2\u012d\u012f\7=\2\2\u012e\u012d\3\2\2\2\u012f"+
+		"\3\2\2\2\u012c\u012e\7<\2\2\u012d\u012f\7>\2\2\u012e\u012d\3\2\2\2\u012f"+
 		"\u0130\3\2\2\2\u0130\u012e\3\2\2\2\u0130\u0131\3\2\2\2\u0131\u0133\3\2"+
 		"\2\2\u0132\u0119\3\2\2\2\u0132\u011f\3\2\2\2\u0132\u0125\3\2\2\2\u0132"+
 		"\u0126\3\2\2\2\u0132\u012c\3\2\2\2\u0133)\3\2\2\2\u0134\u0135\5\"\22\2"+

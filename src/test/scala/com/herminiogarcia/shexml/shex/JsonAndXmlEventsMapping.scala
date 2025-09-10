@@ -1,11 +1,12 @@
 package com.herminiogarcia.shexml.shex
 
+import com.herminiogarcia.shexml.ParallelConfigValidation
 import org.scalatest.funsuite.AnyFunSuite
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMapping extends AnyFunSuite with ShExValidation {
+class JsonAndXmlEventsMapping extends AnyFunSuite with ShExValidation with ParallelConfigValidation {
 
   private val example =
     """
@@ -47,7 +48,7 @@ class JsonAndXmlEventsMapping extends AnyFunSuite with ShExValidation {
     "ex:398@ex:Performance, ex:567@ex:Performance, ex:444@ex:Performance, ex:989@ex:Performance"
 
   test("Events validate against created schema") {
-    assert(this.validate(example, shapeMap))
+    assert(this.validate(example, shapeMap, parallelConfiguration = parallelConfiguration))
   }
 
 }

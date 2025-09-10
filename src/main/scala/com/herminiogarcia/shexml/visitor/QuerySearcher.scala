@@ -3,9 +3,8 @@ package com.herminiogarcia.shexml.visitor
 import com.herminiogarcia.shexml.ast._
 import com.herminiogarcia.shexml.helper.SourceHelper
 
-import scala.collection.mutable
 
-class QuerySearcher(val varTable: mutable.HashMap[Variable, VarResult]) {
+class QuerySearcher(val varTable: Map[Variable, VarResult]) {
 
   def getQueryFromVarTable(variable: Var): QueryClause = {
     varTable.get(variable) match {

@@ -1,9 +1,9 @@
 package com.herminiogarcia.shexml.shex
 
-import com.herminiogarcia.shexml.MappingLauncher
+import com.herminiogarcia.shexml.{MappingLauncher, ParallelConfigValidation}
 import org.scalatest.funsuite.AnyFunSuite
 
-class MultipleElementIteratorExpressionWithCSVAndDBInferredShapeMapTest extends AnyFunSuite with ShExValidation {
+class MultipleElementIteratorExpressionWithCSVAndDBInferredShapeMapTest extends AnyFunSuite with ShExValidation with ParallelConfigValidation {
 
   private val example =
     """
@@ -57,7 +57,7 @@ class MultipleElementIteratorExpressionWithCSVAndDBInferredShapeMapTest extends 
 
   test("Films validate against generated schema") {
     val shapeMap = new MappingLauncher().launchShapeMapGeneration(example)
-    assert(this.validate(example, shapeMap))
+    assert(this.validate(example, shapeMap, parallelConfiguration = parallelConfiguration))
   }
 
 }

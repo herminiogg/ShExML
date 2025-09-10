@@ -1,13 +1,17 @@
 package com.herminiogarcia.shexml.rmlPrettyPrint
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
+import com.herminiogarcia.shexml.{ParallelConfigInferenceDatatypesNormaliseURIsFixture, RDFStatementCreator}
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class DataTypeAndLangTagGenerationFromData extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class DataTypeAndLangTagGenerationFromData extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture with RMLTestConversion {
 
   private val example =
     """
@@ -32,10 +36,15 @@ class DataTypeAndLangTagGenerationFromData extends AnyFunSuite with Matchers wit
       |    :num [values.num] #[values.dt] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val result = mappingLauncher.launchRMLTranslation(example, true)
+
+  private var output: Model = _
   private val prefix = "http://example.com/"
-  private val output = doTranslation(result, prefix).getDefaultModel
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    val result = mappingLauncher.launchRMLTranslation(example, true)
+    output = doTranslation(result, prefix).getDefaultModel
+  }
 
   test("Lang tags translated correctly") {
     assert(output.contains(createStatementWithLiteral(prefix, "Jane", "lastname", "Smith", "fr")))

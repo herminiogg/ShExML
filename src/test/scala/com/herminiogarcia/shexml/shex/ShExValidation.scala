@@ -2,6 +2,7 @@ package com.herminiogarcia.shexml.shex
 
 import cats.effect.unsafe.implicits.global
 import com.herminiogarcia.shexml.MappingLauncher
+import com.herminiogarcia.shexml.helper.ParallelExecutionConfigurator
 import es.weso.rdf.rdf4j.RDFAsRDF4jModel
 import es.weso.shapemaps.ShapeMap
 import es.weso.shex.validator.Validator
@@ -13,8 +14,8 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 trait ShExValidation {
 
-  def validate(shexml: String, shapemap: String): Boolean = {
-    val mappingLauncher = new MappingLauncher(normaliseURIs = true)
+  def validate(shexml: String, shapemap: String, parallelConfiguration: ParallelExecutionConfigurator): Boolean = {
+    val mappingLauncher = new MappingLauncher(normaliseURIs = true, parallelCollectionConfigurator = parallelConfiguration)
     val output = mappingLauncher.launchMapping(shexml).getDefaultModel
     val outputStream = new ByteArrayOutputStream()
     output.write(outputStream, "Turtle")

@@ -1,6 +1,6 @@
 package com.herminiogarcia.shexml
 
-import com.herminiogarcia.shexml.helper.PicocliLeftAlignedLayout
+import com.herminiogarcia.shexml.helper.{ParallelExecutionConfigurator, PicocliLeftAlignedLayout}
 import picocli.CommandLine
 import picocli.CommandLine.{ArgGroup, Command, Option}
 
@@ -20,13 +20,13 @@ object Main {
   }
 }
 
-@Command(name = "ShExML", version = Array("v0.5.4"),
+@Command(name = "ShExML", version = Array("v0.6.0"),
   mixinStandardHelpOptions = true,
   sortOptions = false,
   description = Array("Map and merge heterogeneous data sources with a Shape Expressions based syntax"))
 class Main extends Callable[Int] {
 
-  @Option(names = Array("-m", "--mapping"), required = true, description = Array("Path to the file with the mappings"))
+  @Option(names = Array("-m", "--mapping"), required = true, description = Array("Path to the file with the mappings. If '-' is provided as the path the engine will read from the standard input."))
   private var file: String = ""
 
   @ArgGroup(validate = false, heading = "Options for the transformation to RDF%n")
@@ -39,10 +39,20 @@ class Main extends Callable[Int] {
   private var generalTransformationOptions: GeneralTransformationOptions = new GeneralTransformationOptions()
 
   override def call(): Int = {
-    val fileHandler = scala.io.Source.fromFile(file)
+    val fileHandler = if(file == "-") scala.io.Source.stdin else scala.io.Source.fromFile(file)
+    val parallelExecutionConfiguration =
+      if(generalTransformationOptions.parallel) ParallelExecutionConfigurator(generalTransformationOptions.parallelAspects, generalTransformationOptions.numberOfThreads)
+      else ParallelExecutionConfigurator.empty
     try {
       val fileContent = fileHandler.mkString
-      val mappingLauncher = new MappingLauncher(generalTransformationOptions.username, generalTransformationOptions.password, generalTransformationOptions.drivers, transformationModifiers.inferenceDatatype, transformationModifiers.normaliseURIs)
+      val mappingLauncher = new MappingLauncher(
+        generalTransformationOptions.username,
+        generalTransformationOptions.password,
+        generalTransformationOptions.drivers,
+        transformationModifiers.inferenceDatatype,
+        transformationModifiers.normaliseURIs,
+        parallelExecutionConfiguration
+      )
       val outputContent = if(otherTransformations.rmlOutput) {
         mappingLauncher.launchRMLTranslation(fileContent)
       } else if(otherTransformations.rmlPrettifyOutput) {
@@ -116,4 +126,13 @@ class GeneralTransformationOptions {
 
   @Option(names = Array("-d", "--drivers"), description = Array("Add more JDBC database drivers in the form of <startJDBCURL>%%<driver> and separating them with \";\". Example: jdbc:postgresql%%org.postgresql.Driver;jdbc:oracle%%oracle.jdbc.OracleDriver"))
   var drivers: String = ""
+
+  @Option(names = Array("--parallel"), description = Array("EXPERIMENTAL: Enables the execution of the engine in concurrent mode"))
+  var parallel: Boolean = false
+
+  @Option(names = Array("--parallelAspects"), description = Array("EXPERIMENTAL: Allows to select the aspects that will be parallelised. The possible options are: \"queries\", \"shapes\", or \"all\"."))
+  var parallelAspects: String = "all"
+
+  @Option(names = Array("--nThreads"), description = Array("EXPERIMENTAL: The number of threads to use in the parallelisation. Default to the number of virtual threads of the processor."))
+  var numberOfThreads: String = ""
 }

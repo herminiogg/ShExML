@@ -1,10 +1,14 @@
 package com.herminiogarcia.shexml
 
 import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class FilmsAlt extends AnyFunSuite with Matchers with RDFStatementCreator {
+class FilmsAlt extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
@@ -37,9 +41,13 @@ class FilmsAlt extends AnyFunSuite with Matchers with RDFStatementCreator {
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val output = mappingLauncher.launchMapping(example).getDefaultModel
+  private var output: Model = _
   private val prefix = "http://example.com/"
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    output = mappingLauncher.launchMapping(example).getDefaultModel
+  }
 
   test("Shape film1 contains all the data, literal action, enhancement-#97") {
     assert(output.contains(createStatementWithLiteral(prefix, "film1", "name", "Dunkirk", XSDDatatype.XSDstring)))

@@ -64,6 +64,7 @@ CSVPERROW: C S V P E R R O W ;
 SQL: S Q L ':' ;
 SCALA: S C A L A ':' ;
 SPARQL: S P A R Q L ':' ;
+STDIN: S T D I N ;
 QUERY_PART: (LETTER | DIGIT | ALLOWED_CHARACTERS | '}' | '{' | '"')+ ;
 GREATER_SYMBOL_QUERY: '>' -> mode(DEFAULT_MODE) ;
 WS_QUERY: [ \t\n\r] -> skip ;

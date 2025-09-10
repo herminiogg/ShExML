@@ -1,13 +1,17 @@
 package com.herminiogarcia.shexml.rml
 
-import com.herminiogarcia.shexml.{MappingLauncher, RDFStatementCreator}
+import com.herminiogarcia.shexml.{ParallelConfigInferenceDatatypesNormaliseURIsFixture, RDFStatementCreator}
+import org.apache.jena.rdf.model.Model
+import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
 /**
   * Created by herminio on 21/2/18.
   */
-class JsonAndXmlEventsMappingWithBNode extends AnyFunSuite with Matchers with RDFStatementCreator with RMLTestConversion {
+class JsonAndXmlEventsMappingWithBNode extends AnyFunSuite
+  with Matchers with RDFStatementCreator
+  with ParallelConfigInferenceDatatypesNormaliseURIsFixture with RMLTestConversion {
 
   private val example =
     """
@@ -42,10 +46,15 @@ class JsonAndXmlEventsMappingWithBNode extends AnyFunSuite with Matchers with RD
       |  ex:long [performances.long] ;
       |}
     """.stripMargin
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
-  private val result = mappingLauncher.launchRMLTranslation(example)
+
+  private var output: Model = _
   private val prefix = "http://ex.com/"
-  private val output = doTranslation(result, prefix).getDefaultModel
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    super.beforeAll(configMap)
+    val result = mappingLauncher.launchRMLTranslation(example)
+    output = doTranslation(result, prefix).getDefaultModel
+  }
 
   /**test("Location shape is translated correctly") {
     assert(output.contains(createStatementWithLiteralAndBNodeSubject(output, prefix, "51.043613-3.717333", "lat", "51.043613", XSDDatatype.XSDdecimal)))

@@ -2,7 +2,7 @@ package com.herminiogarcia.shexml
 
 import org.scalatest.funsuite.AnyFunSuite
 
-class PrecompilationTest extends AnyFunSuite {
+class PrecompilationTest(val mappingLauncher: MappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)) extends AnyFunSuite {
 
   private val example =
     """
@@ -82,7 +82,6 @@ class PrecompilationTest extends AnyFunSuite {
       |}
     """.stripMargin
 
-  private val mappingLauncher = new MappingLauncher(inferenceDatatype = true, normaliseURIs = true)
   private val output = mappingLauncher.precompile(example)
 
   test("Precompiled version is generated as expected") {
