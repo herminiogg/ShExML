@@ -135,18 +135,18 @@
     "identifier" : "https://orcid.org/0000-0003-0765-7390"
   },
   "dateCreated" : "2018-02-22",
-  "dateModified" : "2025-07-08",
+  "dateModified" : "2025-09-10",
   "description" : "A heterogeneous data mapping language based on Shape Expressions",
   "developmentStatus" : "active",
   "downloadUrl" : "https://api.github.com/repos/herminiogg/ShExML/downloads",
-  "identifier" : "https://doi.org/10.5281/zenodo.15837379",
+  "identifier" : "https://doi.org/10.5281/zenodo.17092549",
   "license" : "https://api.github.com/licenses/mit",
   "name" : "ShExML",
   "programmingLanguage" : "Scala",
-  "releaseNotes" : "## What's Changed\r\n* Fixed a bug which prevented the generation of a subject based on a condition applied down the hierarchy.\r\n* Added the possibility to get the iteration index as part of a new builtin functions mechanism.\r\n* Iterators and fields can now be placed in any order.\r\n* Allowed the option to use dashes in the variables names.\r\n* Added the possibility to pass autoincrement ids as arguments of a function.\r\n* Added an option to precompile the ShExML input (`-pc` in the CLI) to generate a single version with all the imported files incorporated and check the input for syntactic and grammatical errors. (This should facilitate debugging in these kinds of files.)\r\n* Improved the CLI help message, removing unnecessary nesting of options and grouping them by categories.\r\n* The databases needed for some tests can now be set up locally using Docker (thanks @mikesname for this contribution).\r\n\r\n**Full Changelog**: https://github.com/herminiogg/ShExML/compare/v0.5.3...v0.5.4",
+  "releaseNotes" : "## What's Changed\r\n- Added a parellelisation option in the RDF conversion. You can decide which parts of the execution you want to run in parallel and the number of threads to be used (or let the engine decide based on you hardware specs).\r\n- Stdin can be used as input for the mapping rules or as a input source.\r\n- Some minor fixes and stability improvements.\r\n\r\n**Full Changelog**: https://github.com/herminiogg/ShExML/compare/v0.5.4...v0.6.0",
   "runtimePlatform" : "JVM",
-  "softwareRequirements" : [ "http://example.org/jena-shacl", "http://example.org/Saxon-HE", "http://example.org/logback-classic", "http://example.org/jena-core", "http://example.org/scala-compiler", "http://example.org/mysql-connector-java", "http://example.org/stringdistance_2.13", "http://example.org/rmlmapper", "http://example.org/jena-base", "http://example.org/srdf_3", "http://example.org/mssql-jdbc", "http://example.org/json-path", "http://example.org/picocli", "http://example.org/postgresql", "http://example.org/scala3-library_3", "http://example.org/shex_3", "http://example.org/scala-logging_3", "http://example.org/jena-arq", "http://example.org/srdf4j_3", "http://example.org/slf4j-nop", "http://example.org/antlr4", "http://example.org/mariadb-java-client", "http://example.org/sqlite-jdbc", "http://example.org/scalatest_3", "http://example.org/scala-csv_2.13", "http://example.org/scala-reflect" ],
-  "version" : "0.5.4",
+  "softwareRequirements" : [ "http://example.org/jena-shacl", "http://example.org/Saxon-HE", "http://example.org/logback-classic", "http://example.org/jena-core", "http://example.org/scala-compiler", "http://example.org/mysql-connector-java", "http://example.org/stringdistance_2.13", "http://example.org/rmlmapper", "http://example.org/jena-base", "http://example.org/srdf_3", "http://example.org/scala-parallel-collections_3", "http://example.org/mssql-jdbc", "http://example.org/json-path", "http://example.org/picocli", "http://example.org/postgresql", "http://example.org/scala3-library_3", "http://example.org/shex_3", "http://example.org/scala-logging_3", "http://example.org/jena-arq", "http://example.org/srdf4j_3", "http://example.org/slf4j-nop", "http://example.org/antlr4", "http://example.org/mariadb-java-client", "http://example.org/sqlite-jdbc", "http://example.org/scalatest_3", "http://example.org/scala-csv_2.13", "http://example.org/scala-reflect" ],
+  "version" : "0.6.0",
   "issueTracker" : "https://api.github.com/repos/herminiogg/ShExML/issues",
   "referencePublication" : "https://doi.org/10.7717/peerj-cs.318"
 }
