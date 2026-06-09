@@ -142,7 +142,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   private def createVarTable(ast: AST): mutable.HashMap[Variable, VarResult] = {
     logger.info(s"Building var table")
     val varTable = mutable.HashMap[Variable, VarResult]()
-    varTable += ((Var("rdf:"), URL("http://www.w3.org/1999/02/22-rdf-syntax-ns#")))
+    varTable += ((Var("rdf:"), URL("http://www.w3.org/1999/02/22-rdf-syntax-ns#", UnknownParserInfo)))
     val optionalArgument = Map("variable" -> "", "query" -> "")
     new VarTableBuilderVisitor(varTable).visit(ast, optionalArgument)
     logger.debug(s"Var table contents:")

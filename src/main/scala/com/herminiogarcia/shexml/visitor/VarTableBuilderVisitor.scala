@@ -10,14 +10,14 @@ import scala.collection.mutable
 class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResult]) extends DefaultVisitor[Map[String, Any], Unit] {
 
   override def doVisit(ast: AST, optionalArgument: Map[String, Any]): Unit = ast match {
-    case Prefix(name, value) => variableMap += ((name, value))
-    case Source(name, value) => variableMap += ((name, value))
-    case Query(name, value) => variableMap += ((name, value))
-    case Functions(name, value) => variableMap += ((name, value))
-    case Expression(name, value) => variableMap += ((name, value))
-    case Iterator(name, value, fields, iterators) => registerIterator(name, value, fields, iterators, optionalArgument)
-    case NestedIterator(name, value, fields, iterators) => registerIterator(name, value, fields, iterators, optionalArgument)
-    case Field(name, value, _, _) => {
+    case Prefix(name, value, _) => variableMap += ((name, value))
+    case Source(name, value, _) => variableMap += ((name, value))
+    case Query(name, value, _) => variableMap += ((name, value))
+    case Functions(name, value, _) => variableMap += ((name, value))
+    case Expression(name, value, _) => variableMap += ((name, value))
+    case Iterator(name, value, fields, iterators, _) => registerIterator(name, value, fields, iterators, optionalArgument)
+    case NestedIterator(name, value, fields, iterators, _) => registerIterator(name, value, fields, iterators, optionalArgument)
+    case Field(name, value, _, _, _) => {
       val fieldName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable").toString + "." + name.name
       variableMap += ((Var(fieldName), value))
     }
@@ -34,15 +34,15 @@ class VarTableBuilderVisitor(val variableMap: mutable.HashMap[Variable, VarResul
   def registerIterator(name: Var, value: QueryOrVar, fields: List[Field], iterators: List[NestedIterator], optionalArgument: Map[String, Any]) = {
     val iteratorName = if(optionalArgument("variable") == "") name.name else optionalArgument("variable").toString + "." + name.name
     val finalValue = value match {
-      case FieldQuery(query, pushed, popped) => optionalArgument("type") match {
-        case XmlPath(_) => XmlPath(query)
-        case JsonPath(_) => JsonPath(query)
+      case FieldQuery(query, pushed, popped, _) => optionalArgument("type") match {
+        case XmlPath(_, parserInfo) => XmlPath(query, parserInfo)
+        case JsonPath(_, parserInfo) => JsonPath(query, parserInfo)
       }
       case _ => value
     }
     variableMap += ((Var(iteratorName), finalValue))
     val topIteratorType = value match {
-      case FieldQuery(_, _, _) => optionalArgument("type").asInstanceOf[QueryClause]
+      case FieldQuery(_, _, _, _) => optionalArgument("type").asInstanceOf[QueryClause]
       case x: XmlPath => x
       case j: JsonPath => j
       case c: CSVPerRow => c

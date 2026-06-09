@@ -30,13 +30,13 @@ class QuerySearcher(val varTable: Map[Variable, VarResult]) {
     val extension = parts(parts.length - 1)
     val file = new SourceHelper().getURLContent(u.value)
     if(extension == "xpath") {
-      XmlPath(file.fileContent)
+      XmlPath(file.fileContent, u.parserInfo)
     } else if(extension == "jsonpath") {
-      JsonPath(file.fileContent)
+      JsonPath(file.fileContent, u.parserInfo)
     } else if(extension == "sql") {
-      SqlQuery(file.fileContent)
+      SqlQuery(file.fileContent, u.parserInfo)
     } else if(extension == "sparql") {
-      SparqlQuery(file.fileContent)
+      SparqlQuery(file.fileContent, u.parserInfo)
     } else throw new Exception("File extension " + extension + " is not supported for queries")
   }
 
