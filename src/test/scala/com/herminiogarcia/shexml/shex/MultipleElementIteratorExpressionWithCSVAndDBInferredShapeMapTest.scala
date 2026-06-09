@@ -10,9 +10,9 @@ class MultipleElementIteratorExpressionWithCSVAndDBInferredShapeMapTest extends 
       |PREFIX ex: <http://example.com/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-      |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
-      |SOURCE films_csv_file <https://rawgit.com/herminiogg/ShExML/enhancement-%239/src/test/resources/films.csv>
+      |SOURCE films_xml_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.xml>
+      |SOURCE films_json_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.json>
+      |SOURCE films_csv_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/enhancement-%239/src/test/resources/films.csv>
       |SOURCE films_db_connection <jdbc:sqlite:src/test/resources/films.sqlite>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD id <@id>

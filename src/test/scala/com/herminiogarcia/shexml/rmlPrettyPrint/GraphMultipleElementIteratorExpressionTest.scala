@@ -15,8 +15,8 @@ class GraphMultipleElementIteratorExpressionTest extends AnyFunSuite
     """
       |PREFIX : <http://example.com/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-      |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
+      |SOURCE films_xml_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.xml>
+      |SOURCE films_json_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.json>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD id <@id>
       |    FIELD name <name>
