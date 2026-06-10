@@ -1,7 +1,10 @@
 <configuration>
+    <conversionRule conversionWord="errorsInRed"
+                    converterClass="com.herminiogarcia.shexml.helper.LogRedErrorConverter" />
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %-5level[%thread] [%class] - %msg%n</pattern>
+            <pattern>%errorsInRed(%d{HH:mm:ss.SSS} %-5level[%thread] [%class] - %msg%n)</pattern>
         </encoder>
     </appender>
     <root level="info">

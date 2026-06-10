@@ -1,6 +1,7 @@
 package com.herminiogarcia.shexml.shex
 
 import com.herminiogarcia.shexml.ast._
+import com.herminiogarcia.shexml.helper.ShapesGenerationError
 import com.herminiogarcia.shexml.visitor.DefaultVisitor
 import com.typesafe.scalalogging.Logger
 
@@ -86,7 +87,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
           if(prefix.isEmpty) {
             if(langTag.isDefined) langTag.get match {
               case LangTagLiteral(value, _) => FixedValue("@" + value)
-              case LangTagGeneration(action, matcher, _) => throw new Exception("ShEx generation with dynamic langtag is not yet supported!")
+              case LangTagGeneration(action, matcher, parserInfo) => throw ShapesGenerationError("ShEx generation with dynamic langtag is not yet supported!", parserInfo)
             }
             else
               ObjectDefinition(shexDatatype, cardinality)

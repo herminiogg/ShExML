@@ -1,8 +1,8 @@
 package com.herminiogarcia.shexml.visitor
 
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
-import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, LoadedSource, ParallelExecutionConfigurator, SourceHelper}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, LoadedSource, ParallelExecutionConfigurator, RDFGenerationError, SourceHelper}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
 import com.jayway.jsonpath.{Configuration, DocumentContext}
@@ -200,12 +200,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       prefixTable(prefix) + extension
     }
 
-    case ObjectElement(prefix, action, literalValue, matcher, condition, dataType, langTag, rdfCollection, _) => {
+    case ObjectElement(prefix, action, literalValue, matcher, condition, dataType, langTag, rdfCollection, parserInfo) => {
       val result = action match {
         case Some(value) => doVisit(value, optionalArgument)
         case None => literalValue match {
           case Some(literal) => doVisit(literal, optionalArgument)
-          case None => throw new Exception("No generation clause given.")
+          case None => throw RDFGenerationError("No generation clause given.", parserInfo)
         }
       }
       val matchedResultList = matcher match {
@@ -237,11 +237,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
           }).filter(_ != Nil)
         case ResultAutoIncrement(iterator, predicate, _, _, _) =>
           val dataTypeValue = dataTypeResult.map({
-            case _: List[Result] => throw new Exception("Autoincrement values cannot have a generated dataType")
+            case _: List[Result] => throw RDFGenerationError("Autoincrement values cannot have a generated dataType", parserInfo)
             case value: String => value
           })
           val langTagValue = langTagResult.map({
-            case _: List[Result] => throw new Exception("Autoincrement values cannot have a generated langTag")
+            case _: List[Result] => throw RDFGenerationError("Autoincrement values cannot have a generated langTag", parserInfo)
             case value: String => value
           })
           visitor.ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), normaliseDataType(dataTypeValue), langTagValue)
@@ -249,7 +249,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       }
     }
 
-    case Union(left, right, _) => {
+    case Union(left, right, parserInfo) => {
       val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
       val leftList = doVisit(left, optionalArgument)
       val rightList = doVisit(right, optionalArgument)
@@ -262,13 +262,13 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
             iteratorsCombinations += value
             k -> leftResult.union(rightResult)
           }).toMap
-          case _ => throw new Exception("Impossible to combine an iterator with a non iterator expression")
+          case _ => throw RDFGenerationError("Impossible to combine an iterator with a non iterator expression", parserInfo)
         }
         case l: List[Result] => l.union(rightList.asInstanceOf[List[Result]])
       }
     }
 
-    case Substitution(left, right, join, _) => {
+    case Substitution(left, right, join, parserInfo) => {
       val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
       val leftList = doVisit(left, optionalArgument)
       val rightList = doVisit(right, optionalArgument)
@@ -283,15 +283,15 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               val value = s"$expName$k" -> getSubstitutionResults(leftResult, rightResult, joinResult)
               iteratorsCombinations += value
             })
-            case _ => throw new Exception("Cannot join iterator with non iterator expression. Join clause is not an iterator expression")
+            case _ => throw RDFGenerationError("Cannot join iterator with non iterator expression. Join clause is not an iterator expression", parserInfo)
           }
-          case _ => throw new Exception("Cannot join iterator with non iterator expression. Right clause is not an iterator expression")
+          case _ => throw RDFGenerationError("Cannot join iterator with non iterator expression. Right clause is not an iterator expression", parserInfo)
         }
         case left: List[Result] => getSubstitutionResults(left, rightList.asInstanceOf[List[Result]], joinList.asInstanceOf[List[Result]])
       }
     }
 
-    case Join(left, right, leftClause, rightClause, _) => {
+    case Join(left, right, leftClause, rightClause, parserInfo) => {
       val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
       val leftList = doVisit(left, optionalArgument)
       val rightList = doVisit(right, optionalArgument)
@@ -307,17 +307,17 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
                 val value = s"$expName$k" -> getJoinResults(leftResult, rightResult, l, r)
                 iteratorsCombinations += value
               })
-              case _ => throw new Exception("Cannot use an iterator expression for the join condition clause. Right condition is not a plain expression")
+              case _ => throw RDFGenerationError("Cannot use an iterator expression for the join condition clause. Right condition is not a plain expression", parserInfo)
             }
-            case _ => throw new Exception("Cannot use an iterator expression for the join condition clause. Left condition is not a plain expression")
+            case _ => throw RDFGenerationError("Cannot use an iterator expression for the join condition clause. Left condition is not a plain expression", parserInfo)
           }
-          case _ => throw new Exception("Cannot join iterator with non iterator expression. Right clause is not an iterator expression")
+          case _ => throw RDFGenerationError("Cannot join iterator with non iterator expression. Right clause is not an iterator expression", parserInfo)
         }
-        case _ => throw new Exception("Cannot join iterator with non iterator expression. Left clause is not an iterator expression")
+        case _ => throw RDFGenerationError("Cannot join iterator with non iterator expression. Left clause is not an iterator expression", parserInfo)
       }
     }
 
-    case StringOperation(left, right, unionString, _) => {
+    case StringOperation(left, right, unionString, parserInfo) => {
       val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
       val leftList = doVisit(left, optionalArgument)
       val rightList = doVisit(right, optionalArgument)
@@ -329,7 +329,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
             val value = s"$expName$k" -> getStringOperationResults(leftResult, rightResult, unionString)
             iteratorsCombinations += value
           })
-          case _ => throw new Exception("Cannot make string operation with left clause being an iterator expression and right clause a non iterator expression")
+          case _ => throw RDFGenerationError("Cannot make string operation with left clause being an iterator expression and right clause a non iterator expression", parserInfo)
         }
         case left: List[Result] => getStringOperationResults(left, rightList.asInstanceOf[List[Result]], unionString)
       }
@@ -387,7 +387,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         } else if (varList.size >= 3) {
           doIteratorQuery(varList.slice(1, varList.size), middleArguments, file.asInstanceOf[LoadedSource])
         } else {
-          throw new Exception("Bad number of vars")
+          throw RDFGenerationError("Bad number of vars", i.parserInfo)
         }
       })
       val finalResult = results.headOption match {
@@ -409,10 +409,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         case Some(executor) => executor
         case None =>
           val loadedSource = functionsIRI match {
-            case JdbcURL(jdbcURL, _) => throw new Exception(s"The JDBC URL $jdbcURL cannot be used as the source of functions.")
+            case JdbcURL(jdbcURL, _) => throw RDFGenerationError(s"The JDBC URL $jdbcURL cannot be used as the source of functions.", f.parserInfo)
             case fp: FilePath => doVisit(fp, optionalArgument).asInstanceOf[List[LoadedSource]].headOption match {
               case Some(ls) => ls
-              case None => throw new Exception(s"There is no functions code in the provided path: ${fp.value}")
+              case None => throw RDFGenerationError(s"There is no functions code in the provided path: ${fp.value}", f.parserInfo)
             }
           }
           val executor = new FunctionHubExecutor(loadedSource)
@@ -427,7 +427,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       val sizeArguments = argumentsResults.filter(_.forall(_.isInstanceOf[Result])).map(_.size)
       val maxSize = if(sizeArguments.isEmpty) 1 else argumentsResults.filter(_.forall(_.isInstanceOf[Result])).map(_.size).max
       val sameSizeArguments = argumentsResults.exists(rl => rl.forall(r => r.isInstanceOf[Result]) && rl.size != maxSize)
-      if(sameSizeArguments) throw new Exception(s"The results of the function arguments are not equal in size. This prevents a correct execution of the function.")
+      if(sameSizeArguments) throw RDFGenerationError(s"The results of the function arguments are not equal in size. This prevents a correct execution of the function.", f.parserInfo)
       val argumentsHead = argumentsResults.find(_.forall(_.isInstanceOf[Result]))
       val argumentsResultsFinal = argumentsResults.map(r => {
         if(r.nonEmpty && r.head.isInstanceOf[ResultAutoIncrement]) {
@@ -605,14 +605,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       doVisit(shapeVar, optionalArgument)
     }
 
-    case URL(url, _) =>
+    case URL(url, parserInfo) =>
       logger.debug(s"Selecting file $url")
       if(isRDFSource(url))
         List(LoadedSource("", url))
       else if(url.contains('*') && url.startsWith("file://"))
         getAllFilesContents(url)
       else if(url.contains('*'))
-        throw new Exception("* wildcard not allowed over remote files")
+        throw RDFGenerationError("* wildcard not allowed over remote files", parserInfo)
       else
         List(new SourceHelper().getURLContent(url))
 
@@ -837,7 +837,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     val query = generateFinalQuery(iteratorVars, "", null)
     query match {
       case c: CSVPerRow => doPerRowResults(c, fileContentOrURL)
-      case s: SqlColumn => doSqlResults(s, fileContentOrURL)
+      case s: SqlColumn => doSqlResults(s, fileContentOrURL, s.parserInfo)
       case sp: SparqlColumn => doSparqlResults(sp, fileContentOrURL)
       case _ => {
         val iteratorQueries = doIteratorQueries(iteratorVars.slice(0, iteratorVars.size - 1), "", List(""), middleArguments, null)
@@ -886,12 +886,12 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
 
   }
 
-  private def doSqlResults(query: SqlColumn, source: LoadedSource): List[Result] = {
+  private def doSqlResults(query: SqlColumn, source: LoadedSource, parserInfo: ParserInfo): List[Result] = {
     val dbURLConnection = source.filepath
     val resultMap = queryResultCache.search(query.query, source) match {
       case Some(value) => value.asInstanceOf[Map[String, List[String]]]
       case None => {
-        val connection = connectToDB(dbURLConnection)
+        val connection = connectToDB(dbURLConnection, parserInfo)
         val statement = connection.prepareStatement(query.query)
         val resultSet = statement.executeQuery()
         queryResultCache.save(query.query, source, resultSet)
@@ -907,9 +907,9 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     composedResults.toList
   }
 
-  private def connectToDB(dbURL: String) = {
+  private def connectToDB(dbURL: String, parserInfo: ParserInfo) = {
     logger.info(s"Connecting to JDBC database $dbURL")
-    Class.forName(lookForJdbcDriver(dbURL, driversMap))
+    Class.forName(lookForJdbcDriver(dbURL, driversMap, parserInfo))
     DriverManager.getConnection(dbURL, username, password)
   }
 
@@ -927,7 +927,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
           val id = (file.filepath + i).hashCode
           Result(Option(id), HashSet(id), List(result), None, None, None)
         }
-        case None => throw new Exception("Field not present")
+        case None => throw RDFGenerationError("Field not present", query.parserInfo)
       }
     }
     results.toList
@@ -1165,7 +1165,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         val seq = output.createSeq()
         nodes.foreach(n => seq.add(n))
         seq
-      case _ => throw new Exception("Collection not supported")
+      case _ => throw RDFGenerationError(s"Collection ${rdfCollection.getClass.getName} not supported", rdfCollection.parserInfo)
   }
 
   private def normaliseDataType(datatype: Option[String]): Option[String] = datatype.map(dt => {

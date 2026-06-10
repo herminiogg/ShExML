@@ -140,5 +140,5 @@ case class RDFSeq(parserInfo: ParserInfo) extends RDFCollection
 sealed trait BuiltinFunction extends AST
 case class Index(parserInfo: ParserInfo) extends BuiltinFunction
 
-class ParserInfo(val line: Option[Int], val column: Option[Int])
-object UnknownParserInfo extends ParserInfo(line = None, column = None)
+class ParserInfo(val startLine: Option[Int], val startColumn: Option[Int], val endLine: Option[Int], val endColumn: Option[Int])
+object UnknownParserInfo extends ParserInfo(startLine = None, startColumn = None, endLine = None, endColumn = None)

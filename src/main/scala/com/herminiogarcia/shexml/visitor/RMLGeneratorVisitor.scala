@@ -3,6 +3,7 @@ package com.herminiogarcia.shexml.visitor
 import com.herminiogarcia.shexml.ast._
 import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.Dataset
+import com.herminiogarcia.shexml.helper.RMLGenerationError
 import org.apache.jena.rdf.model.{Resource, Statement}
 
 class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], prettify: Boolean ,username: String, password: String)
@@ -107,11 +108,11 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
           }
           val logicalSourceName = mapPrefixOrBNode + "l_" + (source.value + iterator.query).hashCode.abs
           val logicalSource = iterator match {
-            case SqlQuery(query, _) => {
+            case SqlQuery(query, parserInfo) => {
               val dbSubjectID = mapPrefixOrBNode + "db_" + dbIndex.next()
               val datasource = List(
                 createStatementWithLiteral(dbSubjectID, rdfPrefix + "type", d2rqPrefix + "Database"),
-                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].value)),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].value, parserInfo = parserInfo)),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDSN", source.asInstanceOf[JdbcURL].value),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "username", username),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "password", password)
@@ -176,11 +177,11 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
             } else {
               val datatypePrefix = arguments.get("dataType").map({
                 case dt: DataTypeLiteral => prefixTable(dt.value.split(":")(0) + ":")
-                case _: DataTypeGeneration => throw new Exception("DataType generation from data not supported in RML")
+                case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
               })
               val datatype = arguments.get("dataType").map({
                 case dt: DataTypeLiteral => dt.value.split(":")(1)
-                case _: DataTypeGeneration => throw new Exception("DataType generation from data not supported in RML")
+                case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
               })
               val datatypeURI = datatypePrefix.map(_ + datatype.get)
               val langTagStatement = arguments.get("langTag").map({
@@ -347,7 +348,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       )
     }
 
-    case ObjectElement(prefix, action, literalValue, matcher, condition, dataType, langTag, rdfCollection, _) => {
+    case ObjectElement(prefix, action, literalValue, matcher, condition, dataType, langTag, rdfCollection, parserInfo) => {
       val arguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
       val prefixArguments = if(prefix.nonEmpty) arguments.+("prefix" -> prefix) else arguments
       val dataTypeArguments = if(dataType.isDefined) prefixArguments.+("dataType" -> dataType.getOrElse(None)) else prefixArguments
@@ -356,7 +357,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         case Some(value) => doVisit(value, finalArguments)
         case None => literalValue match {
           case Some(literal) => doVisit(literal, finalArguments)
-          case None => throw new Exception("No generation clause given.")
+          case None => throw RMLGenerationError("No generation clause given.", parserInfo)
         }
       }
     }

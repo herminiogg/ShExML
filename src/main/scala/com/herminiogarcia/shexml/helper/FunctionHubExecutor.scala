@@ -59,7 +59,7 @@ class FunctionHubExecutor(val functionsCode: LoadedSource) {
     else if(typeName == "Short") classOf[Short]
     else if(typeName == "Byte") classOf[Byte]
     else if(typeName == "java.lang.String") classOf[String]
-    else throw new Exception(typeName + "is not a supported type")
+    else throw FunctionExecutionError(typeName + "is not a supported type")
   }
 
 }

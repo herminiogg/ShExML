@@ -369,7 +369,8 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   def createParserInfo(context: ParserRuleContext): ParserInfo = {
     val start = context.getStart
-    new ParserInfo(Some(start.getLine), Some(start.getCharPositionInLine))
+    val end = context.getStop
+    new ParserInfo(Some(start.getLine), Some(start.getCharPositionInLine), Some(end.getLine), Some(end.getCharPositionInLine))
   }
 
 }
