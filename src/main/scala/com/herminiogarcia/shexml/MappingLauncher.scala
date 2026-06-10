@@ -5,11 +5,12 @@ import com.herminiogarcia.shexml.ast._
 import com.herminiogarcia.shexml.helper.{OrphanBNodeRemover, ParallelExecutionConfigurator, SourceHelper}
 import com.herminiogarcia.shexml.parser.ASTCreatorVisitor
 import com.herminiogarcia.shexml.shex._
-import com.herminiogarcia.shexml.visitor.{PushedOrPoppedValueSearchVisitor, RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
+import com.herminiogarcia.shexml.visitor.{PushedOrPoppedValueSearchVisitor, RDFGeneratorVisitor, RMLGeneratorVisitor, SemanticCheckerVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
 import com.typesafe.scalalogging.Logger
+
 import java.io.ByteArrayOutputStream
 import scala.collection.JavaConverters._
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -47,6 +48,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
+    runSemanticAnalysis(ast, varTable)
     generateResultingRDF(ast, varTable)
   }
 
@@ -58,6 +60,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
     val dataset = generateResultingRML(ast, varTable, prettify)
+    runSemanticAnalysis(ast, varTable)
     val outputStream = new ByteArrayOutputStream()
     if(prettify) new OrphanBNodeRemover().removeOrphanBNodes(dataset.getDefaultModel)
     RDFDataMgr.write(outputStream, dataset.getDefaultModel, RDFFormat.TURTLE_PRETTY)
@@ -71,6 +74,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
+    runSemanticAnalysis(ast, varTable)
     val inferencesTable = new ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]()
     generateInferencesFromShExML(ast, varTable, inferencesTable)
     val shex = new ShExGeneratorVisitor(inferencesTable.asScala.toList).doVisit(ast, null)
@@ -84,6 +88,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
+    runSemanticAnalysis(ast, varTable)
     val shapeMaps = generateShapeMaps(ast, varTable)
     new ShapeMapPrinter().print(shapeMaps)
   }
@@ -96,6 +101,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
     val inferencesTable = new ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]()
+    runSemanticAnalysis(ast, varTable)
     generateInferencesFromShExML(ast, varTable, inferencesTable)
     logger.info(s"Executing ShEx extraction process as base for the SHACL conversion")
     val shex = new ShExGeneratorVisitor(inferencesTable.asScala.toList).doVisit(ast, null)
@@ -115,6 +121,8 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
       val lexer = createLexer(mappingCode)
       val parser = createParser(lexer)
       val ast = createAST(parser)
+      val varTable = createVarTable(ast)
+      runSemanticAnalysis(ast, varTable)
       precompiledMappingRules
     } catch {
       case e: Exception =>
@@ -148,6 +156,12 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     logger.debug(s"Var table contents:")
     varTable.foreach {case (v, vr) => logger.debug(s"$v -> $vr")}
     varTable
+  }
+
+  private def runSemanticAnalysis(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Unit = {
+    logger.info(s"Launching semantic analysis")
+    new SemanticCheckerVisitor(varTable.toMap).doVisit(ast, null)
+    logger.debug(s"Semantic analysis completed satisfactorily")
   }
 
   private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {

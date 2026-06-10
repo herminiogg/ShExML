@@ -383,7 +383,9 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
             }
           }
         } else if (varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
-          iteratorsCombinations(varList.map(_.name).mkString("."))
+          val composedVar = varList.map(_.name).mkString(".")
+          iteratorsCombinations.getOrElse(composedVar,
+            throw RDFGenerationError(s"Variable $composedVar does not resolve to any reference, check the used variable or the iterator definition", i.parserInfo))
         } else if (varList.size >= 3) {
           doIteratorQuery(varList.slice(1, varList.size), middleArguments, file.asInstanceOf[LoadedSource])
         } else {
