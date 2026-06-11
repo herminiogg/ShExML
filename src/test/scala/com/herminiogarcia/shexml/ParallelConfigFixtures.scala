@@ -2,9 +2,7 @@ package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.helper.ParallelExecutionConfigurator
 import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, TestSuite}
-
 import java.nio.file.Path
-
 
 trait ParallelConfigInferenceDatatypesNormaliseURIsFixture extends BeforeAndAfterAllConfigMap with MappingLauncherInitializer { this: TestSuite =>
   var mappingLauncher: MappingLauncher = _

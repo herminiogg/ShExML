@@ -6,6 +6,7 @@ import picocli.CommandLine.{ArgGroup, Command, Option}
 
 import java.io.{File, PrintWriter}
 import java.util.concurrent.Callable
+import java.nio.file.Path
 
 /**
   * Created by herminio on 22/12/17.
@@ -51,7 +52,8 @@ class Main extends Callable[Int] {
         generalTransformationOptions.drivers,
         transformationModifiers.inferenceDatatype,
         transformationModifiers.normaliseURIs,
-        parallelExecutionConfiguration
+        parallelExecutionConfiguration,
+        Path.of(generalTransformationOptions.workingDir)
       )
       val outputContent = if(otherTransformations.rmlOutput) {
         mappingLauncher.launchRMLTranslation(fileContent)
@@ -117,6 +119,9 @@ class OtherTransformations {
 class GeneralTransformationOptions {
   @Option(names = Array("-o", "--output"), description = Array("Path where the output file should be created"))
   var output: String = ""
+
+  @Option(names = Array("--chdir"), description = Array("Changes the working folder and uses it to resolve relative file sources"))
+  var workingDir: String = ""
 
   @Option(names = Array("-u", "--username"), description = Array("Username in case of using a database"))
   var username: String = ""

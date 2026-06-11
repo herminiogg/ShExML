@@ -48,7 +48,7 @@ class FilmsStdin extends AnyFunSuite
 
   override def beforeAll(configMap: ConfigMap): Unit = {
     super.beforeAll(configMap)
-    val stream = new ByteArrayInputStream(SourceHelper().getContentFromRelativePath("./src/test/resources/filmsAlt.json").fileContent.getBytes())
+    val stream = new ByteArrayInputStream(new SourceHelper().getContentFromRelativePath("./src/test/resources/filmsAlt.json").fileContent.getBytes())
     System.setIn(stream)
     stream.close()
     output = mappingLauncher.launchMapping(example).getDefaultModel

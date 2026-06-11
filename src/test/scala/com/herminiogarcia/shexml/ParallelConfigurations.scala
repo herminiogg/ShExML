@@ -1,7 +1,6 @@
 package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.helper.ParallelExecutionConfigurator
-
 import java.nio.file.Path
 
 class ParallelConfigurations(val parallelConfiguration: ParallelExecutionConfigurator) {

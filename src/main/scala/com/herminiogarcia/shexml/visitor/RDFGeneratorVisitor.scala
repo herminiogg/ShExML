@@ -51,7 +51,6 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   protected val xpathQueryResultsCache = new XpathQueryResultsCache(pushedOrPoppedFieldsPresent)
   protected val xmlDocumentCache = new XMLDocumentCache()
   protected val functionHubExecuterCache = new FunctionHubExecutorCache()
-  protected val sourceHelper: SourceHelper = SourceHelper()
   protected val defaultModel = dataset.getDefaultModel
   protected val jsonPathConfiguration = Configuration.defaultConfiguration()
     .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
@@ -617,7 +616,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       else if(url.contains('*'))
         throw new Exception("* wildcard not allowed over remote files")
       else
-        List(sourceHelper.getURLContent(url))
+        List(new SourceHelper().getURLContent(url))
 
     case RelativePath(path) =>
       if(isRDFSource(path)) {
@@ -628,11 +627,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         List(LoadedSource("", fileProtocol + fileAbsolutePath))
       }
       else if(path.contains('*')) getAllFilesContents(path)
-      else List(sourceHelper.getContentFromRelativePath(path, basePath))
+      else List(new SourceHelper().getContentFromRelativePath(path, basePath))
 
     case JdbcURL(url) => List(LoadedSource("", url))
 
-    case Stdin() => List(sourceHelper.getStdinContents())
+    case Stdin() => List(new SourceHelper().getStdinContents())
 
 
     case default => visit(default, optionalArgument)
@@ -1014,7 +1013,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     val files = normPath.toFile.listFiles().filter(_.isFile)
       .filter(_.getName.endsWith(fileEnding + fileExtension)).filter(_.getName.startsWith(fileBeginning))
     val fileProtocol = if(path.startsWith("/")) "file://" else "file:///"
-    files.map(file => sourceHelper.getURLContent(fileProtocol + file.getAbsolutePath.replaceAll("\\\\", "/"))).toList
+    files.map(file => new SourceHelper().getURLContent(fileProtocol + file.getAbsolutePath.replaceAll("\\\\", "/"))).toList
   }
 
   private def visitAction(actionOrLiteral: ActionOrLiteral, predicateObjectsList: List[Any], optionalArgument: Any): List[Result] = actionOrLiteral match {

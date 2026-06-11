@@ -1,7 +1,6 @@
 package com.herminiogarcia.shexml.helper
 
 import com.herminiogarcia.shexml.helper.SourceHelper.{saveFileResult, searchFileResult}
-
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import scala.collection.mutable
@@ -9,7 +8,7 @@ import scala.collection.mutable
 /**
   * Created by herminio on 21/2/18.
   */
-case class SourceHelper() {
+class SourceHelper {
 
   def getURLContent(url: String): LoadedSource = searchFileResult(url) match {
     case Some(result) => result
@@ -40,6 +39,7 @@ case class SourceHelper() {
   def getStdinContents(): LoadedSource = {
     LoadedSource(scala.io.Source.stdin.mkString, "-")
   }
+
 }
 
 object SourceHelper {

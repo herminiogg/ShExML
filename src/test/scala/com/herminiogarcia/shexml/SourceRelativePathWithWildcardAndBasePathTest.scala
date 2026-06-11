@@ -6,31 +6,19 @@ import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 
-class RelativeBasePathFunctionTest extends AnyFunSuite
+class SourceRelativePathWithWildcardAndBasePathTest extends AnyFunSuite
   with Matchers with RDFStatementCreator
   with ParallelConfigBasePath {
 
-  // This path is used to resolve films.xml, films.json, functions.json
   override def relativeBasePath: Path = Path.of("src/test/resources/")
 
   private val example =
     """
-      PREFIX : <http://example.com/>
+      |PREFIX : <http://example.com/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_xml_file <./films.xml>
-      |SOURCE films_json_file <../resources/films.json>
-      |FUNCTIONS helper <scala: functions.scala>
-      |AUTOINCREMENT my_code1 <"something: " + 1 to 10 by 2>
-      |AUTOINCREMENT code1 <1 to 10 by 2>
-      |ITERATOR film_xml <xpath: //film> {
-      |    FIELD id <@id>
-      |    FIELD name <name>
-      |    FIELD year <year>
-      |    FIELD country <country>
-      |    FIELD directors <directors/director>
-      |}
+      |SOURCE films_json_file <filmsDirectory/film_*.json>
       |ITERATOR film_json <jsonpath: $.films[*]> {
       |    FIELD id <id>
       |    FIELD name <name>
@@ -38,12 +26,10 @@ class RelativeBasePathFunctionTest extends AnyFunSuite
       |    FIELD country <country>
       |    FIELD directors <director>
       |}
-      |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
+      |EXPRESSION films <films_json_file.film_json>
       |
       |:Films :[films.id] {
       |    :type :Film ;
-      |    :internalId1 [helper.concatenate(films.id, my_code1)] ;
-      |    #:internalIdPlusOne [helper.addOneAutoIncrement(code1)] ;
       |    :name [films.name] ;
       |    :year [films.year] xs:gYear ;
       |    :country [films.country] ;
@@ -61,7 +47,6 @@ class RelativeBasePathFunctionTest extends AnyFunSuite
 
   test("Shape 1 is translated correctly") {
     assert(output.contains(createStatement(prefix, "1", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "1", "internalId1", "1something: 5", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "name", "Dunkirk", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "year", "2017", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "1", "country", "USA", XSDDatatype.XSDstring)))
@@ -70,7 +55,6 @@ class RelativeBasePathFunctionTest extends AnyFunSuite
 
   test("Shape 2 is translated correctly") {
     assert(output.contains(createStatement(prefix, "2", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "2", "internalId1", "2something: 7", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "name", "Interstellar", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "year", "2014", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "2", "country", "USA", XSDDatatype.XSDstring)))
@@ -80,7 +64,6 @@ class RelativeBasePathFunctionTest extends AnyFunSuite
 
   test("Shape 3 is translated correctly") {
     assert(output.contains(createStatement(prefix, "3", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "3", "internalId1", "3something: 1", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "name", "Inception", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "year", "2010", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "3", "country", "USA", XSDDatatype.XSDstring)))
@@ -89,7 +72,6 @@ class RelativeBasePathFunctionTest extends AnyFunSuite
 
   test("Shape 4 is translated correctly") {
     assert(output.contains(createStatement(prefix, "4", "type", "Film")))
-    assert(output.contains(createStatementWithLiteral(prefix, "4", "internalId1", "4something: 3", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "name", "The Prestige", XSDDatatype.XSDstring)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "year", "2006", XSDDatatype.XSDgYear)))
     assert(output.contains(createStatementWithLiteral(prefix, "4", "country", "USA", XSDDatatype.XSDstring)))
@@ -98,7 +80,7 @@ class RelativeBasePathFunctionTest extends AnyFunSuite
   }
 
   test("No additional triples are generated") {
-    val triplesCount = 26
+    val triplesCount = 22
     assert(output.size() == triplesCount)
   }
 
