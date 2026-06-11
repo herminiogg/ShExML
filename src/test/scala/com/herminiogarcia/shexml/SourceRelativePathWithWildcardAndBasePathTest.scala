@@ -8,7 +8,7 @@ import org.scalatest.matchers.must.Matchers
 
 import java.nio.file.Path
 
-class SourceRelativePathWithWildcardTest extends AnyFunSuite
+class SourceRelativePathWithWildcardAndBasePathTest extends AnyFunSuite
   with Matchers with RDFStatementCreator
   with ParallelConfigBasePath {
 

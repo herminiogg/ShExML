@@ -57,7 +57,7 @@ class MultipleElementIteratorExpressionWithCSVFromStdinTest extends AnyFunSuite
 
   override def beforeAll(configMap: ConfigMap): Unit = {
     super.beforeAll(configMap)
-    val stream = new ByteArrayInputStream(new SourceHelper().getURLContent("https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/enhancement-%239/src/test/resources/films.csv").fileContent.getBytes())
+    val stream = new ByteArrayInputStream(new SourceHelper().getURLContent("https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%239/src/test/resources/films.csv").fileContent.getBytes())
     System.setIn(stream)
     stream.close()
     output = mappingLauncher.launchMapping(example).getDefaultModel

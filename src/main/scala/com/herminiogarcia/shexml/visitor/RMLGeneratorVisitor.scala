@@ -4,9 +4,10 @@ import com.herminiogarcia.shexml.ast._
 import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.Dataset
 import org.apache.jena.rdf.model.{Resource, Statement}
+import java.nio.file.Path
 
-class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], prettify: Boolean ,username: String, password: String)
-  extends RDFGeneratorVisitor(dataset, varTable, username, password) with JdbcDriverRegistry {
+class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], prettify: Boolean ,username: String, password: String, basePath: Path = Path.of(""))
+  extends RDFGeneratorVisitor(dataset, varTable, username, password, basePath = basePath) with JdbcDriverRegistry {
 
   private val mapPrefix = "http://mapping.example.com/"
   private val rmlPrefix = "http://semweb.mmlab.be/ns/rml#"

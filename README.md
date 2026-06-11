@@ -64,11 +64,14 @@ The full specification with all the supported features and examples can be consu
 ### CLI
 A command line interface is offered under the jar library with the following options available:
 ```
-Usage: ShExML [-h] [-id] [-nu] [-V] [-d=<drivers>] [-f=<format>] -m=<file>
-              [-o=<output>] [-p=<password>] [-u=<username>] [-pc | -r | -rp |
-              -s | -sm | -sh | -shc]
+Usage: ShExML [-h] [-id] [-nu] [--parallel] [-V] [-d=<drivers>] [-f=<format>]
+              -m=<file> [--nThreads=<numberOfThreads>] [-o=<output>]
+              [-p=<password>] [--parallelAspects=<parallelAspects>]
+              [-u=<username>] [-pc | -r | -rp | -s | -sm | -sh | -shc]
 Map and merge heterogeneous data sources with a Shape Expressions based syntax
-  -m, --mapping=<file>         Path to the file with the mappings
+  -m, --mapping=<file>         Path to the file with the mappings. If '-' is
+                                 provided as the path the engine will read from
+                                 the standard input.
   -h, --help                   Show this help message and exit.
   -V, --version                Print version information and exit.
 Options for the transformation to RDF
@@ -104,6 +107,15 @@ General configuration options applying to all the available transformations
                                  with ";". Example: jdbc:postgresql%org.
                                  postgresql.Driver;jdbc:oracle%oracle.jdbc.
                                  OracleDriver
+  --parallel                   EXPERIMENTAL: Enables the execution of the
+                                 engine in concurrent mode
+  --parallelAspects=<parallelAspects>
+                               EXPERIMENTAL: Allows to select the aspects that
+                                 will be parallelised. The possible options
+                                 are: "queries", "shapes", or "all".
+  --nThreads=<numberOfThreads> EXPERIMENTAL: The number of threads to use in
+                                 the parallelisation. Default to the number of
+                                 virtual threads of the processor.
 ```
 Therefore, to execute the films example: ```java -jar shexml.jar -m films.shexml```
 
@@ -115,11 +127,26 @@ val file = scala.io.Source.fromFile(pathToFile).mkString
 val mappingLauncher = new MappingLauncher()
 val output = mappingLauncher.launchMapping(file, "TURTLE")
 ```
+
+### Parallelisation
+From v0.6.0, the ShExML engine includes an experimental parallel implementation which allows to run the RDF generation algorithm in parallel 
+over two main concerns: shapes and queries. When running shapes in parallel, the first shape will always be run synchronously 
+while the rest of the shapes will be executed in parallel. This is intended to avoid unnecessary identical computations that would 
+be executed by all the shapes, creating as a result a performance downgrade over the non-parallel counterpart execution. When queries are run in parallel,
+only the execution of the final queries against the designated files will be parallelised. The execution in parallel of both shapes and queries 
+can be combined, creating a way of nesting parallel executions, for which both the CLI and the JVM compatible API provide configuration options. 
+The latter through the `ParallelExecutionConfigurator` object. By default, the ShExML engine runs all the transformations in a synchronous manner.
+
+Warning: Running an algorithm in parallel requires a careful selection of the most optimal parts to be executed in parallel. Given that ShExML relies 
+on an external set of mapping rules, this decision is relegated to the final user who must provide the configuration that suits best the targeted 
+transformation. Be aware that a bad configuration may impose a longer execution time due to the associated overheads of running a multi-threaded application
+which in the case of nesting parallel aspects will increase very rapidly.
+
 ### Requirements
 The minimal versions for this software to work are:
 - JDK 17, or the Open JDK 17. (Versions matching earlier JDK version can be generated following the [Build](#build) instructions or provided upon request.) 
-- Scala 2.12.17
-- SBT 1.7.2
+- Scala 2.12.20
+- SBT 1.11.2
 
 ### Webpage
 A live playground is also offered online (http://shexml.herminiogarcia.com). However, due to hardware limitations it is not 
@@ -134,7 +161,7 @@ PeerJ Computer Science, 6, e318. https://doi.org/10.7717/peerj-cs.318
 ```
 
 Other possible publications per topic are:
-* Optimisatin of the ShExML engine
+* Optimisation of the ShExML engine
 ```
 García-González, H. (2025). Optimising the ShExML engine through code profiling: From turtle’s pace 
 to state-of-the-art performance. Semantic Web, (Preprint), 1-30. https://doi.org/10.3233/SW-243736
@@ -208,28 +235,29 @@ $ sbt "++<version> test"
 ### Dependencies
 The following dependencies are used by this library:
 
-| Dependency                                 | License                                 |
-|--------------------------------------------|-----------------------------------------|
-| org.antlr / antlr4                         | BSD-3-Clause                            |
-| net.sf.saxon / Saxon-HE                    | MPL-2.0                                 |
-| org.apache.jena / jena-base                | Apache License 2.0                      |
-| org.apache.jena / jena-core                | Apache License 2.0                      |
-| org.apache.jena / jena-arq                 | Apache License 2.0                      |
-| org.apache.jena / jena-shacl               | Apache License 2.0                      |
-| info.picocli / picocli                     | Apache License 2.0                      |
-| org.slf4j / slf4j-nop                      | MIT License                             |
-| com.github.tototoshi / scala-csv           | Apache License 2.0                      |
-| org.xerial / sqlite-jdbc                   | Apache License 2.0                      |
-| mysql / mysql-connector-java               | GPL-v2 (Universal FOSS Exception v1)    |
-| org.postgresql / postgresql                | BSD-2-Clause                            |
-| org.mariadb.jdbc / mariadb-java-client     | LGPL-2.1                                |
-| com.microsoft.sqlserver / mssql-jdbc       | MIT License                             |
-| com.github.vickumar1981 / stringdistance   | Apache License 2.0                      |
-| com.typesafe.scala-logging / scala-logging | Eclipse Public License v1.0 or LGPL-2.1 |
-| com.jayway.jsonpath / json-path            | Apache License 2.0                      |
-| org.scala-lang / scala-reflect             | Apache License 2.0                      |
-| org.scala-lang / scala-compiler            | Apache License 2.0                      |
-| ch.qos.logback / logback-classic           | Eclipse Public License v1.0 or LGPL-2.1 |
+| Dependency                                            | License                                 |
+|-------------------------------------------------------|-----------------------------------------|
+| org.antlr / antlr4                                    | BSD-3-Clause                            |
+| net.sf.saxon / Saxon-HE                               | MPL-2.0                                 |
+| org.apache.jena / jena-base                           | Apache License 2.0                      |
+| org.apache.jena / jena-core                           | Apache License 2.0                      |
+| org.apache.jena / jena-arq                            | Apache License 2.0                      |
+| org.apache.jena / jena-shacl                          | Apache License 2.0                      |
+| info.picocli / picocli                                | Apache License 2.0                      |
+| org.slf4j / slf4j-nop                                 | MIT License                             |
+| com.github.tototoshi / scala-csv                      | Apache License 2.0                      |
+| org.xerial / sqlite-jdbc                              | Apache License 2.0                      |
+| mysql / mysql-connector-java                          | GPL-v2 (Universal FOSS Exception v1)    |
+| org.postgresql / postgresql                           | BSD-2-Clause                            |
+| org.mariadb.jdbc / mariadb-java-client                | LGPL-2.1                                |
+| com.microsoft.sqlserver / mssql-jdbc                  | MIT License                             |
+| com.github.vickumar1981 / stringdistance              | Apache License 2.0                      |
+| com.typesafe.scala-logging / scala-logging            | Eclipse Public License v1.0 or LGPL-2.1 |
+| com.jayway.jsonpath / json-path                       | Apache License 2.0                      |
+| org.scala-lang / scala-reflect                        | Apache License 2.0                      |
+| org.scala-lang / scala-compiler                       | Apache License 2.0                      |
+| org.scala-lang.modules / scala-parallel-collections   | Apache License 2.0                      |
+| ch.qos.logback / logback-classic                      | Eclipse Public License v1.0 or LGPL-2.1 |
 
 For performing a more exhaustive licenses check, including subdependecies and testing ones the 
 [sbt-license-report](https://github.com/sbt/sbt-license-report) plugin is included in the project, enabling the generation

@@ -703,4 +703,11 @@ class FilmsCLITest extends AnyFunSuite {
     assert(compareTwoRDFModels(executionResult, "Turtle", expectedDatabaseOutput, "Turtle"))
   }
 
+  test("CLI generates expected output when changing working dir") {
+    val executionResult = executeCapturingStdout(cl => cl.execute("-m", filepath, "-nu", "-id", "--chdir", "src/test/resources/filmsDirectory"))
+    assert(compareTwoRDFModels(executionResult, "Turtle", expectedTurtleOutput, "Turtle"))
+  }
+
+
+
 }
