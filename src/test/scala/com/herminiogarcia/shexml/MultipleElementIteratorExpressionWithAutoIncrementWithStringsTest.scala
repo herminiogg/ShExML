@@ -14,8 +14,8 @@ class MultipleElementIteratorExpressionWithAutoIncrementWithStringsTest extends 
     """
       |PREFIX : <http://example.com/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-      |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
+      |SOURCE films_xml_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.xml>
+      |SOURCE films_json_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.json>
       |AUTOINCREMENT my_code1 <"something: " + 1 to 10 by 2>
       |AUTOINCREMENT my_code2 <"something: " + 1 by 2 + " ending">
       |AUTOINCREMENT my_code3 <1 to 10 + " :closing">

@@ -1,6 +1,6 @@
 PREFIX : <http://example.com/>
-SOURCE films_xml <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-SOURCE films_json <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
+SOURCE films_xml <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.xml>
+SOURCE films_json <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.json>
 QUERY film_ids_xml <//film/@id>
 QUERY film_names_xml <//film/name>
 QUERY film_years_xml <//film/year>
