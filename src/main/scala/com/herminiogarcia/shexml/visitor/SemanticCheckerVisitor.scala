@@ -33,6 +33,12 @@ class SemanticCheckerVisitor(varTable: Map[Variable, VarResult]) extends Default
 
     case Arguments(arguments, _) => arguments.foreach(checkExpOrVar(_, optionalArgument))
 
+    case Action(shapePrefix, action, condition, parserInfo) => {
+      if(shapePrefix != "_:") checkPrefix(shapePrefix, parserInfo)
+      doVisit(action, optionalArgument)
+      condition.foreach(doVisit(_, optionalArgument))
+    }
+
     case ObjectElement(prefix, action, _, matcher, filter, dataType, langTag, _, parserInfo) => {
       if(prefix.nonEmpty) checkPrefix(prefix, parserInfo)
       action.foreach(checkExpOrVar(_, optionalArgument))
@@ -63,7 +69,7 @@ class SemanticCheckerVisitor(varTable: Map[Variable, VarResult]) extends Default
   }
 
   private def checkPrefix(prefix: String, parserInfo: ParserInfo): Unit = {
-    varTable.getOrElse(Var(prefix), throw SemanticCheckerError(s"Prefix $prefix: is not defined", parserInfo))
+    varTable.getOrElse(Var(prefix), throw SemanticCheckerError(s"Prefix $prefix is not defined", parserInfo))
   }
 
   private def checkExpOrVar(exp: ExpOrVar, optionalArgument: Any): Unit = exp match {
