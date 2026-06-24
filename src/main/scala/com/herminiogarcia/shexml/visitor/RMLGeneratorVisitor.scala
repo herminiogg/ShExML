@@ -84,7 +84,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       })
     }
 
-    case Action(shapePrefix: String, action: ExpOrVar, _, _) => {
+    case Action(_, action: ExpOrVar, _, _) => {
       doVisit(action, optionalArgument).asInstanceOf[List[RMLMap]].filter(_.logicalSource.nonEmpty)
     }
 
@@ -350,7 +350,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
 
     case ObjectElement(prefix, action, literalValue, matcher, condition, dataType, langTag, rdfCollection, parserInfo) => {
       val arguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
-      val prefixArguments = if(prefix.nonEmpty) arguments.+("prefix" -> prefix) else arguments
+      val prefixArguments = if(prefix.nonEmpty) arguments.+("prefix" -> prefix.get.name) else arguments
       val dataTypeArguments = if(dataType.isDefined) prefixArguments.+("dataType" -> dataType.getOrElse(None)) else prefixArguments
       val finalArguments = if(langTag.isDefined) dataTypeArguments.+("langTag" -> langTag.getOrElse(None)) else dataTypeArguments
       action match {

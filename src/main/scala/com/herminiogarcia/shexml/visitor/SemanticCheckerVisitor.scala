@@ -8,12 +8,12 @@ class SemanticCheckerVisitor(varTable: Map[Variable, VarResult]) extends Default
   override def doVisit(ast: AST, optionalArgument: Any): Unit = ast match {
 
     case i: IteratorQuery => {
-      checkVar(i.firstVar, i.parserInfo) //file var or existing expression
+      checkVar(i.firstVar, i.firstVar.parserInfo) //file var or existing expression
       varTable(i.firstVar) match {
         case e: Exp => doVisit(e, optionalArgument)
         case _ =>
           val fullName = iteratorQueryToList(i.composedVar).map(_.name).mkString(".")
-          varTable.getOrElse(Var(fullName), throw SemanticCheckerError(s"Variable $fullName is not defined", i.parserInfo))
+          varTable.getOrElse(Var(fullName), throw SemanticCheckerError(s"Variable $fullName is not defined", i.composedVar.parserInfo))
       }
     }
 
@@ -27,22 +27,22 @@ class SemanticCheckerVisitor(varTable: Map[Variable, VarResult]) extends Default
     case Predicate(prefix, _, parserInfo) => checkPrefix(prefix, parserInfo)
 
     case FunctionCalling(functionHub, _, arguments, parserInfo) => {
-      checkVar(functionHub, parserInfo)
+      checkVar(functionHub, functionHub.parserInfo)
       doVisit(arguments, optionalArgument)
     }
 
     case Arguments(arguments, _) => arguments.foreach(checkExpOrVar(_, optionalArgument))
 
     case Action(shapePrefix, action, condition, parserInfo) => {
-      if(shapePrefix != "_:") checkPrefix(shapePrefix, parserInfo)
+      if(shapePrefix.name != "_:") checkPrefix(shapePrefix.name, shapePrefix.parserInfo)
       doVisit(action, optionalArgument)
       condition.foreach(doVisit(_, optionalArgument))
     }
 
     case ObjectElement(prefix, action, _, matcher, filter, dataType, langTag, _, parserInfo) => {
-      if(prefix.nonEmpty) checkPrefix(prefix, parserInfo)
+      prefix.foreach(p => checkPrefix(p.name, p.parserInfo))
       action.foreach(checkExpOrVar(_, optionalArgument))
-      matcher.foreach(checkVar(_, parserInfo))
+      matcher.foreach(m => checkVar(m, m.parserInfo))
       filter.foreach(checkExpOrVar(_, optionalArgument))
       dataType.foreach(doVisit(_, optionalArgument))
       langTag.foreach(doVisit(_, optionalArgument))
@@ -51,7 +51,7 @@ class SemanticCheckerVisitor(varTable: Map[Variable, VarResult]) extends Default
     case ShapeLink(shape, parserInfo) => checkVar(shape, parserInfo)
 
     case DataTypeGeneration(prefix, action, matcher, parserInfo) => {
-      if(prefix.nonEmpty) checkPrefix(prefix, parserInfo)
+      prefix.foreach(p => checkPrefix(p.name, p.parserInfo))
       checkExpOrVar(action, optionalArgument)
       matcher.foreach(checkVar(_, parserInfo))
     }

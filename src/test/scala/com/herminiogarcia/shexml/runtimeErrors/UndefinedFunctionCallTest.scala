@@ -1,20 +1,21 @@
-package com.herminiogarcia.shexml.semanticChecker
+package com.herminiogarcia.shexml.runtimeErrors
 
 import com.herminiogarcia.shexml.ParallelConfigInferenceDatatypesNormaliseURIsFixture
-import com.herminiogarcia.shexml.helper.SemanticCheckerError
+import com.herminiogarcia.shexml.helper.RDFGenerationError
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class UndefinedVariableInActionRightExpressionTest extends AnyFunSuite
+class UndefinedFunctionCallTest extends AnyFunSuite
   with Matchers with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
-      |PREFIX : <http://example.com/>
+      PREFIX : <http://example.com/>
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |SOURCE films_xml_file <https://shexml.herminiogarcia.com/files/films.xml>
       |SOURCE films_json_file <https://shexml.herminiogarcia.com/files/films.json>
+      |FUNCTIONS helper <scala: src/test/resources/functions.scala>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD id <@id>
       |    FIELD name <name>
@@ -51,8 +52,8 @@ class UndefinedVariableInActionRightExpressionTest extends AnyFunSuite
       |}
       |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
       |
-      |:Films :[nonExistent.id] {
-      |    :name [films.name] ;
+      |:Films :[films.id] {
+      |    :name [helper.toLowerCase(films.name)] ;
       |    :year [films.year] ;
       |    :country [films.country] ;
       |    :director [films.directors] ;
@@ -71,11 +72,12 @@ class UndefinedVariableInActionRightExpressionTest extends AnyFunSuite
       |}
     """.stripMargin
 
-  test("Undefined prefix in a datatype is detected") {
-    val error = intercept[SemanticCheckerError] {
+  test("Undefined function in function call is detected") {
+    val error = intercept[RDFGenerationError] {
       mappingLauncher.launchMapping(example)
     }
-    assert(error.message == "Variable nonExistent is not defined")
+    assert(error.message == "Function toLowerCase was not found in source code src/test/resources/functions.scala")
+    assert(error.getEnrichedErrorMessage(example).contains("45:     :name [[1m[4mhelper.toLowerCase(films.name[22m[24m)] ;"))
   }
 
 }

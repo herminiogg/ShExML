@@ -76,6 +76,7 @@ class UndefinedPrefixInSubjectTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Prefix wiki: is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("43: :Films [1m[4mwiki:[22m[24m[films.id] {"))
   }
 
 }

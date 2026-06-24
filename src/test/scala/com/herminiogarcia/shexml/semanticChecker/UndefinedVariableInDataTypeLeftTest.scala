@@ -76,6 +76,7 @@ class UndefinedVariableInDataTypeLeftTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable nonExistent is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("45:     :year [films.year] dbr:[[1m[4mnonExistent[22m[24m.name] ;"))
   }
 
 }

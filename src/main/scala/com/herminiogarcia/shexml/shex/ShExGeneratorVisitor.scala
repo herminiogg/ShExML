@@ -92,7 +92,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
             else
               ObjectDefinition(shexDatatype, cardinality)
           }
-          else PartialFixedValue(prefix, cardinality)
+          else PartialFixedValue(prefix.get.name, cardinality)
       }
     }
 
@@ -126,7 +126,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
   }
 
   protected def getShapePrefix(action: ActionOrLiteral): String = action match {
-    case Action(shapePrefix, _, _, _) => shapePrefix
+    case Action(shapePrefix, _, _, _) => shapePrefix.name
     case LiteralSubject(prefix, _, _) => prefix.name
   }
 

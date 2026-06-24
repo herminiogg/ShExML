@@ -2,7 +2,7 @@ package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import com.herminiogarcia.shexml.ast._
-import com.herminiogarcia.shexml.helper.{OrphanBNodeRemover, ParallelExecutionConfigurator, SourceHelper}
+import com.herminiogarcia.shexml.helper.{LexerErrorListener, OrphanBNodeRemover, ParallelExecutionConfigurator, ParserErrorListener, SourceHelper}
 import com.herminiogarcia.shexml.parser.ASTCreatorVisitor
 import com.herminiogarcia.shexml.shex._
 import com.herminiogarcia.shexml.visitor.{PushedOrPoppedValueSearchVisitor, RDFGeneratorVisitor, RMLGeneratorVisitor, SemanticCheckerVisitor, VarTableBuilderVisitor}
@@ -134,12 +134,18 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   private def createLexer(mappingCode: String): ShExMLLexer = {
     val finalMappingRules = resolveImports(mappingCode)
     logger.info("Applying lexer to tokenize input mapping rules")
-    new ShExMLLexer(CharStreams.fromString(finalMappingRules))
+    val lexer = new ShExMLLexer(CharStreams.fromString(finalMappingRules))
+    lexer.removeErrorListeners()
+    lexer.addErrorListener(new LexerErrorListener)
+    lexer
   }
 
   private def createParser(lexer: ShExMLLexer): ShExMLParser = {
     logger.info("Parsing tokens from the lexer")
-    new ShExMLParser(new CommonTokenStream(lexer))
+    val parser = new ShExMLParser(new CommonTokenStream(lexer))
+    parser.removeErrorListeners()
+    parser.addErrorListener(new ParserErrorListener)
+    parser
   }
 
   private def createAST(parser: ShExMLParser): AST = {
@@ -159,7 +165,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   }
 
   private def runSemanticAnalysis(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Unit = {
-    logger.info(s"Launching semantic analysis")
+    logger.info(s"Running semantic analysis")
     new SemanticCheckerVisitor(varTable.toMap).doVisit(ast, null)
     logger.debug(s"Semantic analysis completed satisfactorily")
   }

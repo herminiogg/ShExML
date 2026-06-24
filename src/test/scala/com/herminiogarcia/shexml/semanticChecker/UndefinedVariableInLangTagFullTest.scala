@@ -76,6 +76,7 @@ class UndefinedVariableInLangTagFullTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable filmsIt is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("44:     :name [films.name] @[[1m[4mfilmsIt[22m[24m.lang] ;"))
   }
 
 }

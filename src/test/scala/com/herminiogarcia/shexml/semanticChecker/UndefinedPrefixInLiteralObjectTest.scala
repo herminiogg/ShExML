@@ -76,6 +76,7 @@ class UndefinedPrefixInLiteralObjectTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable wiki: is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("46:     :country [1m[4mwiki:[22m[24mUSA ;"))
   }
 
 }

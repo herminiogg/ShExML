@@ -76,6 +76,7 @@ class UndefinedVariableInDataTypeTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable film_xml.nonexistent is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("45:     :year [films.year] dbr:[films_xml_file.[1m[4mfilm_xml.nonexistent[22m[24m] ;"))
   }
 
 }

@@ -76,6 +76,7 @@ class UndefinedNestedIteratorFieldInShapeTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable film_xml.actors.nonexistent is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("54:     :appear_on :[films_xml_file.[1m[4mfilm_xml.actors.nonexistent[22m[24m] ;"))
   }
 
 }

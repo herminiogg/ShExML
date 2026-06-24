@@ -76,6 +76,7 @@ class UndefinedExpressionInShapeTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable notfilms is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("44:     :name [[1m[4mnotfilms[22m[24m.name] ;"))
   }
 
 }

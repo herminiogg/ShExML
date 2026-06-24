@@ -76,6 +76,7 @@ class UndefinedShapeLinkTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable :NonExistentShape is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("48:     :actor [1m[4m@:NonExistentShape[22m[24m ;"))
   }
 
 }

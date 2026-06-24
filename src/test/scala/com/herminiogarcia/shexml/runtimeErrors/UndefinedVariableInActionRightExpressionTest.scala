@@ -1,16 +1,16 @@
-package com.herminiogarcia.shexml.semanticChecker
+package com.herminiogarcia.shexml.runtimeErrors
 
 import com.herminiogarcia.shexml.ParallelConfigInferenceDatatypesNormaliseURIsFixture
-import com.herminiogarcia.shexml.helper.SemanticCheckerError
+import com.herminiogarcia.shexml.helper.RDFGenerationError
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
-class UndefinedVariableInLangTagTest extends AnyFunSuite
+class UndefinedVariableInActionRightExpressionTest extends AnyFunSuite
   with Matchers with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
 
   private val example =
     """
-      PREFIX : <http://example.com/>
+      |PREFIX : <http://example.com/>
       |PREFIX dbr: <http://dbpedia.org/resource/>
       |PREFIX schema: <http://schema.org/>
       |SOURCE films_xml_file <https://shexml.herminiogarcia.com/files/films.xml>
@@ -51,8 +51,8 @@ class UndefinedVariableInLangTagTest extends AnyFunSuite
       |}
       |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
       |
-      |:Films :[films.id] {
-      |    :name [films.name] @[films_xml_file.film_xml.nonexistent] ;
+      |:Films :[films.nonExistent] {
+      |    :name [films.name] ;
       |    :year [films.year] ;
       |    :country [films.country] ;
       |    :director [films.directors] ;
@@ -71,12 +71,12 @@ class UndefinedVariableInLangTagTest extends AnyFunSuite
       |}
     """.stripMargin
 
-  test("Undefined variable in a language tag is detected") {
-    val error = intercept[SemanticCheckerError] {
+  test("Undefined variable in an action expression is detected") {
+    val error = intercept[RDFGenerationError] {
       mappingLauncher.launchMapping(example)
     }
-    assert(error.message == "Variable film_xml.nonexistent is not defined")
-    assert(error.getEnrichedErrorMessage(example).contains("44:     :name [films.name] @[films_xml_file.[1m[4mfilm_xml.nonexistent[22m[24m] ;"))
+    assert(error.message == "Variable films.nonExistent does not resolve to any reference, check the used variable or the iterator definition")
+    assert(error.getEnrichedErrorMessage(example).contains("43: :Films :[films.[1m[4mnonExistent[22m[24m] {"))
   }
 
 }

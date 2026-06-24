@@ -73,11 +73,12 @@ class UndefinedFieldExpressionTest extends AnyFunSuite
       |}
     """.stripMargin
 
-  test("Undefined prefix in a datatype is detected") {
+  test("Undefined field within expression is detected") {
     val error = intercept[SemanticCheckerError] {
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable film_xml.country.name is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("43: EXPRESSION erroredExp <films_xml_file.[1m[4mfilm_xml.country.name[22m[24m>"))
   }
 
 }

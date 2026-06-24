@@ -1,7 +1,7 @@
-package com.herminiogarcia.shexml.runtimeErrors
+package com.herminiogarcia.shexml.semanticChecker
 
 import com.herminiogarcia.shexml.ParallelConfigInferenceDatatypesNormaliseURIsFixture
-import com.herminiogarcia.shexml.helper.RDFGenerationError
+import com.herminiogarcia.shexml.helper.SemanticCheckerError
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
@@ -51,7 +51,7 @@ class UndefinedVariableInActionLeftExpressionTest extends AnyFunSuite
       |}
       |EXPRESSION films <films_xml_file.film_xml UNION films_json_file.film_json>
       |
-      |:Films :[films.nonExistent] {
+      |:Films :[nonExistent.id] {
       |    :name [films.name] ;
       |    :year [films.year] ;
       |    :country [films.country] ;
@@ -71,11 +71,12 @@ class UndefinedVariableInActionLeftExpressionTest extends AnyFunSuite
       |}
     """.stripMargin
 
-  test("Undefined prefix in a datatype is detected") {
-    val error = intercept[RDFGenerationError] {
+  test("Undefined variable in action is detected") {
+    val error = intercept[SemanticCheckerError] {
       mappingLauncher.launchMapping(example)
     }
-    assert(error.message == "Variable films.nonExistent does not resolve to any reference, check the used variable or the iterator definition")
+    assert(error.message == "Variable nonExistent is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("43: :Films :[[1m[4mnonExistent[22m[24m.id] {"))
   }
 
 }

@@ -198,7 +198,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val otherVariables = if(ctx.composedVariable() != null)
       visit(ctx.composedVariable()).asInstanceOf[VarOrIteratorQuery]
     else null
-    if(otherVariables != null) IteratorQuery(variable, otherVariables, parserInfo = createParserInfo(ctx)) else variable
+    if(otherVariables != null) IteratorQuery(variable, otherVariables, parserInfo = createParserInfo(ctx, considerFullContext = true)) else variable
   }
 
   override def visitBuiltinFunction(ctx: BuiltinFunctionContext): AST = {
@@ -224,7 +224,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitAction(ctx: ActionContext): AST = {
-    val shapePrefix = ctx.prefixVar().getText
+    val shapePrefix = createVar(ctx.prefixVar().variable())
     val action = visit(ctx.expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar]
     val condition = if(ctx.expOrVarOrFunctionCallign(1) != null)
       Some(visit(ctx.expOrVarOrFunctionCallign(1)).asInstanceOf[ExpOrVar])
@@ -265,7 +265,10 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitObjectElement(ctx: ObjectElementContext): AST = {
-    val prefix = if(ctx.firstPartObjectElement().prefixVar() != null) ctx.firstPartObjectElement().prefixVar().getText else ""
+    val prefix =
+      if(ctx.firstPartObjectElement().prefixVar() != null)
+        Some(Var(ctx.firstPartObjectElement().prefixVar().getText, createParserInfo(ctx.firstPartObjectElement().prefixVar(), considerFullContext = true)))
+      else None
     val mainExpOrVar = if(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(0) != null)
       Some(visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar])
     else None
@@ -302,7 +305,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     if(ctx.firstPartObjectElement() == null) {
       DataTypeLiteral(ctx.XMLSCHEMADATATYPE().getText, createParserInfo(ctx))
     } else {
-      val prefix = if(ctx.firstPartObjectElement().prefixVar() != null) ctx.firstPartObjectElement().prefixVar().getText else ""
+      val prefix = if(ctx.firstPartObjectElement().prefixVar() != null) Some(createVar(ctx.firstPartObjectElement().prefixVar().variable())) else None
       val expOrVar = visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar]
       val matcherVar = if(ctx.firstPartObjectElement().valueRetriever().variable() != null)
         Option(ctx.firstPartObjectElement().valueRetriever().variable()).map(createVar)
@@ -342,11 +345,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
 
   override def visitShapeLink(ctx: ShapeLinkContext): AST = {
     val shapeName = ShapeVar(ctx.getText.replace("@", "").replaceAll("\\\\.|%2E", "."), createParserInfo(ctx))
-    ShapeLink(shapeName, createParserInfo(ctx))
+    ShapeLink(shapeName, createParserInfo(ctx, considerFullContext = true))
   }
 
   def createVar(variable: VariableContext): Var = {
-    Var(Try(variable.getText).getOrElse("").replaceAll("\\\\.|%2E", "."), createParserInfo(variable))
+    Var(Try(variable.getText).getOrElse("").replaceAll("\\\\.|%2E", "."), createParserInfo(variable, considerFullContext = true))
   }
 
   def createShapeVar(tripleElementContext: TripleElementContext): ShapeVar = {
@@ -367,10 +370,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     else throw new Exception("Impossible to parse query: " + query)
   }
 
-  def createParserInfo(context: ParserRuleContext): ParserInfo = {
+  def createParserInfo(context: ParserRuleContext, considerFullContext: Boolean = false): ParserInfo = {
     val start = context.getStart
     val end = context.getStop
-    new ParserInfo(Some(start.getLine), Some(start.getCharPositionInLine), Some(end.getLine), Some(end.getCharPositionInLine))
+    val endPosition = if(considerFullContext) Some(end.getCharPositionInLine + end.getText.length) else Some(end.getCharPositionInLine)
+    new ParserInfo(Some(start.getLine), Some(start.getCharPositionInLine), Some(end.getLine), endPosition)
   }
 
 }

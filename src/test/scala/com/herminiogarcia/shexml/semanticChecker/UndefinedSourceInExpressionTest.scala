@@ -76,6 +76,7 @@ class UndefinedSourceInExpressionTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable undeclared_file is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("41: EXPRESSION films <[1m[4mundeclared_file[22m[24m.film_xml UNION films_json_file.film_json>"))
   }
 
 }

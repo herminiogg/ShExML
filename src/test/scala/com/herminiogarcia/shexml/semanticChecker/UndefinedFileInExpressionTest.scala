@@ -71,11 +71,12 @@ class UndefinedFileInExpressionTest extends AnyFunSuite
       |}
     """.stripMargin
 
-  test("Undefined prefix in a datatype is detected") {
+  test("Undefined file in expression is detected") {
     val error = intercept[SemanticCheckerError] {
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable films_csv_file is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("41: EXPRESSION films <[1m[4mfilms_csv_file[22m[24m.film_xml UNION films_json_file.film_json>"))
   }
 
 }

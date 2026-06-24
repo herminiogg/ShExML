@@ -71,11 +71,12 @@ class UndefinedFunctionHubTest extends AnyFunSuite
       |}
     """.stripMargin
 
-  test("Undefined variable in a language tag is detected") {
+  test("Undefined variable for a function hub before function call") {
     val error = intercept[SemanticCheckerError] {
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable helper is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("44:     :name [[1m[4mhelper[22m[24m.toUpperCase(films.name)] ;"))
   }
 
 }

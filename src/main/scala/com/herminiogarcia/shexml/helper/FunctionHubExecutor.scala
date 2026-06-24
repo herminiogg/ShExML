@@ -4,6 +4,7 @@ import com.github.vickumar1981.stringdistance
 import com.github.vickumar1981.stringdistance.StringDistance.Levenshtein
 import com.github.vickumar1981.stringdistance.implicits._
 import com.github.vickumar1981.stringdistance.StringConverter._
+import com.herminiogarcia.shexml.ast.ParserInfo
 import com.typesafe.scalalogging.Logger
 
 import scala.tools.reflect.ToolBox
@@ -11,7 +12,7 @@ import scala.reflect.runtime._
 import scala.reflect.runtime
 import scala.reflect.runtime.universe._
 
-class FunctionHubExecutor(val functionsCode: LoadedSource) {
+class FunctionHubExecutor(val functionsCode: LoadedSource, val parserInfo: ParserInfo) {
 
   private val cm = universe.runtimeMirror(getClass.getClassLoader)
   private val toolBox = cm.mkToolBox()
@@ -29,7 +30,9 @@ class FunctionHubExecutor(val functionsCode: LoadedSource) {
         name.levenshteinDist(a.getName) < name.levenshteinDist(b.getName)
         //Levenshtein.distance(name, a.getName)(LevenshteinDistance) < Levenshtein.distance(name, b.getName)
       })
-      .head
+      .headOption.getOrElse(
+        throw RDFGenerationError(s"Function $name was not found in source code ${functionsCode.filepath}", parserInfo)
+      )
     val parameterTypes = method.getParameterTypes.toSeq
     val finalArgs = for((arg, theType) <- args zip parameterTypes) yield {
       val typeName =

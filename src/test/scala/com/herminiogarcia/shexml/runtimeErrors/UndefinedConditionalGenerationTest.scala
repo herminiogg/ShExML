@@ -71,11 +71,12 @@ class UndefinedConditionalGenerationTest extends AnyFunSuite
       |}
     """.stripMargin
 
-  test("Undefined variable in a language tag is detected") {
+  test("Undefined variable in a conditional generation expression") {
     val error = intercept[RDFGenerationError] {
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable films.shouldGenerate does not resolve to any reference, check the used variable or the iterator definition")
+    assert(error.getEnrichedErrorMessage(example).contains("44:     :name [films.name IF films.[1m[4mshouldGenerate[22m[24m] ;"))
   }
 
 }

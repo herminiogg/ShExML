@@ -13,7 +13,7 @@ case class Graph(graphName: GraphVar, shapes: List[Shape], parserInfo: ParserInf
 case class Shape(shapeName: ShapeVar, action: ActionOrLiteral, predicateObjects: List[PredicateObject], holdingGraph: Option[Graph], parserInfo: ParserInfo) extends VarResult
 
 sealed trait ActionOrLiteral extends AST
-case class Action(shapePrefix: String, action: ExpOrVar, condition: Option[ExpOrVar], parserInfo: ParserInfo) extends ActionOrLiteral
+case class Action(shapePrefix: Var, action: ExpOrVar, condition: Option[ExpOrVar], parserInfo: ParserInfo) extends ActionOrLiteral
 case class LiteralSubject(prefix: Var, value: String, parserInfo: ParserInfo) extends ActionOrLiteral
 
 sealed trait DeclarationStatement extends AST
@@ -98,12 +98,12 @@ case class Arguments(arguments: List[ExpOrVar], parserInfo: ParserInfo) extends 
 
 sealed trait ObjectOrShapeLink extends AST
 
-case class ObjectElement(prefix: String, action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var], filter: Option[ExpOrVar],
+case class ObjectElement(prefix: Option[Var], action: Option[ExpOrVar], literalValue: Option[LiteralObjectValue], matcher: Option[Var], filter: Option[ExpOrVar],
                          dataType: Option[DataType], langTag: Option[LangTag], rdfCollection: Option[RDFCollection], parserInfo: ParserInfo) extends ObjectOrShapeLink
 case class ShapeLink(shape: ShapeVar, parserInfo: ParserInfo) extends ObjectOrShapeLink
 
 sealed trait DataType extends AST
-case class DataTypeGeneration(prefix: String, action: ExpOrVar, matcher: Option[Var], parserInfo: ParserInfo) extends DataType
+case class DataTypeGeneration(prefix: Option[Var], action: ExpOrVar, matcher: Option[Var], parserInfo: ParserInfo) extends DataType
 case class DataTypeLiteral(value: String, parserInfo: ParserInfo) extends DataType
 
 sealed trait LangTag extends AST

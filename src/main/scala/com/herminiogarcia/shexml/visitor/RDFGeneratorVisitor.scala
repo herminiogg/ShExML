@@ -218,7 +218,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       result match {
         case _: List[Result] =>
           matchedResultList.asInstanceOf[List[Result]].map(result => {
-            val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
+            val newResults = result.results.map(prefix.flatMap(p => prefixTable.get(p.name)).getOrElse("") + _)
             val dataTypeValue = dataTypeResult.map({
               case dataTypeResults: List[Result] => dataTypeResults.filter(_.id == result.id).head.results.head
               case value: String => value
@@ -244,7 +244,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
             case _: List[Result] => throw RDFGenerationError("Autoincrement values cannot have a generated langTag", parserInfo)
             case value: String => value
           })
-          visitor.ResultAutoIncrement(iterator, predicate, prefixTable.getOrElse(prefix, ""), normaliseDataType(dataTypeValue), langTagValue)
+          visitor.ResultAutoIncrement(iterator, predicate, prefix.flatMap(p => prefixTable.get(p.name)).getOrElse(""), normaliseDataType(dataTypeValue), langTagValue)
         case _ => result
       }
     }
@@ -385,7 +385,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         } else if (varTable(varList.head).isInstanceOf[Exp] && varList.size > 1) {
           val composedVar = varList.map(_.name).mkString(".")
           iteratorsCombinations.getOrElse(composedVar,
-            throw RDFGenerationError(s"Variable $composedVar does not resolve to any reference, check the used variable or the iterator definition", i.parserInfo))
+            throw RDFGenerationError(s"Variable $composedVar does not resolve to any reference, check the used variable or the iterator definition", i.composedVar.parserInfo))
         } else if (varList.size >= 3) {
           doIteratorQuery(varList.slice(1, varList.size), middleArguments, file.asInstanceOf[LoadedSource])
         } else {
@@ -417,7 +417,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               case None => throw RDFGenerationError(s"There is no functions code in the provided path: ${fp.value}", f.parserInfo)
             }
           }
-          val executor = new FunctionHubExecutor(loadedSource)
+          val executor = new FunctionHubExecutor(loadedSource, f.parserInfo)
           functionHubExecuterCache.save(functionsIRI.value, executor)
           executor
       }
@@ -579,7 +579,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       result match {
         case _: List[Result] =>
           matchedResultList.asInstanceOf[List[Result]].map(result => {
-            val newResults = result.results.map(prefixTable.getOrElse(prefix, "") + _)
+            val newResults = result.results.map(prefix.flatMap(p => prefixTable.get(p.name)).getOrElse("") + _)
             Result(result.id, result.rootIds, newResults, None, None, None)
           })
         case _ => result
@@ -1192,7 +1192,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   }
 
   protected def getShapePrefix(action: ActionOrLiteral): String = action match {
-    case Action(shapePrefix, _, _, _) => shapePrefix
+    case Action(shapePrefix, _, _, _) => shapePrefix.name
     case LiteralSubject(prefix, _, _) => prefix.name
   }
 

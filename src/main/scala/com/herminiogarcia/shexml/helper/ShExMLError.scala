@@ -1,6 +1,8 @@
 package com.herminiogarcia.shexml.helper
 
 import com.herminiogarcia.shexml.ast.{ParserInfo, UnknownParserInfo}
+import org.antlr.v4.runtime.{BaseErrorListener, CommonToken, RecognitionException, Recognizer}
+
 import scala.collection.JavaConverters._
 
 trait ShExMLError extends Exception {
@@ -23,15 +25,15 @@ trait ShExMLError extends Exception {
           if(el == sl) {
             val mainLine = inputLines(sl - 1)
             parserInfo.startColumn.map(sc => {
-              val mainLineSplit = mainLine.splitAt(sc - 1)
-              val endSplit = parserInfo.endColumn.map(ec => mainLineSplit._2.splitAt(ec))
+              val mainLineSplit = mainLine.splitAt(sc)
+              val endSplit = parserInfo.endColumn.map(ec => mainLineSplit._2.splitAt((ec - 1) - (mainLineSplit._1.length - 1)))
               val highlightedLine = endSplit.map(es => generateHighlightedErrorExtract(sl, mainLineSplit._1, es._1, es._2))
               s"$message in line $sl between columns ${parserInfo.startColumn.getOrElse("unknown")} and ${parserInfo.endColumn.getOrElse("unknown")}\n\n${highlightedLine.getOrElse("")}\n"
             })
           } else {
             val mainLines = inputLines.slice(sl - 1 , el)
             parserInfo.startColumn.map(sc => {
-              val firstLineSplit = mainLines.head.splitAt(sc - 1)
+              val firstLineSplit = mainLines.head.splitAt(sc)
               val lastLineSplit = parserInfo.endColumn.map(ec => mainLines.last.splitAt(ec))
               val inBetweenLines = {
                 val lines = mainLines.tail.dropRight(1).mkString("\n")
@@ -72,3 +74,23 @@ case class VarError(message: String, parserInfo: ParserInfo) extends ShExMLError
 case class FileError(message: String, parserInfo: ParserInfo) extends ShExMLError
 case class FunctionExecutionError(message: String, parserInfo: ParserInfo = UnknownParserInfo) extends ShExMLError
 case class SemanticCheckerError(message: String, parserInfo: ParserInfo) extends ShExMLError
+case class LexerError(message: String, parserInfo: ParserInfo) extends ShExMLError
+case class ParserError(message: String, parserInfo: ParserInfo) extends ShExMLError
+
+class LexerErrorListener extends BaseErrorListener {
+  override def syntaxError(recognizer: Recognizer[_, _], offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException): Unit = {
+    throw LexerError(s"Lexer error: $msg",
+      new ParserInfo(Some(line), Some(charPositionInLine), Some(line), Some(charPositionInLine + 1)))
+  }
+}
+
+class ParserErrorListener extends BaseErrorListener {
+  override def syntaxError(recognizer: Recognizer[_, _], offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException): Unit = {
+    val endColumn = offendingSymbol match {
+      case ct: CommonToken => Some(charPositionInLine + (ct.getStopIndex - ct.getStartIndex) + 1)
+      case _ => Some(charPositionInLine + 1)
+    }
+    throw ParserError(s"Parser error: $msg",
+      new ParserInfo(Some(line), Some(charPositionInLine), Some(line), endColumn))
+  }
+}

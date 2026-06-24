@@ -76,6 +76,7 @@ class UndefinedMatcherTest extends AnyFunSuite
       mappingLauncher.launchMapping(example)
     }
     assert(error.message == "Variable country_matcher is not defined")
+    assert(error.getEnrichedErrorMessage(example).contains("46:     :country [films.country MATCHING [1m[4mcountry_matcher[22m[24m] ;"))
   }
 
 }
