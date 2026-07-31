@@ -14,7 +14,8 @@ sealed trait ShExMLError extends Exception {
   private val RESET_UNDERLINE = "\u001B[24m"
 
   def getEnrichedErrorMessage: String = {
-    s"$message between line ${parserInfo.startLine.getOrElse("unknown")} column ${parserInfo.endColumn.getOrElse("unknown")} and line ${parserInfo.endLine.getOrElse("unknown")} column ${parserInfo.endColumn.getOrElse("unknown")}"
+    if(parserInfo == UnknownParserInfo) message
+    else s"$message between line ${parserInfo.startLine.getOrElse("unknown")} column ${parserInfo.endColumn.getOrElse("unknown")} and line ${parserInfo.endLine.getOrElse("unknown")} column ${parserInfo.endColumn.getOrElse("unknown")}"
   }
 
   def getEnrichedErrorMessage(input: String): String = {

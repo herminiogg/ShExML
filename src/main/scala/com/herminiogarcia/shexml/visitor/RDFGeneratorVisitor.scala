@@ -1,7 +1,7 @@
 package com.herminiogarcia.shexml.visitor
 
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, UnknownParserInfo, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{CSVExtractionError, FunctionHubExecutor, JsonPathQueryError, LoadedSource, ParallelExecutionConfigurator, RDFGenerationError, SPARQLExtractionError, SQLExtractionError, SourceHelper, XPathQueryError}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
@@ -684,8 +684,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   protected def createStatementWithLiteral(s: String, p: String, o: String, dataType: Option[String] = None, langTag: Option[String] = None): Statement = {
     val subject = ResourceFactory.createResource(s)
     val predicate = ResourceFactory.createProperty(p)
-    val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
-      .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
+    val xsdType = lookForXsdType(dataType, o)
     val escapedO = escapeIfString(o, dataType, langTag)
     val obj = if(langTag.isDefined)
       ResourceFactory.createLangLiteral(escapedO, langTag.get)
@@ -697,13 +696,19 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     val anonID = new AnonId(s)
     val subject = defaultModel.createResource(anonID)
     val predicate = ResourceFactory.createProperty(p)
-    val xsdType = dataType.map(d => prefixTable(d.split(":")(0) + ":") + d.split(":")(1))
-      .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
+    val xsdType = lookForXsdType(dataType, o)
     val escapedO = escapeIfString(o, dataType, langTag)
     val obj = if(langTag.isDefined)
       ResourceFactory.createLangLiteral(escapedO, langTag.get)
     else ResourceFactory.createTypedLiteral(escapedO, xsdType)
     ResourceFactory.createStatement(subject, predicate, obj)
+  }
+
+  private def lookForXsdType(dataType: Option[String], o: String): RDFDatatype = {
+    def getPrefixFromVarTable(dataType: String): String =
+      prefixTable.getOrElse(dataType.split(":")(0) + ":", throw RDFGenerationError(s"Prefix ${dataType.split(":")(0)}: for XML Schema Datatypes used in the mapping rules but not defined previously as a general prefix", UnknownParserInfo))
+    dataType.map(d => getPrefixFromVarTable(d) + d.split(":")(1))
+      .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
   }
 
   protected def searchForXSDType(o: String): RDFDatatype = {
@@ -1117,6 +1122,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
             prefixTable(shapePrefix) + action, predicateObject(0), predicateObject(1), result.dataType, result.langTag))
       }
       dataset.commit()
+    } catch {
+      case e: Exception =>
+        dataset.abort()
+        throw e
     } finally {
       dataset.end()
     }
@@ -1168,6 +1177,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         }
       }
       dataset.commit()
+    } catch {
+      case e: Exception =>
+        dataset.abort()
+        throw e
     } finally {
       dataset.end()
     }
