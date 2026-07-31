@@ -60,11 +60,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitQueryClause(ctx: QueryClauseContext): AST = {
-    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "), createParserInfo(ctx))
-    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "), createParserInfo(ctx))
-    else if(ctx.SQL() != null) SqlQuery(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "), createParserInfo(ctx))
+    if(ctx.JSONPATH() != null) JsonPath(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "), createParserInfo(ctx, columnOffset = "jsonpath: ".length))
+    else if(ctx.XMLPATH() != null) XmlPath(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "), createParserInfo(ctx, columnOffset = "xpath: ".length))
+    else if(ctx.SQL() != null) SqlQuery(ctx.QUERY_PART().asScala.map(_.getText).mkString(" "), createParserInfo(ctx, columnOffset = "csv: ".length))
     else if(ctx.SPARQL() != null) SparqlQuery(ctx.QUERY_PART().asScala.map(_.getText)
-      .mkString(" ").replaceAll("\\\\<", "<").replaceAll("\\\\>", ">"), createParserInfo(ctx))
+      .mkString(" ").replaceAll("\\\\<", "<").replaceAll("\\\\>", ">"), createParserInfo(ctx, columnOffset = "sparql: ".length))
     else CSVPerRow("", createParserInfo(ctx))
   }
 
@@ -370,11 +370,11 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     else throw new Exception("Impossible to parse query: " + query)
   }
 
-  def createParserInfo(context: ParserRuleContext, considerFullContext: Boolean = false): ParserInfo = {
+  def createParserInfo(context: ParserRuleContext, considerFullContext: Boolean = false, columnOffset: Int = 0): ParserInfo = {
     val start = context.getStart
     val end = context.getStop
-    val endPosition = if(considerFullContext) Some(end.getCharPositionInLine + end.getText.length) else Some(end.getCharPositionInLine)
-    new ParserInfo(Some(start.getLine), Some(start.getCharPositionInLine), Some(end.getLine), endPosition)
+    val endPosition = if(considerFullContext) Some(end.getCharPositionInLine + end.getText.length + columnOffset) else Some(end.getCharPositionInLine + columnOffset)
+    new ParserInfo(Some(start.getLine), Some(start.getCharPositionInLine + columnOffset), Some(end.getLine), endPosition)
   }
 
 }

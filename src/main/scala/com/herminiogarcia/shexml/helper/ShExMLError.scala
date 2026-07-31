@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.{BaseErrorListener, CommonToken, RecognitionExceptio
 
 import scala.collection.JavaConverters._
 
-trait ShExMLError extends Exception {
+sealed trait ShExMLError extends Exception {
   val message: String
   val parserInfo: ParserInfo
   private val BOLD = "\u001B[1m"
@@ -53,19 +53,29 @@ trait ShExMLError extends Exception {
   private def generateHighlightedErrorExtract(firstLineNumber: Int, before: String, affectedFragment: String, after: String): String = {
     val lineCounter = Iterator.from(firstLineNumber)
     val output = before + BOLD + UNDERLINE + affectedFragment + RESET_BOLD + RESET_UNDERLINE + after
-    output.lines().toList.asScala.map(ol => s"${lineCounter.next()}: ${resetBoldAndUnderline(ol)}").mkString("\n")
+    val multiline = output.lines().toList.size() > 1
+    output.lines().toList.asScala.map(ol => s"${lineCounter.next()}: ${resetBoldAndUnderline(ol, multiline)}").mkString("\n")
   }
 
-  private def resetBoldAndUnderline(input: String): String = {
+  private def resetBoldAndUnderline(input: String, multiline: Boolean): String = {
     if(input.contains(BOLD + UNDERLINE) && !input.contains(RESET_BOLD + RESET_UNDERLINE)) {
       input + RESET_BOLD + RESET_UNDERLINE
     } else if(!input.contains(BOLD + UNDERLINE) && input.contains(RESET_BOLD + RESET_UNDERLINE)) {
       BOLD + UNDERLINE + input
+    } else if(multiline) {
+      BOLD + UNDERLINE + input + RESET_BOLD + RESET_UNDERLINE
     } else input
   }
 }
 
+sealed trait QueryEngineError extends ShExMLError
+
 case class RDFGenerationError(message: String, parserInfo: ParserInfo) extends ShExMLError
+case class XPathQueryError(message: String, parserInfo: ParserInfo) extends QueryEngineError
+case class JsonPathQueryError(message: String, parserInfo: ParserInfo) extends QueryEngineError
+case class CSVExtractionError(message: String, parserInfo: ParserInfo) extends QueryEngineError
+case class SPARQLExtractionError(message: String, parserInfo: ParserInfo) extends QueryEngineError
+case class SQLExtractionError(message: String, parserInfo: ParserInfo) extends QueryEngineError
 case class RMLGenerationError(message: String, parserInfo: ParserInfo) extends ShExMLError
 case class ShapesGenerationError(message: String, parserInfo: ParserInfo) extends ShExMLError
 case class JDBCDriverError(message: String, parserInfo: ParserInfo) extends ShExMLError
