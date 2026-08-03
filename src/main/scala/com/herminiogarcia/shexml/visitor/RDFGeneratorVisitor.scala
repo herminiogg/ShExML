@@ -318,7 +318,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     }
 
     case StringOperation(left, right, unionString, parserInfo) => {
-      val expName = optionalArgument.asInstanceOf[Map[String, Any]].getOrElse("varName", "")
+      val expName = Option(optionalArgument).flatMap(_.asInstanceOf[Map[String, Any]].get("varName")).getOrElse("")
       val leftList = doVisit(left, optionalArgument)
       val rightList = doVisit(right, optionalArgument)
       leftList match {
