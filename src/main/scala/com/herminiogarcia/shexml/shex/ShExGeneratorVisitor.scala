@@ -1,6 +1,7 @@
 package com.herminiogarcia.shexml.shex
 
 import com.herminiogarcia.shexml.ast._
+import com.herminiogarcia.shexml.helper.ShapesGenerationError
 import com.herminiogarcia.shexml.visitor.DefaultVisitor
 import com.typesafe.scalalogging.Logger
 
@@ -15,8 +16,9 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
   val prefixTable = mutable.HashMap[String, String]()
 
   override def doVisit(ast: com.herminiogarcia.shexml.ast.AST, optionalArgument: HashMap[String, String]): ShExSubsetAST = ast match {
-    case ShExML(declarations, graphs, shapes) => {
-      val prefixes = (declarations :+ Declaration(com.herminiogarcia.shexml.ast.Prefix(Var("rdf:"), URL("http://www.w3.org/1999/02/22-rdf-syntax-ns#"))))
+    case ShExML(declarations, graphs, shapes, _) => {
+      val prefixes = (declarations :+ Declaration(com.herminiogarcia.shexml.ast.Prefix(Var("rdf:"),
+        URL("http://www.w3.org/1999/02/22-rdf-syntax-ns#", UnknownParserInfo), UnknownParserInfo), UnknownParserInfo))
         .filter(_.declarationStatement.isInstanceOf[com.herminiogarcia.shexml.ast.Prefix])
         .map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Prefix])
       val shexGraphs = graphs.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Graph])
@@ -27,22 +29,22 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       result
     }
 
-    case Declaration(declarationStatement) => {
+    case Declaration(declarationStatement, _) => {
       doVisit(declarationStatement, optionalArgument)
     }
 
-    case com.herminiogarcia.shexml.ast.Prefix(name, url) => {
+    case com.herminiogarcia.shexml.ast.Prefix(name, url, _) => {
       prefixTable += (name.name -> url.value)
       com.herminiogarcia.shexml.shex.Prefix(name.name, url)
     }
 
-    case com.herminiogarcia.shexml.ast.Graph(graphName, shapes) => {
+    case com.herminiogarcia.shexml.ast.Graph(graphName, shapes, _) => {
       logger.info(s"Extracting ShEx for ${shapes.size} shapes within the graph ${graphName.prefix + graphName.name}")
       val shexShapes = shapes.map(doVisit(_, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Shape])
       com.herminiogarcia.shexml.shex.Graph(graphName.prefix + graphName.name, shexShapes)
     }
 
-    case com.herminiogarcia.shexml.ast.Shape(shapeName, action, predicateObjects, _) => {
+    case com.herminiogarcia.shexml.ast.Shape(shapeName, action, predicateObjects, _, _) => {
       logger.info(s"Extracting shape ${shapeName.name} with ${predicateObjects.size} predicate-object statements")
       val shapePrefix = getShapePrefix(action)
       val arguments = HashMap("shapeName" -> shapeName.name)
@@ -52,7 +54,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       com.herminiogarcia.shexml.shex.Shape(name, iriStart, shexPredicateObjects)
     }
 
-    case com.herminiogarcia.shexml.ast.PredicateObject(predicate, objectOrShapeLink) => {
+    case com.herminiogarcia.shexml.ast.PredicateObject(predicate, objectOrShapeLink, _) => {
       val fullPrefix = prefixTable.getOrElse(predicate.prefix, "")
       val arguments = optionalArgument + ("predicateIRI" -> (fullPrefix + predicate.`extension`))
       val shexPredicate = doVisit(predicate, optionalArgument).asInstanceOf[com.herminiogarcia.shexml.shex.Predicate]
@@ -60,11 +62,11 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
       com.herminiogarcia.shexml.shex.PredicateObject(shexPredicate, objectElement)
     }
 
-    case com.herminiogarcia.shexml.ast.Predicate(prefix, localname) => {
+    case com.herminiogarcia.shexml.ast.Predicate(prefix, localname, _) => {
       com.herminiogarcia.shexml.shex.Predicate(prefix, localname)
     }
 
-    case com.herminiogarcia.shexml.ast.ObjectElement(prefix, _, literalValue, _, _, dataType, langTag, _) => {
+    case com.herminiogarcia.shexml.ast.ObjectElement(prefix, _, literalValue, _, _, dataType, langTag, _, _) => {
       val shapeName = optionalArgument("shapeName")
       val predicateIRI = optionalArgument("predicateIRI")
       val cardinality = getInferredCardinality(shapeName, predicateIRI)
@@ -84,25 +86,25 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
         case None =>
           if(prefix.isEmpty) {
             if(langTag.isDefined) langTag.get match {
-              case LangTagLiteral(value) => FixedValue("@" + value)
-              case LangTagGeneration(action, matcher) => throw new Exception("ShEx generation with dynamic langtag is not yet supported!")
+              case LangTagLiteral(value, _) => FixedValue("@" + value)
+              case LangTagGeneration(action, matcher, parserInfo) => throw ShapesGenerationError("ShEx generation with dynamic langtag is not yet supported!", parserInfo)
             }
             else
               ObjectDefinition(shexDatatype, cardinality)
           }
-          else PartialFixedValue(prefix, cardinality)
+          else PartialFixedValue(prefix.get.name, cardinality)
       }
     }
 
-    case com.herminiogarcia.shexml.ast.ShapeLink(shapeVar) => {
+    case com.herminiogarcia.shexml.ast.ShapeLink(shapeVar, _) => {
       com.herminiogarcia.shexml.shex.ShapeLink(shapeVar.name)
     }
 
-    case com.herminiogarcia.shexml.ast.LiteralObject(prefix, value) => {
+    case com.herminiogarcia.shexml.ast.LiteralObject(prefix, value, _) => {
       FixedValue(prefix.name + value)
     }
 
-    case com.herminiogarcia.shexml.ast.LiteralObjectValue(value) => {
+    case com.herminiogarcia.shexml.ast.LiteralObjectValue(value, _) => {
       FixedValue('"' + value + '"')
     }
 
@@ -124,8 +126,8 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
   }
 
   protected def getShapePrefix(action: ActionOrLiteral): String = action match {
-    case Action(shapePrefix, _, _) => shapePrefix
-    case LiteralSubject(prefix, _) => prefix.name
+    case Action(shapePrefix, _, _, _) => shapePrefix.name
+    case LiteralSubject(prefix, _, _) => prefix.name
   }
 
   override def doVisitDefault(): ShExSubsetAST = ???

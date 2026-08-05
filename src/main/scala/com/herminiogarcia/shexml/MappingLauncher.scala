@@ -2,14 +2,15 @@ package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.antlr.{ShExMLLexer, ShExMLParser}
 import com.herminiogarcia.shexml.ast._
-import com.herminiogarcia.shexml.helper.{OrphanBNodeRemover, ParallelExecutionConfigurator, SourceHelper}
+import com.herminiogarcia.shexml.helper.{LexerErrorListener, OrphanBNodeRemover, ParallelExecutionConfigurator, ParserErrorListener, SourceHelper}
 import com.herminiogarcia.shexml.parser.ASTCreatorVisitor
 import com.herminiogarcia.shexml.shex._
-import com.herminiogarcia.shexml.visitor.{PushedOrPoppedValueSearchVisitor, RDFGeneratorVisitor, RMLGeneratorVisitor, VarTableBuilderVisitor}
+import com.herminiogarcia.shexml.visitor.{PushedOrPoppedValueSearchVisitor, RDFGeneratorVisitor, RMLGeneratorVisitor, SemanticCheckerVisitor, VarTableBuilderVisitor}
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.jena.query.{Dataset, DatasetFactory}
 import org.apache.jena.riot.{RDFDataMgr, RDFFormat, RDFLanguages}
 import com.typesafe.scalalogging.Logger
+
 import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 import scala.collection.JavaConverters._
@@ -49,6 +50,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
+    runSemanticAnalysis(ast, varTable)
     generateResultingRDF(ast, varTable)
   }
 
@@ -60,6 +62,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
     val dataset = generateResultingRML(ast, varTable, prettify)
+    runSemanticAnalysis(ast, varTable)
     val outputStream = new ByteArrayOutputStream()
     if(prettify) new OrphanBNodeRemover().removeOrphanBNodes(dataset.getDefaultModel)
     RDFDataMgr.write(outputStream, dataset.getDefaultModel, RDFFormat.TURTLE_PRETTY)
@@ -73,6 +76,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
+    runSemanticAnalysis(ast, varTable)
     val inferencesTable = new ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]()
     generateInferencesFromShExML(ast, varTable, inferencesTable)
     val shex = new ShExGeneratorVisitor(inferencesTable.asScala.toList).doVisit(ast, null)
@@ -86,6 +90,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val parser = createParser(lexer)
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
+    runSemanticAnalysis(ast, varTable)
     val shapeMaps = generateShapeMaps(ast, varTable)
     new ShapeMapPrinter().print(shapeMaps)
   }
@@ -98,6 +103,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     val ast = createAST(parser)
     val varTable = createVarTable(ast)
     val inferencesTable = new ConcurrentLinkedQueue[ShExMLInferredCardinalitiesAndDatatypes]()
+    runSemanticAnalysis(ast, varTable)
     generateInferencesFromShExML(ast, varTable, inferencesTable)
     logger.info(s"Executing ShEx extraction process as base for the SHACL conversion")
     val shex = new ShExGeneratorVisitor(inferencesTable.asScala.toList).doVisit(ast, null)
@@ -113,27 +119,29 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
     logger.debug(s"Mapping rules $mappingCode")
     val precompiledMappingRules = resolveImports(mappingCode)
     logger.debug(s"Precompiled mapping rules $precompiledMappingRules")
-    try {
-      val lexer = createLexer(mappingCode)
-      val parser = createParser(lexer)
-      val ast = createAST(parser)
-      precompiledMappingRules
-    } catch {
-      case e: Exception =>
-        logger.error("Error while parsing the mapping rules, check the syntax of your input!", e)
-        precompiledMappingRules
-    }
+    val lexer = createLexer(mappingCode)
+    val parser = createParser(lexer)
+    val ast = createAST(parser)
+    val varTable = createVarTable(ast)
+    runSemanticAnalysis(ast, varTable)
+    precompiledMappingRules
   }
 
   private def createLexer(mappingCode: String): ShExMLLexer = {
     val finalMappingRules = resolveImports(mappingCode)
     logger.info("Applying lexer to tokenize input mapping rules")
-    new ShExMLLexer(CharStreams.fromString(finalMappingRules))
+    val lexer = new ShExMLLexer(CharStreams.fromString(finalMappingRules))
+    lexer.removeErrorListeners()
+    lexer.addErrorListener(new LexerErrorListener)
+    lexer
   }
 
   private def createParser(lexer: ShExMLLexer): ShExMLParser = {
     logger.info("Parsing tokens from the lexer")
-    new ShExMLParser(new CommonTokenStream(lexer))
+    val parser = new ShExMLParser(new CommonTokenStream(lexer))
+    parser.removeErrorListeners()
+    parser.addErrorListener(new ParserErrorListener)
+    parser
   }
 
   private def createAST(parser: ShExMLParser): AST = {
@@ -144,12 +152,18 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   private def createVarTable(ast: AST): mutable.HashMap[Variable, VarResult] = {
     logger.info(s"Building var table")
     val varTable = mutable.HashMap[Variable, VarResult]()
-    varTable += ((Var("rdf:"), URL("http://www.w3.org/1999/02/22-rdf-syntax-ns#")))
+    varTable += ((Var("rdf:"), URL("http://www.w3.org/1999/02/22-rdf-syntax-ns#", UnknownParserInfo)))
     val optionalArgument = Map("variable" -> "", "query" -> "")
     new VarTableBuilderVisitor(varTable).visit(ast, optionalArgument)
     logger.debug(s"Var table contents:")
     varTable.foreach {case (v, vr) => logger.debug(s"$v -> $vr")}
     varTable
+  }
+
+  private def runSemanticAnalysis(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Unit = {
+    logger.info(s"Running semantic analysis")
+    new SemanticCheckerVisitor(varTable.toMap).doVisit(ast, null)
+    logger.debug(s"Semantic analysis completed satisfactorily")
   }
 
   private def generateResultingRDF(ast: AST, varTable: mutable.HashMap[Variable, VarResult]): Dataset = {

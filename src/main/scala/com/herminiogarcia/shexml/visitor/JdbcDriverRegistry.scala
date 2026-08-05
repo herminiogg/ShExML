@@ -1,5 +1,8 @@
 package com.herminiogarcia.shexml.visitor
 
+import com.herminiogarcia.shexml.ast.ParserInfo
+import com.herminiogarcia.shexml.helper.JDBCDriverError
+
 trait JdbcDriverRegistry {
 
   val jdbcDrivers = Map(
@@ -14,10 +17,10 @@ trait JdbcDriverRegistry {
     "jdbc:h2" -> "org.h2.Driver"
   )
 
-  def lookForJdbcDriver(jdbcURL: String, moreDrivers: Map[String, String] = Map()): String = {
+  def lookForJdbcDriver(jdbcURL: String, moreDrivers: Map[String, String] = Map(), parserInfo: ParserInfo): String = {
     (jdbcDrivers ++ moreDrivers).find(t => jdbcURL.startsWith(t._1)) match {
       case Some(driver) => driver._2
-      case None => throw new Exception("No driver found for URL: " + jdbcURL)
+      case None => throw JDBCDriverError("No driver found for URL: " + jdbcURL, parserInfo)
     }
   }
 

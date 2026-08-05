@@ -9,54 +9,54 @@ abstract class DefaultVisitor[A, B] {
 
   def visit(ast: AST, optionalArgument: A): B = ast match {
 
-    case ShExML(declarations, graphs, shapes) => {
+    case ShExML(declarations, graphs, shapes, _) => {
       declarations.foreach(doVisit(_, optionalArgument))
       val firstGraph = graphs.map(doVisit(_, optionalArgument)).headOption
       val firstShape = shapes.map(doVisit(_, optionalArgument)).headOption
       if(firstGraph.isEmpty) firstShape.get else firstGraph.get
     }
 
-    case Declaration(declarationStatement) => doVisit(declarationStatement, optionalArgument)
+    case Declaration(declarationStatement, _) => doVisit(declarationStatement, optionalArgument)
 
-    case Shape(shapeName, action, predicateObjects, _) => {
+    case Shape(shapeName, action, predicateObjects, _, _) => {
       doVisit(shapeName, optionalArgument)
       predicateObjects.foreach(doVisit(_, optionalArgument))
       doVisit(action, optionalArgument)
     }
 
-    case Query(_, queryClause) => doVisit(queryClause, optionalArgument)
+    case Query(_, queryClause, _) => doVisit(queryClause, optionalArgument)
 
-    case Expression(_, exp) => doVisit(exp, optionalArgument)
+    case Expression(_, exp, _) => doVisit(exp, optionalArgument)
 
-    case Union(left, right) => {
+    case Union(left, right, _) => {
       doVisit(left, optionalArgument)
       doVisit(right, optionalArgument)
     }
 
-    case Substitution(leftUnion, rightUnion, joinClause) => {
+    case Substitution(leftUnion, rightUnion, joinClause, _) => {
       doVisit(leftUnion, optionalArgument)
       doVisit(rightUnion, optionalArgument)
       doVisit(joinClause, optionalArgument)
     }
 
-    case Join(leftUnion, rightUnion, leftJoinClause, rightJoinClause) => {
+    case Join(leftUnion, rightUnion, leftJoinClause, rightJoinClause, _) => {
       doVisit(leftUnion, optionalArgument)
       doVisit(rightUnion, optionalArgument)
       doVisit(leftJoinClause, optionalArgument)
       doVisit(rightJoinClause, optionalArgument)
     }
 
-    case StringOperation(left, right, _) => {
+    case StringOperation(left, right, _, _) => {
       doVisit(left, optionalArgument)
       doVisit(right, optionalArgument)
     }
 
-    case PredicateObject(objectOrShapeLink, predicate) => {
+    case PredicateObject(objectOrShapeLink, predicate, _) => {
       doVisit(objectOrShapeLink, optionalArgument)
       doVisit(predicate, optionalArgument)
     }
 
-    case ObjectElement(_, action, _, _, _, _, _, _) => action match { case Some(value) => doVisit(value, optionalArgument) }
+    case ObjectElement(_, action, _, _, _, _, _, _, _) => action match { case Some(value) => doVisit(value, optionalArgument) }
 
     case _ => doVisitDefault()
 
