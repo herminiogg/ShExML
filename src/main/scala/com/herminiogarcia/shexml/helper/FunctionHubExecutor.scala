@@ -1,25 +1,20 @@
 package com.herminiogarcia.shexml.helper
 
-import com.github.vickumar1981.stringdistance
-import com.github.vickumar1981.stringdistance.StringDistance.Levenshtein
-import com.github.vickumar1981.stringdistance.implicits._
 import com.github.vickumar1981.stringdistance.StringConverter._
 import com.herminiogarcia.shexml.ast.ParserInfo
 import com.typesafe.scalalogging.Logger
 
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
-import scala.reflect.runtime
-import scala.reflect.runtime.universe._
 
 class FunctionHubExecutor(val functionsCode: LoadedSource, val parserInfo: ParserInfo) {
 
-  private val cm = universe.runtimeMirror(getClass.getClassLoader)
-  private val toolBox = cm.mkToolBox()
+  private val toolBox = ToolBoxSingleton.toolBox
   private val tree = toolBox.parse(functionsCode.fileContent)
   private val symbol = toolBox.define(tree.asInstanceOf[toolBox.u.ImplDef])
-  private val theClass = toolBox.eval(toolBox.parse(functionsCode.fileContent + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
-
+  private val theClass = toolBox.synchronized {
+    toolBox.eval(toolBox.parse(functionsCode.fileContent + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
+  }
   private val logger = Logger[FunctionHubExecutor]
 
   def callFunction(name: String, args: String*): List[String] = {
@@ -65,4 +60,9 @@ class FunctionHubExecutor(val functionsCode: LoadedSource, val parserInfo: Parse
     else throw FunctionExecutionError(typeName + "is not a supported type")
   }
 
+}
+
+object ToolBoxSingleton {
+  private lazy val cm = universe.runtimeMirror(getClass.getClassLoader)
+  lazy val toolBox: ToolBox[universe.type] = cm.mkToolBox()
 }
