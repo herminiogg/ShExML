@@ -13,8 +13,8 @@ class MultipleElementTest extends AnyFunSuite
   private val example =
     """
       |PREFIX : <http://example.com/>
-      |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-      |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
+      |SOURCE films_xml_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.xml>
+      |SOURCE films_json_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.json>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD id <@id>
       |    FIELD name <name>

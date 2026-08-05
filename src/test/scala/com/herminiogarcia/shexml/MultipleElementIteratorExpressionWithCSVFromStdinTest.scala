@@ -17,8 +17,8 @@ class MultipleElementIteratorExpressionWithCSVFromStdinTest extends AnyFunSuite
     """
       |PREFIX : <http://example.com/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_xml_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.xml>
-      |SOURCE films_json_file <https://rawgit.com/herminiogg/ShExML/master/src/test/resources/films.json>
+      |SOURCE films_xml_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.xml>
+      |SOURCE films_json_file <https://raw.githubusercontent.com/herminiogg/ShExML/refs/heads/master/src/test/resources/films.json>
       |SOURCE films_csv_file <stdin>
       |ITERATOR film_xml <xpath: //film> {
       |    FIELD id <@id>
@@ -57,7 +57,7 @@ class MultipleElementIteratorExpressionWithCSVFromStdinTest extends AnyFunSuite
 
   override def beforeAll(configMap: ConfigMap): Unit = {
     super.beforeAll(configMap)
-    val stream = new ByteArrayInputStream(new SourceHelper().getURLContent("https://rawgit.com/herminiogg/ShExML/enhancement-%239/src/test/resources/films.csv").fileContent.getBytes())
+    val stream = new ByteArrayInputStream(new SourceHelper().getURLContent("https://raw.githubusercontent.com/herminiogg/ShExML/enhancement-%239/src/test/resources/films.csv").fileContent.getBytes())
     System.setIn(stream)
     stream.close()
     output = mappingLauncher.launchMapping(example).getDefaultModel

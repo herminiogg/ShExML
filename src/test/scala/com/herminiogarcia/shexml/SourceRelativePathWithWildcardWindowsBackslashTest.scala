@@ -6,15 +6,19 @@ import org.scalatest.ConfigMap
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers
 
+import java.nio.file.Path
+
 class SourceRelativePathWithWildcardWindowsBackslashTest extends AnyFunSuite
   with Matchers with RDFStatementCreator
-  with ParallelConfigInferenceDatatypesNormaliseURIsFixture {
+  with ParallelConfigBasePath {
+
+  override def relativeBasePath: Path = Path.of("src/test");
 
   private val example =
     """
       |PREFIX : <http://example.com/>
       |PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
-      |SOURCE films_json_file <src\test\resources\filmsDirectory\film_*.json>
+      |SOURCE films_json_file <resources\filmsDirectory\film_*.json>
       |ITERATOR film_json <jsonpath: $.films[*]> {
       |    FIELD id <id>
       |    FIELD name <name>

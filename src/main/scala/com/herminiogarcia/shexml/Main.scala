@@ -1,11 +1,13 @@
 package com.herminiogarcia.shexml
 
-import com.herminiogarcia.shexml.helper.{ParallelExecutionConfigurator, PicocliLeftAlignedLayout}
+import com.herminiogarcia.shexml.helper.{ParallelExecutionConfigurator, PicocliLeftAlignedLayout, ShExMLError}
+import com.typesafe.scalalogging.Logger
 import picocli.CommandLine
 import picocli.CommandLine.{ArgGroup, Command, Option}
 
-import java.io.{File, PrintWriter}
+import java.io.{File, PrintWriter, StringWriter}
 import java.util.concurrent.Callable
+import java.nio.file.Path
 
 /**
   * Created by herminio on 22/12/17.
@@ -20,11 +22,13 @@ object Main {
   }
 }
 
-@Command(name = "ShExML", version = Array("v0.6.1"),
+@Command(name = "ShExML", version = Array("v0.7.0"),
   mixinStandardHelpOptions = true,
   sortOptions = false,
   description = Array("Map and merge heterogeneous data sources with a Shape Expressions based syntax"))
 class Main extends Callable[Int] {
+
+  private val logger = Logger[MappingLauncher]
 
   @Option(names = Array("-m", "--mapping"), required = true, description = Array("Path to the file with the mappings. If '-' is provided as the path the engine will read from the standard input."))
   private var file: String = ""
@@ -43,15 +47,16 @@ class Main extends Callable[Int] {
     val parallelExecutionConfiguration =
       if(generalTransformationOptions.parallel) ParallelExecutionConfigurator(generalTransformationOptions.parallelAspects, generalTransformationOptions.numberOfThreads)
       else ParallelExecutionConfigurator.empty
+    val fileContent = fileHandler.mkString
     try {
-      val fileContent = fileHandler.mkString
       val mappingLauncher = new MappingLauncher(
         generalTransformationOptions.username,
         generalTransformationOptions.password,
         generalTransformationOptions.drivers,
         transformationModifiers.inferenceDatatype,
         transformationModifiers.normaliseURIs,
-        parallelExecutionConfiguration
+        parallelExecutionConfiguration,
+        Path.of(generalTransformationOptions.workingDir)
       )
       val outputContent = if(otherTransformations.rmlOutput) {
         mappingLauncher.launchRMLTranslation(fileContent)
@@ -76,6 +81,15 @@ class Main extends Callable[Int] {
         pw.close()
       }
       0 // well finished
+    } catch {
+      case e: ShExMLError =>
+        val sw = new StringWriter()
+        val pw = new PrintWriter(sw)
+        e.printStackTrace(pw)
+        val stackTrace = sw.toString
+        pw.close(); sw.close()
+        logger.error(s"${e.getEnrichedErrorMessage(fileContent)}\n$stackTrace")
+        1 // badly finished
     } finally { fileHandler.close() }
   }
 }
@@ -117,6 +131,9 @@ class OtherTransformations {
 class GeneralTransformationOptions {
   @Option(names = Array("-o", "--output"), description = Array("Path where the output file should be created"))
   var output: String = ""
+
+  @Option(names = Array("--chdir"), description = Array("Changes the working folder and uses it to resolve relative file sources"))
+  var workingDir: String = ""
 
   @Option(names = Array("-u", "--username"), description = Array("Username in case of using a database"))
   var username: String = ""

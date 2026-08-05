@@ -200,7 +200,7 @@ class FilmsCLITest extends AnyFunSuite {
       |        rr:template  "{name}" ;
       |        rr:termType  rr:Literal .
       |
-      |map:l_353498812  a                rml:LogicalSource ;
+      |map:l_1694368582  a                rml:LogicalSource ;
       |        rml:iterator              "$.films[*]" ;
       |        rml:referenceFormulation  ql:JSONPath ;
       |        rml:source                "https://shexml.herminiogarcia.com/files/films.json" .
@@ -209,7 +209,7 @@ class FilmsCLITest extends AnyFunSuite {
       |        rr:template  "http://example.com/{@id}" .
       |
       |map:m_2  a                     rr:TriplesMap ;
-      |        rml:logicalSource      map:l_353498812 ;
+      |        rml:logicalSource      map:l_1694368582 ;
       |        rr:predicateObjectMap  map:po_5 , map:po_3 , map:po_13 , map:po_1 , map:po_11 , map:po_9 , map:po_7 ;
       |        rr:subjectMap          map:s_2 .
       |
@@ -231,7 +231,7 @@ class FilmsCLITest extends AnyFunSuite {
       |map:p_1  a           rr:predicateMap ;
       |        rr:constant  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> .
       |
-      |map:l_1572684380  a               rml:LogicalSource ;
+      |map:l_1409459066  a               rml:LogicalSource ;
       |        rml:iterator              "//film" ;
       |        rml:referenceFormulation  ql:XPath ;
       |        rml:source                "https://shexml.herminiogarcia.com/files/films.xml" .
@@ -241,7 +241,7 @@ class FilmsCLITest extends AnyFunSuite {
       |        rr:termType  rr:IRI .
       |
       |map:m_1  a                     rr:TriplesMap ;
-      |        rml:logicalSource      map:l_1572684380 ;
+      |        rml:logicalSource      map:l_1409459066 ;
       |        rr:predicateObjectMap  map:po_12 , map:po_10 , map:po_4 , map:po_8 , map:po_1 , map:po_6 , map:po_2 ;
       |        rr:subjectMap          map:s_1 .
       |
@@ -702,5 +702,12 @@ class FilmsCLITest extends AnyFunSuite {
     val executionResult = executeCapturingStdout(cl => cl.execute("-m", "src/test/resources/databaseTestInput.shexml", "-u", "root", "-p", "root"))
     assert(compareTwoRDFModels(executionResult, "Turtle", expectedDatabaseOutput, "Turtle"))
   }
+
+  test("CLI generates expected output when changing working dir") {
+    val executionResult = executeCapturingStdout(cl => cl.execute("-m", filepath, "-nu", "-id", "--chdir", "src/test/resources/filmsDirectory"))
+    assert(compareTwoRDFModels(executionResult, "Turtle", expectedTurtleOutput, "Turtle"))
+  }
+
+
 
 }

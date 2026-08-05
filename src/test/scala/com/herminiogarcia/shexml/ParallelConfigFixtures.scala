@@ -2,7 +2,7 @@ package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.helper.ParallelExecutionConfigurator
 import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap, TestSuite}
-
+import java.nio.file.Path
 
 trait ParallelConfigInferenceDatatypesNormaliseURIsFixture extends BeforeAndAfterAllConfigMap with MappingLauncherInitializer { this: TestSuite =>
   var mappingLauncher: MappingLauncher = _
@@ -45,6 +45,17 @@ trait ParallelConfigSparql extends BeforeAndAfterAllConfigMap with MappingLaunch
 
   override def beforeAll(configMap: ConfigMap): Unit = {
     mappingLauncher = configMapToParallelConfiguration(configMap).parallelConfigurationSparql
+    super.beforeAll(configMap)
+  }
+}
+
+trait ParallelConfigBasePath extends BeforeAndAfterAllConfigMap with MappingLauncherInitializer { this: TestSuite =>
+  var mappingLauncher: MappingLauncher = _
+
+  def relativeBasePath: Path
+
+  override def beforeAll(configMap: ConfigMap): Unit = {
+    mappingLauncher = configMapToParallelConfiguration(configMap).parallelConfigurationBasePath(relativeBasePath)
     super.beforeAll(configMap)
   }
 }

@@ -3,10 +3,12 @@ package com.herminiogarcia.shexml.visitor
 import com.herminiogarcia.shexml.ast._
 import com.typesafe.scalalogging.Logger
 import org.apache.jena.query.Dataset
+import com.herminiogarcia.shexml.helper.RMLGenerationError
 import org.apache.jena.rdf.model.{Resource, Statement}
+import java.nio.file.Path
 
-class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], prettify: Boolean ,username: String, password: String)
-  extends RDFGeneratorVisitor(dataset, varTable, username, password) with JdbcDriverRegistry {
+class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], prettify: Boolean ,username: String, password: String, basePath: Path = Path.of(""))
+  extends RDFGeneratorVisitor(dataset, varTable, username, password, basePath = basePath) with JdbcDriverRegistry {
 
   private val mapPrefix = "http://mapping.example.com/"
   private val rmlPrefix = "http://semweb.mmlab.be/ns/rml#"
@@ -33,7 +35,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
 
   override def doVisit(ast: AST, optionalArgument: Any): Any = ast match {
 
-    case Shape(shapeName, action, predicateObjects, holdingGraph) => {
+    case Shape(shapeName, action, predicateObjects, holdingGraph, _) => {
       logger.info(s"Converting shape ${shapeName.name} with ${predicateObjects.size} predicate-object statements under the graph " +
         s"${holdingGraph.map(g => g.graphName.prefix + g.graphName.name).getOrElse("default")}")
       val shapePrefix = getShapePrefix(action)
@@ -83,11 +85,11 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       })
     }
 
-    case Action(shapePrefix: String, action: ExpOrVar, _) => {
+    case Action(_, action: ExpOrVar, _, _) => {
       doVisit(action, optionalArgument).asInstanceOf[List[RMLMap]].filter(_.logicalSource.nonEmpty)
     }
 
-    case IteratorQuery(firstVar, composedVar, _) => {
+    case IteratorQuery(firstVar, composedVar, _, _) => {
       val receivedArguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
       val arguments = if(receivedArguments.isDefinedAt("rmlType")) receivedArguments else receivedArguments.+("rmlType" -> "object")
       varTable(firstVar) match {
@@ -95,7 +97,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         case i: IteratorQuery => List(doVisit(i, arguments + ("composedVar" -> composedVar)))
         case source: FilePath => {
           val iterator = composedVar match {
-            case IteratorQuery(iteratorVar, _, _) =>
+            case IteratorQuery(iteratorVar, _, _, _) =>
               if(varTable.get(iteratorVar).isDefined && iteratorVar.name.contains(".")) {
                 val query = transformNestedIterator(getQueryFromVarTable(iteratorVar), iteratorVar)
                 val rootQuery = getQueryFromVarTable(Var(iteratorVar.name.splitAt(iteratorVar.name.lastIndexOf("."))._1))
@@ -105,13 +107,13 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               else return RMLMap(Nil, Nil, Nil, Nil)
             case v: Var => transformNestedIterator(getQueryFromVarTable(v), v)
           }
-          val logicalSourceName = mapPrefixOrBNode + "l_" + (source.toString + iterator.query).hashCode.abs
+          val logicalSourceName = mapPrefixOrBNode + "l_" + (source.value + iterator.query).hashCode.abs
           val logicalSource = iterator match {
-            case SqlQuery(query) => {
+            case SqlQuery(query, parserInfo) => {
               val dbSubjectID = mapPrefixOrBNode + "db_" + dbIndex.next()
               val datasource = List(
                 createStatementWithLiteral(dbSubjectID, rdfPrefix + "type", d2rqPrefix + "Database"),
-                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].value)),
+                createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDriver", lookForJdbcDriver(source.asInstanceOf[JdbcURL].value, parserInfo = parserInfo)),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "jdbcDSN", source.asInstanceOf[JdbcURL].value),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "username", username),
                 createStatementWithLiteral(dbSubjectID, d2rqPrefix + "password", password)
@@ -128,9 +130,9 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
             }
             case _ => {
               val referenceFormulation = iterator match {
-                case JsonPath(_) => "JSONPath"
-                case XmlPath(_) => "XPath"
-                case CSVPerRow(_) => "CSV"
+                case JsonPath(_, _) => "JSONPath"
+                case XmlPath(_, _) => "XPath"
+                case CSVPerRow(_, _) => "CSV"
               }
               val iteratorStatement = if(iterator.isInstanceOf[JsonPath] | iterator.isInstanceOf[XmlPath])
                 List(createStatementWithLiteral(logicalSourceName, rmlPrefix + "iterator", iterator.query))
@@ -149,7 +151,11 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               case _ => arguments("composedVar") match {
                 case cv: Var => varTable(Var(v.name + "." + cv.name)).asInstanceOf[FieldQuery]
                 case i: IteratorQuery =>
-                  return doVisit(IteratorQuery(firstVar, IteratorQuery(Var(composedVar.asInstanceOf[Var].name + "." + i.firstVar.name), i.composedVar)), optionalArgument)
+                  return doVisit(IteratorQuery(
+                    firstVar,
+                    IteratorQuery(Var(composedVar.asInstanceOf[Var].name + "." + i.firstVar.name), i.composedVar, parserInfo = i.parserInfo), parserInfo = i.parserInfo),
+                    optionalArgument
+                  )
               }
 
             }
@@ -172,11 +178,11 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
             } else {
               val datatypePrefix = arguments.get("dataType").map({
                 case dt: DataTypeLiteral => prefixTable(dt.value.split(":")(0) + ":")
-                case _: DataTypeGeneration => throw new Exception("DataType generation from data not supported in RML")
+                case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
               })
               val datatype = arguments.get("dataType").map({
                 case dt: DataTypeLiteral => dt.value.split(":")(1)
-                case _: DataTypeGeneration => throw new Exception("DataType generation from data not supported in RML")
+                case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
               })
               val datatypeURI = datatypePrefix.map(_ + datatype.get)
               val langTagStatement = arguments.get("langTag").map({
@@ -234,7 +240,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       }
     }
 
-    case Union(left, right) => {
+    case Union(left, right, _) => {
       val leftMap = doVisit(left, optionalArgument) match {
         case l: List[RMLMap] => l
         case r: RMLMap => List(r)
@@ -246,7 +252,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       leftMap.union(rightMap)
     }
 
-    case StringOperation(left, right, unionString) => {
+    case StringOperation(left, right, unionString, _) => {
       val leftMap = doVisit(left, optionalArgument).asInstanceOf[RMLMap]
       val rightMap = doVisit(right, optionalArgument).asInstanceOf[RMLMap]
       val leftTemplate = leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
@@ -268,7 +274,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       )
     }
 
-    case Substitution(left, right, join) => {
+    case Substitution(left, right, join, _) => {
       val leftMap = doVisit(left, optionalArgument).asInstanceOf[RMLMap]
       val rightMap = doVisit(right, optionalArgument).asInstanceOf[RMLMap]
       val joinMap = doVisit(join, optionalArgument).asInstanceOf[RMLMap]
@@ -314,7 +320,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       )
     }
 
-    case PredicateObject(predicate, objectOrShapeLink) => {
+    case PredicateObject(predicate, objectOrShapeLink, _) => {
       val objectMap = doVisit(objectOrShapeLink, optionalArgument).asInstanceOf[List[RMLMap]]
       objectMap.map(om => {
         val predicateStatements = doVisit(predicate, optionalArgument).asInstanceOf[List[Statement]]
@@ -335,7 +341,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       }).filter(_.isDefined).map {case Some(v) => v}
     }
 
-    case Predicate(prefix, extension) => {
+    case Predicate(prefix, extension, _) => {
       val predicateID = mapPrefixOrBNode + "p_" + predicateIndex.next
       List(
         createStatement(predicateID, rdfPrefix + "type", rrPrefix + "predicateMap"),
@@ -343,21 +349,21 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       )
     }
 
-    case ObjectElement(prefix, action, literalValue, matcher, condition, dataType, langTag, rdfCollection) => {
+    case ObjectElement(prefix, action, literalValue, matcher, condition, dataType, langTag, rdfCollection, parserInfo) => {
       val arguments = if(optionalArgument != null) optionalArgument.asInstanceOf[Map[String, Any]] else Map[String, Any]()
-      val prefixArguments = if(prefix.nonEmpty) arguments.+("prefix" -> prefix) else arguments
+      val prefixArguments = if(prefix.nonEmpty) arguments.+("prefix" -> prefix.get.name) else arguments
       val dataTypeArguments = if(dataType.isDefined) prefixArguments.+("dataType" -> dataType.getOrElse(None)) else prefixArguments
       val finalArguments = if(langTag.isDefined) dataTypeArguments.+("langTag" -> langTag.getOrElse(None)) else dataTypeArguments
       action match {
         case Some(value) => doVisit(value, finalArguments)
         case None => literalValue match {
           case Some(literal) => doVisit(literal, finalArguments)
-          case None => throw new Exception("No generation clause given.")
+          case None => throw RMLGenerationError("No generation clause given.", parserInfo)
         }
       }
     }
 
-    case LiteralObject(prefix, value) => {
+    case LiteralObject(prefix, value, _) => {
       val fullPrefix = prefixTable(prefix.name)
       val objectMapID = mapPrefixOrBNode + "o_" + objectIndex.next
       val objectMap = List(
@@ -368,7 +374,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       List(RMLMap(Nil, objectMap, Nil, Nil))
     }
 
-    case LiteralSubject(prefix, value) => {
+    case LiteralSubject(prefix, value, _) => {
       val fullPrefix = prefixTable(prefix.name)
       val subjectMapID = mapPrefixOrBNode + "s_" + objectIndex.next
       val objectMap = List(
@@ -379,7 +385,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       List(RMLMap(Nil, objectMap, Nil, Nil))
     }
 
-    case LiteralObjectValue(value) => {
+    case LiteralObjectValue(value, _) => {
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
       val datatypePrefix = arguments.get("dataType").map(d => prefixTable(d.toString.split(":")(0) + ":"))
       val datatype = arguments.get("dataType").map(d => d.toString.split(":")(1))
@@ -432,11 +438,11 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   }
 
   private def transformNestedIterator(queryClause: QueryClause, v: Var): QueryClause = queryClause match {
-    case FieldQuery(query, _, _) => getQueryFromVarTable(Var(v.name.split('.').head)) match {
-      case JsonPath(jsonQuery) => JsonPath(jsonQuery + "." + query)
-      case XmlPath(xpathQuery) => XmlPath(xpathQuery + "/" + query)
-      case CSVPerRow(_) => CSVPerRow(query)
-      case SqlQuery(_) => SqlQuery(query)
+    case FieldQuery(query, _, _, _) => getQueryFromVarTable(Var(v.name.split('.').head)) match {
+      case JsonPath(jsonQuery, parserInfo) => JsonPath(jsonQuery + "." + query, parserInfo)
+      case XmlPath(xpathQuery, parserInfo) => XmlPath(xpathQuery + "/" + query, parserInfo)
+      case CSVPerRow(_, parserInfo) => CSVPerRow(query, parserInfo)
+      case SqlQuery(_, parserInfo) => SqlQuery(query, parserInfo)
     }
     case j: JsonPath => j
     case x: XmlPath => x
@@ -445,24 +451,24 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   }
 
   private def mergeQueries(leftQuery: QueryClause, rightQuery: QueryClause): QueryClause = rightQuery match {
-    case XmlPath(query) => XmlPath(leftQuery.query + "/" + query)
-    case JsonPath(query) => JsonPath(leftQuery.query + "." + query)
+    case XmlPath(query, parserInfo) => XmlPath(leftQuery.query + "/" + query, parserInfo)
+    case JsonPath(query, parserInfo) => JsonPath(leftQuery.query + "." + query, parserInfo)
   }
 
   private def getNestedIteratorFieldQuery(iteratorQuery: IteratorQuery, precedentVar: Var, iteratorQueryClause: QueryClause): Option[FieldQuery] = {
     iteratorQuery.composedVar match {
       case i: IteratorQuery => {
         val accIteratorQueryClause = iteratorQueryClause match {
-          case JsonPath(_) => JsonPath(getQueryFromVarTable(Var(precedentVar.name + "." + i.firstVar.name)).query + ".")
-          case XmlPath(_) => XmlPath(getQueryFromVarTable(Var(precedentVar.name + "." + i.firstVar.name)).query + "/")
+          case JsonPath(_, parserInfo) => JsonPath(getQueryFromVarTable(Var(precedentVar.name + "." + i.firstVar.name)).query + ".", parserInfo)
+          case XmlPath(_, parserInfo) => XmlPath(getQueryFromVarTable(Var(precedentVar.name + "." + i.firstVar.name)).query + "/", parserInfo)
         }
         getNestedIteratorFieldQuery(i, Var(precedentVar.name + "." + i.firstVar.name), accIteratorQueryClause)
       }
       case v: Var => varTable.get(Var(precedentVar.name + "." + v.name)) match {
         case Some(value) => value match {
           case fq: FieldQuery => iteratorQueryClause match {
-            case JsonPath(_) => Some(FieldQuery(getQueryFromVarTable(precedentVar).query + "." + fq.query))
-            case XmlPath(_) => Some(FieldQuery(getQueryFromVarTable(precedentVar).query + "/" + fq.query))
+            case JsonPath(_, parserInfo) => Some(FieldQuery(getQueryFromVarTable(precedentVar).query + "." + fq.query, parserInfo = parserInfo))
+            case XmlPath(_, parserInfo) => Some(FieldQuery(getQueryFromVarTable(precedentVar).query + "/" + fq.query, parserInfo = parserInfo))
           }
           case _ => None
         }

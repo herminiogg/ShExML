@@ -1,6 +1,7 @@
 package com.herminiogarcia.shexml
 
 import com.herminiogarcia.shexml.helper.ParallelExecutionConfigurator
+import java.nio.file.Path
 
 class ParallelConfigurations(val parallelConfiguration: ParallelExecutionConfigurator) {
 
@@ -33,6 +34,11 @@ class ParallelConfigurations(val parallelConfiguration: ParallelExecutionConfigu
   val parallelConfigurationSparql = new MappingLauncher(
     "root",
     parallelCollectionConfigurator = parallelConfiguration
+  )
+
+  def parallelConfigurationBasePath(basePath: Path) = new MappingLauncher(
+    parallelCollectionConfigurator = parallelConfiguration,
+    basePath = basePath
   )
 }
 

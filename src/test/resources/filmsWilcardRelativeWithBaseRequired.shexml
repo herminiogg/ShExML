@@ -1,0 +1,19 @@
+PREFIX : <http://example.com/>
+PREFIX xs: <http://www.w3.org/2001/XMLSchema#>
+SOURCE films_json_file <film_*.json>
+ITERATOR film_json <jsonpath: $.films[*]> {
+    FIELD id <id>
+    FIELD name <name>
+    FIELD year <year>
+    FIELD country <country>
+    FIELD directors <director>
+}
+EXPRESSION films <films_json_file.film_json>
+
+:Films :[films.id] {
+    :type :Film ;
+    :name [films.name] ;
+    :year [films.year] xs:gYear ;
+    :country [films.country] ;
+    :director [films.directors] ;
+}
