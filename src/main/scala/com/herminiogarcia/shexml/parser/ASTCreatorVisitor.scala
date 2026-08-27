@@ -281,7 +281,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val condition = if(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(1) != null)
         Some(visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(1)).asInstanceOf[ExpOrVar])
       else None
-    val dataType = if(ctx.xmlschemadatatype() != null) Some(visit(ctx.xmlschemadatatype()).asInstanceOf[DataType]) else None
+    val dataType = if(ctx.datatype() != null) Some(visit(ctx.datatype()).asInstanceOf[DataType]) else None
     val langTag = if(ctx.langtag() != null) Some(visit(ctx.langtag()).asInstanceOf[LangTag]) else None
     val rdfCollection = {
       if(ctx.firstPartObjectElement() == null || ctx.firstPartObjectElement().valueRetriever() == null
@@ -301,9 +301,15 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     else visit(ctx.functionCalling())
   }
 
-  override def visitXmlschemadatatype(ctx: XmlschemadatatypeContext): AST = {
+  override def visitDatatype(ctx: DatatypeContext): AST = {
     if(ctx.firstPartObjectElement() == null) {
-      DataTypeLiteral(ctx.XMLSCHEMADATATYPE().getText, createParserInfo(ctx))
+      if(ctx.XMLSCHEMADATATYPE() != null) {
+        val xmlSchemaDataTypeSplit = ctx.XMLSCHEMADATATYPE().getText.split(':')
+        DataTypeLiteral(Var(s"${xmlSchemaDataTypeSplit(0)}:"), xmlSchemaDataTypeSplit(1), createParserInfo(ctx))
+      } else {
+        val literalSubject = visit(ctx.literalSubject()).asInstanceOf[LiteralSubject]
+        DataTypeLiteral(literalSubject.prefix, literalSubject.value, literalSubject.parserInfo)
+      }
     } else {
       val prefix = if(ctx.firstPartObjectElement().prefixVar() != null) Some(createVar(ctx.firstPartObjectElement().prefixVar().variable())) else None
       val expOrVar = visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar]

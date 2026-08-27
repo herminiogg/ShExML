@@ -104,7 +104,7 @@ case class ShapeLink(shape: ShapeVar, parserInfo: ParserInfo) extends ObjectOrSh
 
 sealed trait DataType extends AST
 case class DataTypeGeneration(prefix: Option[Var], action: ExpOrVar, matcher: Option[Var], parserInfo: ParserInfo) extends DataType
-case class DataTypeLiteral(value: String, parserInfo: ParserInfo) extends DataType
+case class DataTypeLiteral(prefix: Var, value: String, parserInfo: ParserInfo) extends DataType
 
 sealed trait LangTag extends AST
 case class LangTagGeneration(action: ExpOrVar, matcher: Option[Var], parserInfo: ParserInfo) extends LangTag

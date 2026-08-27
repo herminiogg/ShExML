@@ -474,13 +474,13 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterXmlschemadatatype(ShExMLParser.XmlschemadatatypeContext ctx) { }
+	@Override public void enterDatatype(ShExMLParser.DatatypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitXmlschemadatatype(ShExMLParser.XmlschemadatatypeContext ctx) { }
+	@Override public void exitDatatype(ShExMLParser.DatatypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

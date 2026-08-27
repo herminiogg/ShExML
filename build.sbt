@@ -18,7 +18,7 @@ lazy val shexml = project
       "info.picocli" % "picocli" % "4.7.7",
       "org.slf4j" % "slf4j-nop" % "1.7.27",
       ("com.github.tototoshi" %% "scala-csv" % "1.3.6").cross(CrossVersion.for3Use2_13),
-      "org.xerial" % "sqlite-jdbc" % "3.32.3.2",
+      "org.xerial" % "sqlite-jdbc" % "3.53.2.1",
       "mysql" % "mysql-connector-java" % "8.0.21",
       "org.postgresql" % "postgresql" % "42.5.0",
       "org.mariadb.jdbc" % "mariadb-java-client" % "2.6.2",
