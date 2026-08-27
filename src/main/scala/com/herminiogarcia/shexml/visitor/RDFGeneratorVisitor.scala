@@ -605,8 +605,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       matchedResultList
     }
 
-    case DataTypeLiteral(value, _) => {
-      value
+    case DataTypeLiteral(prefix, value, _) => {
+      prefix.name + value
     }
 
     case LangTagLiteral(value, _) => {
@@ -708,9 +708,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
 
   private def lookForXsdType(dataType: Option[String], o: String): RDFDatatype = {
     def getPrefixFromVarTable(dataType: String): String =
-      prefixTable.getOrElse(dataType.split(":")(0) + ":", throw RDFGenerationError(s"Prefix ${dataType.split(":")(0)}: for XML Schema Datatypes used in the mapping rules but not defined previously as a general prefix", UnknownParserInfo))
-    dataType.map(d => getPrefixFromVarTable(d) + d.split(":")(1))
-      .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
+      prefixTable.getOrElse(dataType.split(":")(0) + ":", throw RDFGenerationError(s"Prefix ${dataType.split(":")(0)}: for datatype used in the mapping rules but not defined previously as a general prefix", UnknownParserInfo))
+    dataType.map(d => {
+      Try(new java.net.URL(d)).map(_ => d).getOrElse(getPrefixFromVarTable(d) + d.split(":")(1))
+    }).map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
   }
 
   protected def searchForXSDType(o: String): RDFDatatype = {

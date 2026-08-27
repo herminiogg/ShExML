@@ -176,15 +176,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               ) ::: termType
               RMLMap(logicalSource, objectMap, Nil, Nil)
             } else {
-              val datatypePrefix = arguments.get("dataType").map({
-                case dt: DataTypeLiteral => prefixTable(dt.value.split(":")(0) + ":")
-                case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
-              })
-              val datatype = arguments.get("dataType").map({
-                case dt: DataTypeLiteral => dt.value.split(":")(1)
-                case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
-              })
-              val datatypeURI = datatypePrefix.map(_ + datatype.get)
+              val datatypeURI = getDataTypeURI(arguments.get("dataType"))
               val langTagStatement = arguments.get("langTag").map({
                 case lt: LangTagLiteral => List(createStatementWithLiteral(objectMapID, rrPrefix + "language", lt.value))
                 case ltg: LangTagGeneration => {
@@ -387,9 +379,8 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
 
     case LiteralObjectValue(value, _) => {
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
-      val datatypePrefix = arguments.get("dataType").map(d => prefixTable(d.toString.split(":")(0) + ":"))
-      val datatype = arguments.get("dataType").map(d => d.toString.split(":")(1))
-      val datatypeURI = datatypePrefix.map(_ + datatype.get)
+      val datatype = arguments.get("dataType")
+      val datatypeURI = getDataTypeURI(datatype)
       val langTag = arguments.get("langTag").map(_.asInstanceOf[String])
       val objectMapID = mapPrefixOrBNode + "o_" + objectIndex.next
       val datatypeStatement =
@@ -475,6 +466,22 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         case None => None
       }
     }
+  }
+
+  private def getDataTypePrefix(dataType: DataType): String = dataType match {
+    case dt: DataTypeLiteral => prefixTable(dt.prefix.name)
+    case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
+  }
+
+  private def getDataTypeValue(dataType: DataType): String = dataType match {
+    case dt: DataTypeLiteral => dt.value
+    case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
+  }
+
+  private def getDataTypeURI(dataType: Option[Any]): Option[String] = dataType.map {
+    case dt: DataType =>
+      getDataTypePrefix(dt) + getDataTypeValue(dt)
+    case _ => throw RMLGenerationError("Not a dataType", UnknownParserInfo)
   }
 
   private def getQueryFromVarTable(variable: Var): QueryClause = {
