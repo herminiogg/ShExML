@@ -1,7 +1,7 @@
 package com.herminiogarcia.shexml.visitor
 
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, UnknownParserInfo, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Functions, Graph, Index, IteratorQuery, JavaFunctions, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ScalaFunctions, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, UnknownParserInfo, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{CSVExtractionError, FunctionHubExecutor, JsonPathQueryError, LoadedSource, ParallelExecutionConfigurator, RDFGenerationError, SPARQLExtractionError, SQLExtractionError, SourceHelper, XPathQueryError}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
@@ -15,7 +15,6 @@ import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, Resu
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
-
 import scala.collection.concurrent
 import java.io.{File, StringReader}
 import java.nio.file.Path
@@ -24,6 +23,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import javax.xml.transform.stream.StreamSource
 import scala.collection.immutable.HashSet
 import scala.util.{Failure, Success, Try}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, ScalaFunctionHubExecutor, JavaFunctionHubExecutor}
 import scala.collection.JavaConverters._
 
 /**
@@ -408,7 +408,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     }
 
     case f: FunctionCalling => {
-      val functionsIRI = varTable(f.functionHub).asInstanceOf[FilePath]
+      val functionsDefinition = varTable(f.functionHub).asInstanceOf[Functions]
+      val functionsIRI = functionsDefinition.query
       val functionHub = functionHubExecuterCache.search(functionsIRI.value) match {
         case Some(executor) => executor
         case None =>
@@ -419,7 +420,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               case None => throw RDFGenerationError(s"There is no functions code in the provided path: ${fp.value}", f.parserInfo)
             }
           }
-          val executor = new FunctionHubExecutor(loadedSource, f.parserInfo)
+          val executor = functionsDefinition match {
+            case ScalaFunctions(_, _, parserInfo) => ScalaFunctionHubExecutor(loadedSource, f.parserInfo)
+            case JavaFunctions(_, _, parserInfo) => JavaFunctionHubExecutor(loadedSource, f.parserInfo)
+          }
           functionHubExecuterCache.save(functionsIRI.value, executor)
           executor
       }

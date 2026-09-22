@@ -4,7 +4,9 @@ import com.herminiogarcia.shexml.antlr.ShExMLParser._
 import com.herminiogarcia.shexml.antlr.ShExMLParserBaseVisitor
 import com.herminiogarcia.shexml.ast._
 import com.herminiogarcia.shexml.ast.URL
+import com.herminiogarcia.shexml.helper.ParserError
 import org.antlr.v4.runtime.ParserRuleContext
+
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -46,7 +48,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       if(ctx.URL != null) URL(ctx.URL().getText, createParserInfo(ctx))
       else RelativePath(ctx.QUERY_PART().getText, createParserInfo(ctx))
     val name = createVar(ctx.variable())
-    Functions(name, url, createParserInfo(ctx))
+    if(ctx.SCALA() != null) ScalaFunctions(name, url, createParserInfo(ctx))
+    else if(ctx.JAVA() != null) JavaFunctions(name, url, createParserInfo(ctx))
+    else throw ParserError("Functions should be declared as either Scala or Java", createParserInfo(ctx))
   }
 
   override def visitQuery(ctx: QueryContext): AST = {

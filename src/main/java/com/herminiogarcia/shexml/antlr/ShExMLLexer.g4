@@ -63,6 +63,7 @@ XMLPATH: X P A T H ':' ;
 CSVPERROW: C S V P E R R O W ;
 SQL: S Q L ':' ;
 SCALA: S C A L A ':' ;
+JAVA: J A V A ':' ;
 SPARQL: S P A R Q L ':' ;
 STDIN: S T D I N ;
 QUERY_PART: (LETTER | DIGIT | ALLOWED_CHARACTERS | '}' | '{' | '"')+ ;
