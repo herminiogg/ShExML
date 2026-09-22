@@ -21,7 +21,13 @@ sealed trait DeclarationStatement extends AST
 case class Prefix(name: Var, url: URL, parserInfo: ParserInfo) extends DeclarationStatement
 case class Source(name: Var, path: FilePathOrStdin, parserInfo: ParserInfo) extends DeclarationStatement
 case class Query(name: Var, query: QueryOrURL, parserInfo: ParserInfo) extends DeclarationStatement
-case class Functions(name: Var, query: FilePath, parserInfo: ParserInfo) extends DeclarationStatement
+sealed trait Functions extends DeclarationStatement with VarResult {
+  val name: Var
+  val query: FilePath
+  val parserInfo: ParserInfo
+}
+case class ScalaFunctions(name: Var, query: FilePath, parserInfo: ParserInfo) extends Functions
+case class JavaFunctions(name: Var, query: FilePath, parserInfo: ParserInfo) extends Functions
 case class Iterator(name: Var, queryClause: QueryOrVar, fields: List[Field], iterators: List[NestedIterator], parserInfo: ParserInfo) extends Iterators with DeclarationStatement with VarResult
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator], parserInfo: ParserInfo) extends Iterators with DeclarationStatement with VarResult
 case class Field(name: Var, queryClause: QueryClause, pushed: Boolean, popped: Boolean, parserInfo: ParserInfo) extends AST

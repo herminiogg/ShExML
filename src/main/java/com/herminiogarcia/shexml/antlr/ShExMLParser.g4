@@ -11,7 +11,7 @@ decl: (source | prefix | query | expression | matcher | iterator | autoincrement
 prefix: PREFIX variable LESS_SYMBOL_QUERY URL GREATER_SYMBOL_QUERY ;
 source: SOURCE variable LESS_SYMBOL_QUERY (URL | JDBC_URL | QUERY_PART | STDIN) GREATER_SYMBOL_QUERY ;
 query: QUERY variable LESS_SYMBOL_QUERY (URL | queryClause) GREATER_SYMBOL_QUERY ;
-functions: FUNCTIONS variable LESS_SYMBOL_QUERY SCALA (URL | QUERY_PART) GREATER_SYMBOL_QUERY ;
+functions: FUNCTIONS variable LESS_SYMBOL_QUERY (SCALA | JAVA) (URL | QUERY_PART) GREATER_SYMBOL_QUERY ;
 iterator: ITERATOR variable LESS_SYMBOL_QUERY (queryClause | QUERY_PART+) GREATER_SYMBOL_QUERY '{' (field | nestedIterator)* '}' ;
 nestedIterator: ITERATOR variable LESS_SYMBOL_QUERY QUERY_PART+ GREATER_SYMBOL_QUERY '{' (field | nestedIterator)* '}' ;
 field: (FIELD | PUSHED_FIELD | POPPED_FIELD) variable LESS_SYMBOL_QUERY QUERY_PART+ GREATER_SYMBOL_QUERY ;
