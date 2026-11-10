@@ -244,26 +244,43 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       leftMap.union(rightMap)
     }
 
-    case StringOperation(left, right, unionString, _) => {
-      val leftMap = doVisit(left, optionalArgument).asInstanceOf[RMLMap]
-      val rightMap = doVisit(right, optionalArgument).asInstanceOf[RMLMap]
-      val leftTemplate = leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
-      val rightTemplate = rightMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
-      val leftDiff = leftTemplate.split('{')(1).dropRight(1)
-      val rightDiff = rightTemplate.split('{')(1).dropRight(1)
-      val intersection = leftTemplate.intersect(rightTemplate).split('{')(0)
-      val newTemplate =
-        intersection + "{" + leftDiff + "}" + unionString + "{" + rightDiff + "}"
-      val newStatement = createStatementWithLiteral(
-        getURIOrBNode(leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getSubject),
-        leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getPredicate.getURI,
-        newTemplate)
-      val index = leftMap.objectMap.indexOf(leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head)
-      val objectMap = leftMap.objectMap.updated(index, newStatement)
-      List(
-        RMLMap(leftMap.logicalSource, objectMap, leftMap.predicateObjectMap, leftMap.predicateMap),
-        RMLMap(rightMap.logicalSource, objectMap, rightMap.predicateObjectMap, rightMap.predicateMap)
-      )
+    case StringOperation(left, right, _) => {
+      val leftMap = doVisit(left, optionalArgument) match {
+        case lr: List[RMLMap] => lr
+        case r: RMLMap => List(r)
+      }
+      val rightMap = doVisit(right, optionalArgument) match {
+        case lr: List[RMLMap] => lr
+        case r: RMLMap => List(r)
+      }
+      leftMap.flatMap(l => {
+        rightMap.flatMap(r => {
+          val leftTemplate = l.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
+          val rightTemplate = r.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
+          val leftDiff = if(leftTemplate.startsWith("http")) "{" + leftTemplate.split("\\{", 2)(1) else leftTemplate
+          val intersection =
+            if(leftTemplate.startsWith("http") && rightTemplate.startsWith("http")) leftTemplate.intersect(rightTemplate).split('{')(0)
+            else if(leftTemplate.startsWith("http") && !rightTemplate.startsWith("http")) leftTemplate.split('{')(0)
+            else if(rightTemplate.startsWith("http") && !leftTemplate.startsWith("http")) rightTemplate.split('{')(0)
+            else ""
+          val rightDiff = if(rightTemplate.startsWith("http")) rightTemplate.replace(intersection, "") else rightTemplate
+          val newTemplate = intersection + leftDiff + rightDiff
+          val termType = l.objectMap.find(s => s.getPredicate.getLocalName == "termType")
+            .orElse(r.objectMap.find(s => s.getPredicate.getLocalName == "termType"))
+          List(l, r).map(triplesToUpdate => {
+            val newStatement = createStatementWithLiteral(
+              getURIOrBNode(triplesToUpdate.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getSubject),
+              triplesToUpdate.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getPredicate.getURI,
+              newTemplate)
+            val index = triplesToUpdate.objectMap.indexOf(triplesToUpdate.objectMap.filter(s => s.getPredicate.getLocalName == "template").head)
+            val objectMap = triplesToUpdate.objectMap.updated(index, newStatement)
+            val objectMapWithTermType = termType
+              .map(s => createStatement(newStatement.getSubject.getURI, s.getPredicate.getURI, s.getObject.asResource().getURI))
+              .map(objectMap :+ _).getOrElse(objectMap)
+            RMLMap(triplesToUpdate.logicalSource, objectMapWithTermType, triplesToUpdate.predicateObjectMap, triplesToUpdate.predicateMap)
+          })
+        })
+      })
     }
 
     case Substitution(left, right, join, _) => {
@@ -407,6 +424,15 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         )
         RMLMap(sr._2.logicalSource, objectMap, Nil, Nil)
       })
+    }
+
+    case s: StringValue => {
+      val objectId = mapPrefixOrBNode + "o_" + objectIndex.next
+      val objectMap = List(
+        createStatement(objectId, rdfPrefix + "type", rrPrefix + "ObjectMap"),
+        createStatementWithLiteral(objectId, rrPrefix + "template", s.value)
+      )
+      RMLMap(Nil, objectMap, Nil, Nil)
     }
 
     case v: Var => doVisit(varTable(v), optionalArgument)

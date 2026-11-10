@@ -1,7 +1,7 @@
 package com.herminiogarcia.shexml.visitor
 
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Functions, Graph, Index, IteratorQuery, JavaFunctions, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ScalaFunctions, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, UnknownParserInfo, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Functions, Graph, Index, IteratorQuery, JavaFunctions, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ScalaFunctions, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, StringValue, Substitution, URL, Union, UnknownParserInfo, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{CSVExtractionError, FunctionHubExecutor, JsonPathQueryError, LoadedSource, ParallelExecutionConfigurator, RDFGenerationError, SPARQLExtractionError, SQLExtractionError, SourceHelper, XPathQueryError}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
@@ -15,6 +15,7 @@ import org.apache.jena.query.{Dataset, QueryExecutionFactory, QueryFactory, Resu
 import org.apache.jena.rdf.model._
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.util.SplitIRI
+
 import scala.collection.concurrent
 import java.io.{File, StringReader}
 import java.nio.file.Path
@@ -23,7 +24,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import javax.xml.transform.stream.StreamSource
 import scala.collection.immutable.HashSet
 import scala.util.{Failure, Success, Try}
-import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, ScalaFunctionHubExecutor, JavaFunctionHubExecutor}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, JavaFunctionHubExecutor, ScalaFunctionHubExecutor}
+
 import scala.collection.JavaConverters._
 
 /**
@@ -319,7 +321,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       }
     }
 
-    case StringOperation(left, right, unionString, parserInfo) => {
+    case StringOperation(left, right, parserInfo) => {
       val expName = Option(optionalArgument).flatMap(_.asInstanceOf[Map[String, Any]].get("varName")).getOrElse("")
       val leftList = doVisit(left, optionalArgument)
       val rightList = doVisit(right, optionalArgument)
@@ -328,12 +330,28 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
           case mr: Map[String, List[Result]] => ml.keySet.union(mr.keySet).foreach(k => {
             val leftResult = mr.getOrElse(k, Nil)
             val rightResult = ml.getOrElse(k, Nil)
-            val value = s"$expName$k" -> getStringOperationResults(leftResult, rightResult, unionString)
+            val value = s"$expName$k" -> getStringOperationResults(leftResult, rightResult)
+            iteratorsCombinations += value
+          })
+          case right: String => ml.keySet.foreach(k => {
+            val value = s"$expName$k" -> getStringOperationResults(ml(k), right)
             iteratorsCombinations += value
           })
           case _ => throw RDFGenerationError("Cannot make string operation with left clause being an iterator expression and right clause a non iterator expression", parserInfo)
         }
-        case left: List[Result] => getStringOperationResults(left, rightList.asInstanceOf[List[Result]], unionString)
+        case left: List[Result] => rightList match {
+          case right: List[Result] => getStringOperationResults(left, right)
+          case right: String => getStringOperationResults(left, right)
+          case _ => throw RDFGenerationError("Cannot make string operation with left clause being an iterator expression and right clause a non iterator expression", parserInfo)
+        }
+        case left: String => rightList match {
+          case right: List[Result] => getStringOperationResults(left, right)
+          case mr: Map[String, List[Result]] => mr.keySet.foreach(k => {
+            val value = s"$expName$k" -> getStringOperationResults(left, mr(k))
+            iteratorsCombinations += value
+          })
+          case _: String => throw RDFGenerationError("Cannot generate string operation with only strings", parserInfo)
+        }
       }
     }
 
@@ -614,6 +632,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     }
 
     case LangTagLiteral(value, _) => {
+      value
+    }
+
+    case StringValue(value, _) => {
       value
     }
 
@@ -983,14 +1005,32 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     result
   }
 
-  protected def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {
+  protected def getStringOperationResults(left: List[Result], right: List[Result]): List[Result] = {
     for ((l, r) <- left zip right) yield {
       val results = for (i <- l.results) yield {
         for (j <- r.results) yield {
-          i + unionString + j
+          i + j
         }
       }
       Result(l.id, l.rootIds, results.flatten, r.dataType, r.langTag, r.rdfCollection)
+    }
+  }
+
+  protected def getStringOperationResults(left: List[Result], right: String): List[Result] = {
+    for (l <- left) yield {
+      val results = for (i <- l.results) yield {
+        i + right
+      }
+      Result(l.id, l.rootIds, results, l.dataType, l.langTag, l.rdfCollection)
+    }
+  }
+
+  protected def getStringOperationResults(left: String, right: List[Result]): List[Result] = {
+    for (r <- right) yield {
+      val results = for (j <- r.results) yield {
+        left + j
+      }
+      Result(r.id, r.rootIds, results, r.dataType, r.langTag, r.rdfCollection)
     }
   }
 

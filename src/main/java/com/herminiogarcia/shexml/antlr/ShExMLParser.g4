@@ -24,7 +24,8 @@ matchers: replacedStrings AS (STRING_OR_VAR | STRINGOPERATOR)
     | matchers AND replacedStrings AS (STRING_OR_VAR | STRINGOPERATOR) ;
 replacedStrings: (STRING_OR_VAR | STRINGOPERATOR) ',' replacedStrings | (STRING_OR_VAR | STRINGOPERATOR) ;
 exp: union | join | substitution | stringOperation | iteratorQuery ;
-stringOperation: iteratorQuery ADD STRINGOPERATOR ADD iteratorQuery ;
+stringOperation: (iteratorQuery | STRINGOPERATOR) composedStringOperation ;
+composedStringOperation: ADD (iteratorQuery | STRINGOPERATOR | stringOperation) ;
 iteratorQuery: variable '.' composedVariable ('.' builtinFunction)?;
 composedVariable: variable | variable '.' composedVariable ;
 builtinFunction: INDEX ;

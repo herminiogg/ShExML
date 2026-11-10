@@ -170,6 +170,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitStringOperation(ShExMLParser.StringOperationContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#composedStringOperation}.
+	 * @param ctx the parse tree
+	 */
+	void enterComposedStringOperation(ShExMLParser.ComposedStringOperationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#composedStringOperation}.
+	 * @param ctx the parse tree
+	 */
+	void exitComposedStringOperation(ShExMLParser.ComposedStringOperationContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#iteratorQuery}.
 	 * @param ctx the parse tree
 	 */
