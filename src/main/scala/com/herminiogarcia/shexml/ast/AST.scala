@@ -60,12 +60,15 @@ sealed trait LeftUnion extends Exp
 sealed trait RightUnion extends Exp
 
 case class Union(left: LeftUnion, right: RightUnion, parserInfo: ParserInfo) extends RightUnion
-case class StringOperation(left: IteratorQuery, right: IteratorQuery, unionString: String, parserInfo: ParserInfo) extends LeftUnion with RightUnion
+case class StringOperation(left: StringValueProducer, right: StringOperationOrStringValueProducer, parserInfo: ParserInfo) extends LeftUnion with RightUnion with StringOperationOrStringValueProducer
 case class Substitution(leftUnion: IteratorQuery, rightUnion: IteratorQuery, joinClause: IteratorQuery, parserInfo: ParserInfo) extends Exp
 case class Join(leftUnion: IteratorQuery, rightUnion: IteratorQuery, leftJoinClause: IteratorQuery, rightJoinClause: IteratorQuery, parserInfo: ParserInfo) extends Exp
-case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery, builtinFunction: Option[BuiltinFunction] = None, parserInfo: ParserInfo) extends LeftUnion with RightUnion with VarOrIteratorQuery
+case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery, builtinFunction: Option[BuiltinFunction] = None, parserInfo: ParserInfo) extends LeftUnion with RightUnion with VarOrIteratorQuery with StringValueProducer
 
 sealed trait VarOrIteratorQuery extends AST
+sealed trait StringOperationOrStringValueProducer extends AST
+sealed trait StringValueProducer extends StringOperationOrStringValueProducer
+case class StringValue(value: String, parserInfo: ParserInfo) extends StringValueProducer
 sealed trait ExpOrVar extends AST
 sealed trait QueryOrURL extends VarResult
 sealed trait QueryOrVar extends VarResult

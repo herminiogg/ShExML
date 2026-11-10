@@ -47,7 +47,7 @@ abstract class DefaultUnitVisitor {
       doVisit(rightJoinClause)
     }
 
-    case StringOperation(left, right, _, _) => {
+    case StringOperation(left, right, _) => {
       doVisit(left)
       doVisit(right)
     }

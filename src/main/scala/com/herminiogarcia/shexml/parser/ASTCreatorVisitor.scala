@@ -138,10 +138,17 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitStringOperation(ctx: StringOperationContext): AST = {
-    val left = visit(ctx.iteratorQuery(0)).asInstanceOf[IteratorQuery]
-    val right = visit(ctx.iteratorQuery(1)).asInstanceOf[IteratorQuery]
-    val stringOperator = ctx.STRINGOPERATOR().getText.replace("\"", "")
-    StringOperation(left, right, stringOperator, createParserInfo(ctx))
+    val left =
+      if(ctx.iteratorQuery() != null) visit(ctx.iteratorQuery()).asInstanceOf[StringValueProducer]
+      else StringValue(ctx.STRINGOPERATOR().getText.replace("\"", ""), createParserInfo(ctx))
+    val right = visit(ctx.composedStringOperation()).asInstanceOf[StringOperationOrStringValueProducer]
+    StringOperation(left, right, createParserInfo(ctx))
+  }
+
+  override def visitComposedStringOperation(ctx: ComposedStringOperationContext): AST = {
+    if(ctx.iteratorQuery() != null) visit(ctx.iteratorQuery())
+    else if(ctx.stringOperation() != null) visit(ctx.stringOperation())
+    else StringValue(ctx.STRINGOPERATOR().getText.replace("\"", ""), createParserInfo(ctx))
   }
 
   override def visitSubstitution(ctx: SubstitutionContext): AST = {

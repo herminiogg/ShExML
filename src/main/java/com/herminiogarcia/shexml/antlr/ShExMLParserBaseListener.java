@@ -210,6 +210,18 @@ public class ShExMLParserBaseListener implements ShExMLParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterComposedStringOperation(ShExMLParser.ComposedStringOperationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComposedStringOperation(ShExMLParser.ComposedStringOperationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterIteratorQuery(ShExMLParser.IteratorQueryContext ctx) { }
 	/**
 	 * {@inheritDoc}
