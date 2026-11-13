@@ -98,7 +98,7 @@ fragment ALLOWEDTYPES: ('string' | 'boolean' | 'decimal' | 'integer' | 'double' 
     | 'nonPositiveInteger' | 'hexBinary' | 'base64Binary' | 'anyURI' | 'language' | 'normalizedString' | 'token'
     | 'NMTOKEN' | 'Name' | 'NCName') ;
 fragment ALLOWED_CHARACTERS: '[' | ']' | '*' | '_' | '/' | '\\' | '@' | '.' | ',' | '%' | '-' | '(' | ')'
-        | '?' | '=' | '&' | '#' | '$' | ':' | '^' | '\'' | ';' | '\\<' | '\\>' ;
+        | '?' | '!' | '=' | '&' | '#' | '$' | ':' | '^' | '\'' | ';' | '\\<' | '\\>' ;
 fragment B:('b'|'B');
 fragment C:('c'|'C');
 fragment D:('d'|'D');

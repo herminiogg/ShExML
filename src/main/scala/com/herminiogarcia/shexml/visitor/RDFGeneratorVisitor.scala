@@ -54,8 +54,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   protected val xmlDocumentCache = new XMLDocumentCache()
   protected val functionHubExecuterCache = new FunctionHubExecutorCache()
   protected val defaultModel = dataset.getDefaultModel
-  protected val jsonPathConfiguration = Configuration.defaultConfiguration()
+  protected val jsonPathConfigurationDefault = Configuration.defaultConfiguration()
     .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
+    .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
+    .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
+  protected val jsonPathConfigurationForPathFunctions = Configuration.defaultConfiguration()
     .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
     .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
 
@@ -503,6 +506,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
       val index = arguments.getOrElse("index", "")
       val file = arguments.getOrElse("file", null).asInstanceOf[LoadedSource]
+      val usingPathFunction = doesJsonPathEndInPathFunction(query)
       jsonpathQueryResultsCache.search(query, file, index.toString) match {
         case Some(result) =>
           logger.debug(s"Retrieving cached result for JsonPath query $query")
@@ -510,13 +514,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         case None =>
           val id = (iteratorQuery + file.filepath + index).hashCode
           val rootIds = arguments.getOrElse("rootIds", HashSet(id)).asInstanceOf[HashSet[Int]]
-          val jsonContent =  jsonObjectMapperCache.search(file) match {
+          val jsonContent =  jsonObjectMapperCache.search(file, usingPathFunction) match {
             case Some(jsonNode) =>
               logger.debug(s"Retrieving cached result for already parsed JSON file")
               jsonNode
             case None =>
+              val jsonPathConfiguration = retrieveAppropriateJsonPathConfiguration(query)
               val context = com.jayway.jsonpath.JsonPath.using(jsonPathConfiguration).parse(file.fileContent)
-              jsonObjectMapperCache.save(file, context)
+              jsonObjectMapperCache.save(file, usingPathFunction, context)
               context
           }
           Try(jsonContent.read(query, classOf[java.util.List[Object]])).map(result => {
@@ -1300,6 +1305,18 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     new ParserInfo(start.startLine, start.startColumn, end.endLine, end.endColumn)
   }
 
+  private def retrieveAppropriateJsonPathConfiguration(query: String): Configuration = {
+    if(doesJsonPathEndInPathFunction(query)) jsonPathConfigurationForPathFunctions else jsonPathConfigurationDefault
+  }
+
+  private def doesJsonPathEndInPathFunction(query: String): Boolean = {
+    val supportedFunctions = List("min", "max", "avg", "stddev", "length", "sum", "keys",
+      "concat", "append", "first", "last", "index")
+      .mkString("|")
+    val endByRegex = s"\\.($supportedFunctions)\\(.*\\)$$".r.unanchored
+    endByRegex.matches(query)
+  }
+
   override def doVisitDefault(): Any = Nil
 
 }
@@ -1387,12 +1404,12 @@ class JsonPathQueryResultsCache(pushedValues: Boolean) {
 class JsonObjectMapperCache {
   private val table = concurrent.TrieMap[Int, DocumentContext]()
 
-  def search(file: LoadedSource): Option[DocumentContext] = {
-    table.get(file.filepath.hashCode)
+  def search(file: LoadedSource, usingPathFunctions: Boolean): Option[DocumentContext] = {
+    table.get((file.filepath + usingPathFunctions).hashCode)
   }
 
-  def save(file: LoadedSource, jsonNode: DocumentContext): Unit = {
-    val id = file.filepath.hashCode
+  def save(file: LoadedSource, usingPathFunctions: Boolean, jsonNode: DocumentContext): Unit = {
+    val id = (file.filepath + usingPathFunctions).hashCode
     table += ((id, jsonNode))
   }
 }
