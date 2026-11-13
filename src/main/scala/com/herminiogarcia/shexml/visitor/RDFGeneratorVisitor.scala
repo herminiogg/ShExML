@@ -1314,7 +1314,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       "concat", "append", "first", "last", "index")
       .mkString("|")
     val endByRegex = s"\\.($supportedFunctions)\\(.*\\)$$".r.unanchored
-    endByRegex.matches(query)
+    endByRegex.findFirstIn(query).isDefined // this ensures compatibility with Scala 2.12
   }
 
   override def doVisitDefault(): Any = Nil
