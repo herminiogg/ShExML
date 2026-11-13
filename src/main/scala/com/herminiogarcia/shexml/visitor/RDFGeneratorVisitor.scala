@@ -1,7 +1,7 @@
 package com.herminiogarcia.shexml.visitor
 
 import com.github.tototoshi.csv.{CSVReader, DefaultCSVFormat}
-import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Graph, Index, IteratorQuery, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, Substitution, URL, Union, UnknownParserInfo, Var, VarResult, Variable, XmlPath}
+import com.herminiogarcia.shexml.ast.{AST, Action, ActionOrLiteral, AutoIncrement, BuiltinFunction, CSVPerRow, DataTypeGeneration, DataTypeLiteral, Declaration, Exp, FieldQuery, FilePath, FilePathOrStdin, FunctionCalling, Functions, Graph, Index, IteratorQuery, JavaFunctions, JdbcURL, Join, JsonPath, LangTagGeneration, LangTagLiteral, LiteralObject, LiteralObjectValue, LiteralSubject, Matcher, Matchers, ObjectElement, ParserInfo, Predicate, PredicateObject, Prefix, QueryClause, RDFAlt, RDFBag, RDFCollection, RDFList, RDFSeq, RelativePath, ScalaFunctions, ShExML, Shape, ShapeLink, ShapeVar, Sparql, SparqlColumn, Sql, SqlColumn, Stdin, StringOperation, StringValue, Substitution, URL, Union, UnknownParserInfo, Var, VarResult, Variable, XmlPath}
 import com.herminiogarcia.shexml.helper.{CSVExtractionError, FunctionHubExecutor, JsonPathQueryError, LoadedSource, ParallelExecutionConfigurator, RDFGenerationError, SPARQLExtractionError, SQLExtractionError, SourceHelper, XPathQueryError}
 import com.herminiogarcia.shexml.shex.{Node, ShExMLInferredCardinalitiesAndDatatypes, ShapeMapInference, ShapeMapShape}
 import com.herminiogarcia.shexml.visitor
@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import javax.xml.transform.stream.StreamSource
 import scala.collection.immutable.HashSet
 import scala.util.{Failure, Success, Try}
+import com.herminiogarcia.shexml.helper.{FunctionHubExecutor, JavaFunctionHubExecutor, ScalaFunctionHubExecutor}
+
 import scala.collection.JavaConverters._
 
 /**
@@ -52,8 +54,11 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
   protected val xmlDocumentCache = new XMLDocumentCache()
   protected val functionHubExecuterCache = new FunctionHubExecutorCache()
   protected val defaultModel = dataset.getDefaultModel
-  protected val jsonPathConfiguration = Configuration.defaultConfiguration()
+  protected val jsonPathConfigurationDefault = Configuration.defaultConfiguration()
     .addOptions(com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST)
+    .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
+    .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
+  protected val jsonPathConfigurationForPathFunctions = Configuration.defaultConfiguration()
     .addOptions(com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL)
     .addOptions(com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS)
 
@@ -319,7 +324,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       }
     }
 
-    case StringOperation(left, right, unionString, parserInfo) => {
+    case StringOperation(left, right, parserInfo) => {
       val expName = Option(optionalArgument).flatMap(_.asInstanceOf[Map[String, Any]].get("varName")).getOrElse("")
       val leftList = doVisit(left, optionalArgument)
       val rightList = doVisit(right, optionalArgument)
@@ -328,12 +333,28 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
           case mr: Map[String, List[Result]] => ml.keySet.union(mr.keySet).foreach(k => {
             val leftResult = mr.getOrElse(k, Nil)
             val rightResult = ml.getOrElse(k, Nil)
-            val value = s"$expName$k" -> getStringOperationResults(leftResult, rightResult, unionString)
+            val value = s"$expName$k" -> getStringOperationResults(leftResult, rightResult)
+            iteratorsCombinations += value
+          })
+          case right: String => ml.keySet.foreach(k => {
+            val value = s"$expName$k" -> getStringOperationResults(ml(k), right)
             iteratorsCombinations += value
           })
           case _ => throw RDFGenerationError("Cannot make string operation with left clause being an iterator expression and right clause a non iterator expression", parserInfo)
         }
-        case left: List[Result] => getStringOperationResults(left, rightList.asInstanceOf[List[Result]], unionString)
+        case left: List[Result] => rightList match {
+          case right: List[Result] => getStringOperationResults(left, right)
+          case right: String => getStringOperationResults(left, right)
+          case _ => throw RDFGenerationError("Cannot make string operation with left clause being an iterator expression and right clause a non iterator expression", parserInfo)
+        }
+        case left: String => rightList match {
+          case right: List[Result] => getStringOperationResults(left, right)
+          case mr: Map[String, List[Result]] => mr.keySet.foreach(k => {
+            val value = s"$expName$k" -> getStringOperationResults(left, mr(k))
+            iteratorsCombinations += value
+          })
+          case _: String => throw RDFGenerationError("Cannot generate string operation with only strings", parserInfo)
+        }
       }
     }
 
@@ -408,7 +429,8 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     }
 
     case f: FunctionCalling => {
-      val functionsIRI = varTable(f.functionHub).asInstanceOf[FilePath]
+      val functionsDefinition = varTable(f.functionHub).asInstanceOf[Functions]
+      val functionsIRI = functionsDefinition.query
       val functionHub = functionHubExecuterCache.search(functionsIRI.value) match {
         case Some(executor) => executor
         case None =>
@@ -419,7 +441,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               case None => throw RDFGenerationError(s"There is no functions code in the provided path: ${fp.value}", f.parserInfo)
             }
           }
-          val executor = new FunctionHubExecutor(loadedSource, f.parserInfo)
+          val executor = functionsDefinition match {
+            case ScalaFunctions(_, _, parserInfo) => ScalaFunctionHubExecutor(loadedSource, f.parserInfo)
+            case JavaFunctions(_, _, parserInfo) => JavaFunctionHubExecutor(loadedSource, f.parserInfo)
+          }
           functionHubExecuterCache.save(functionsIRI.value, executor)
           executor
       }
@@ -481,6 +506,7 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       val iteratorQuery = arguments.getOrElse("iteratorQuery", "").toString
       val index = arguments.getOrElse("index", "")
       val file = arguments.getOrElse("file", null).asInstanceOf[LoadedSource]
+      val usingPathFunction = doesJsonPathEndInPathFunction(query)
       jsonpathQueryResultsCache.search(query, file, index.toString) match {
         case Some(result) =>
           logger.debug(s"Retrieving cached result for JsonPath query $query")
@@ -488,13 +514,14 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         case None =>
           val id = (iteratorQuery + file.filepath + index).hashCode
           val rootIds = arguments.getOrElse("rootIds", HashSet(id)).asInstanceOf[HashSet[Int]]
-          val jsonContent =  jsonObjectMapperCache.search(file) match {
+          val jsonContent =  jsonObjectMapperCache.search(file, usingPathFunction) match {
             case Some(jsonNode) =>
               logger.debug(s"Retrieving cached result for already parsed JSON file")
               jsonNode
             case None =>
+              val jsonPathConfiguration = retrieveAppropriateJsonPathConfiguration(query)
               val context = com.jayway.jsonpath.JsonPath.using(jsonPathConfiguration).parse(file.fileContent)
-              jsonObjectMapperCache.save(file, context)
+              jsonObjectMapperCache.save(file, usingPathFunction, context)
               context
           }
           Try(jsonContent.read(query, classOf[java.util.List[Object]])).map(result => {
@@ -605,11 +632,15 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       matchedResultList
     }
 
-    case DataTypeLiteral(value, _) => {
-      value
+    case DataTypeLiteral(prefix, value, _) => {
+      prefix.name + value
     }
 
     case LangTagLiteral(value, _) => {
+      value
+    }
+
+    case StringValue(value, _) => {
       value
     }
 
@@ -708,9 +739,10 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
 
   private def lookForXsdType(dataType: Option[String], o: String): RDFDatatype = {
     def getPrefixFromVarTable(dataType: String): String =
-      prefixTable.getOrElse(dataType.split(":")(0) + ":", throw RDFGenerationError(s"Prefix ${dataType.split(":")(0)}: for XML Schema Datatypes used in the mapping rules but not defined previously as a general prefix", UnknownParserInfo))
-    dataType.map(d => getPrefixFromVarTable(d) + d.split(":")(1))
-      .map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
+      prefixTable.getOrElse(dataType.split(":")(0) + ":", throw RDFGenerationError(s"Prefix ${dataType.split(":")(0)}: for datatype used in the mapping rules but not defined previously as a general prefix", UnknownParserInfo))
+    dataType.map(d => {
+      Try(new java.net.URL(d)).map(_ => d).getOrElse(getPrefixFromVarTable(d) + d.split(":")(1))
+    }).map(TypeMapper.getInstance().getSafeTypeByName(_)).getOrElse(searchForXSDType(o))
   }
 
   protected def searchForXSDType(o: String): RDFDatatype = {
@@ -978,14 +1010,32 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     result
   }
 
-  protected def getStringOperationResults(left: List[Result], right: List[Result], unionString: String): List[Result] = {
+  protected def getStringOperationResults(left: List[Result], right: List[Result]): List[Result] = {
     for ((l, r) <- left zip right) yield {
       val results = for (i <- l.results) yield {
         for (j <- r.results) yield {
-          i + unionString + j
+          i + j
         }
       }
       Result(l.id, l.rootIds, results.flatten, r.dataType, r.langTag, r.rdfCollection)
+    }
+  }
+
+  protected def getStringOperationResults(left: List[Result], right: String): List[Result] = {
+    for (l <- left) yield {
+      val results = for (i <- l.results) yield {
+        i + right
+      }
+      Result(l.id, l.rootIds, results, l.dataType, l.langTag, l.rdfCollection)
+    }
+  }
+
+  protected def getStringOperationResults(left: String, right: List[Result]): List[Result] = {
+    for (r <- right) yield {
+      val results = for (j <- r.results) yield {
+        left + j
+      }
+      Result(r.id, r.rootIds, results, r.dataType, r.langTag, r.rdfCollection)
     }
   }
 
@@ -1255,6 +1305,18 @@ class RDFGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
     new ParserInfo(start.startLine, start.startColumn, end.endLine, end.endColumn)
   }
 
+  private def retrieveAppropriateJsonPathConfiguration(query: String): Configuration = {
+    if(doesJsonPathEndInPathFunction(query)) jsonPathConfigurationForPathFunctions else jsonPathConfigurationDefault
+  }
+
+  private def doesJsonPathEndInPathFunction(query: String): Boolean = {
+    val supportedFunctions = List("min", "max", "avg", "stddev", "length", "sum", "keys",
+      "concat", "append", "first", "last", "index")
+      .mkString("|")
+    val endByRegex = s"\\.($supportedFunctions)\\(.*\\)$$".r.unanchored
+    endByRegex.findFirstIn(query).isDefined // this ensures compatibility with Scala 2.12
+  }
+
   override def doVisitDefault(): Any = Nil
 
 }
@@ -1342,12 +1404,12 @@ class JsonPathQueryResultsCache(pushedValues: Boolean) {
 class JsonObjectMapperCache {
   private val table = concurrent.TrieMap[Int, DocumentContext]()
 
-  def search(file: LoadedSource): Option[DocumentContext] = {
-    table.get(file.filepath.hashCode)
+  def search(file: LoadedSource, usingPathFunctions: Boolean): Option[DocumentContext] = {
+    table.get((file.filepath + usingPathFunctions).hashCode)
   }
 
-  def save(file: LoadedSource, jsonNode: DocumentContext): Unit = {
-    val id = file.filepath.hashCode
+  def save(file: LoadedSource, usingPathFunctions: Boolean, jsonNode: DocumentContext): Unit = {
+    val id = (file.filepath + usingPathFunctions).hashCode
     table += ((id, jsonNode))
   }
 }

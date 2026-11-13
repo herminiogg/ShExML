@@ -4,7 +4,9 @@ import com.herminiogarcia.shexml.antlr.ShExMLParser._
 import com.herminiogarcia.shexml.antlr.ShExMLParserBaseVisitor
 import com.herminiogarcia.shexml.ast._
 import com.herminiogarcia.shexml.ast.URL
+import com.herminiogarcia.shexml.helper.ParserError
 import org.antlr.v4.runtime.ParserRuleContext
+
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -46,7 +48,9 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
       if(ctx.URL != null) URL(ctx.URL().getText, createParserInfo(ctx))
       else RelativePath(ctx.QUERY_PART().getText, createParserInfo(ctx))
     val name = createVar(ctx.variable())
-    Functions(name, url, createParserInfo(ctx))
+    if(ctx.SCALA() != null) ScalaFunctions(name, url, createParserInfo(ctx))
+    else if(ctx.JAVA() != null) JavaFunctions(name, url, createParserInfo(ctx))
+    else throw ParserError("Functions should be declared as either Scala or Java", createParserInfo(ctx))
   }
 
   override def visitQuery(ctx: QueryContext): AST = {
@@ -134,10 +138,17 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
   }
 
   override def visitStringOperation(ctx: StringOperationContext): AST = {
-    val left = visit(ctx.iteratorQuery(0)).asInstanceOf[IteratorQuery]
-    val right = visit(ctx.iteratorQuery(1)).asInstanceOf[IteratorQuery]
-    val stringOperator = ctx.STRINGOPERATOR().getText.replace("\"", "")
-    StringOperation(left, right, stringOperator, createParserInfo(ctx))
+    val left =
+      if(ctx.iteratorQuery() != null) visit(ctx.iteratorQuery()).asInstanceOf[StringValueProducer]
+      else StringValue(ctx.STRINGOPERATOR().getText.replace("\"", ""), createParserInfo(ctx))
+    val right = visit(ctx.composedStringOperation()).asInstanceOf[StringOperationOrStringValueProducer]
+    StringOperation(left, right, createParserInfo(ctx))
+  }
+
+  override def visitComposedStringOperation(ctx: ComposedStringOperationContext): AST = {
+    if(ctx.iteratorQuery() != null) visit(ctx.iteratorQuery())
+    else if(ctx.stringOperation() != null) visit(ctx.stringOperation())
+    else StringValue(ctx.STRINGOPERATOR().getText.replace("\"", ""), createParserInfo(ctx))
   }
 
   override def visitSubstitution(ctx: SubstitutionContext): AST = {
@@ -281,7 +292,7 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     val condition = if(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(1) != null)
         Some(visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(1)).asInstanceOf[ExpOrVar])
       else None
-    val dataType = if(ctx.xmlschemadatatype() != null) Some(visit(ctx.xmlschemadatatype()).asInstanceOf[DataType]) else None
+    val dataType = if(ctx.datatype() != null) Some(visit(ctx.datatype()).asInstanceOf[DataType]) else None
     val langTag = if(ctx.langtag() != null) Some(visit(ctx.langtag()).asInstanceOf[LangTag]) else None
     val rdfCollection = {
       if(ctx.firstPartObjectElement() == null || ctx.firstPartObjectElement().valueRetriever() == null
@@ -301,9 +312,15 @@ class ASTCreatorVisitor extends ShExMLParserBaseVisitor[AST] {
     else visit(ctx.functionCalling())
   }
 
-  override def visitXmlschemadatatype(ctx: XmlschemadatatypeContext): AST = {
+  override def visitDatatype(ctx: DatatypeContext): AST = {
     if(ctx.firstPartObjectElement() == null) {
-      DataTypeLiteral(ctx.XMLSCHEMADATATYPE().getText, createParserInfo(ctx))
+      if(ctx.XMLSCHEMADATATYPE() != null) {
+        val xmlSchemaDataTypeSplit = ctx.XMLSCHEMADATATYPE().getText.split(':')
+        DataTypeLiteral(Var(s"${xmlSchemaDataTypeSplit(0)}:"), xmlSchemaDataTypeSplit(1), createParserInfo(ctx))
+      } else {
+        val literalSubject = visit(ctx.literalSubject()).asInstanceOf[LiteralSubject]
+        DataTypeLiteral(literalSubject.prefix, literalSubject.value, literalSubject.parserInfo)
+      }
     } else {
       val prefix = if(ctx.firstPartObjectElement().prefixVar() != null) Some(createVar(ctx.firstPartObjectElement().prefixVar().variable())) else None
       val expOrVar = visit(ctx.firstPartObjectElement().valueRetriever().expOrVarOrFunctionCallign(0)).asInstanceOf[ExpOrVar]

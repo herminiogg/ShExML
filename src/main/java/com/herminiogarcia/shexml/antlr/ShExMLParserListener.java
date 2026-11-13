@@ -170,6 +170,16 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitStringOperation(ShExMLParser.StringOperationContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ShExMLParser#composedStringOperation}.
+	 * @param ctx the parse tree
+	 */
+	void enterComposedStringOperation(ShExMLParser.ComposedStringOperationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ShExMLParser#composedStringOperation}.
+	 * @param ctx the parse tree
+	 */
+	void exitComposedStringOperation(ShExMLParser.ComposedStringOperationContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#iteratorQuery}.
 	 * @param ctx the parse tree
 	 */
@@ -390,15 +400,15 @@ public interface ShExMLParserListener extends ParseTreeListener {
 	 */
 	void exitRdfCollection(ShExMLParser.RdfCollectionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ShExMLParser#xmlschemadatatype}.
+	 * Enter a parse tree produced by {@link ShExMLParser#datatype}.
 	 * @param ctx the parse tree
 	 */
-	void enterXmlschemadatatype(ShExMLParser.XmlschemadatatypeContext ctx);
+	void enterDatatype(ShExMLParser.DatatypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ShExMLParser#xmlschemadatatype}.
+	 * Exit a parse tree produced by {@link ShExMLParser#datatype}.
 	 * @param ctx the parse tree
 	 */
-	void exitXmlschemadatatype(ShExMLParser.XmlschemadatatypeContext ctx);
+	void exitDatatype(ShExMLParser.DatatypeContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ShExMLParser#langtag}.
 	 * @param ctx the parse tree

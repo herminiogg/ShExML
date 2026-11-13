@@ -109,6 +109,12 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStringOperation(ShExMLParser.StringOperationContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ShExMLParser#composedStringOperation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComposedStringOperation(ShExMLParser.ComposedStringOperationContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#iteratorQuery}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -241,11 +247,11 @@ public interface ShExMLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitRdfCollection(ShExMLParser.RdfCollectionContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ShExMLParser#xmlschemadatatype}.
+	 * Visit a parse tree produced by {@link ShExMLParser#datatype}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitXmlschemadatatype(ShExMLParser.XmlschemadatatypeContext ctx);
+	T visitDatatype(ShExMLParser.DatatypeContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ShExMLParser#langtag}.
 	 * @param ctx the parse tree

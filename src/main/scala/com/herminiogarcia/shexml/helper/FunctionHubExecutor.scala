@@ -4,17 +4,20 @@ import com.github.vickumar1981.stringdistance.StringConverter._
 import com.herminiogarcia.shexml.ast.ParserInfo
 import com.typesafe.scalalogging.Logger
 
+import java.io.{ByteArrayOutputStream, File}
+import java.net.{URL, URLClassLoader}
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.util.regex.Pattern
+import javax.tools.ToolProvider
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
 
-class FunctionHubExecutor(val functionsCode: LoadedSource, val parserInfo: ParserInfo) {
+sealed trait FunctionHubExecutor {
 
-  private val toolBox = ToolBoxSingleton.toolBox
-  private val tree = toolBox.parse(functionsCode.fileContent)
-  private val symbol = toolBox.define(tree.asInstanceOf[toolBox.u.ImplDef])
-  private val theClass = toolBox.synchronized {
-    toolBox.eval(toolBox.parse(functionsCode.fileContent + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
-  }
+  val functionsCode: LoadedSource
+  val parserInfo: ParserInfo
+  protected def theClass: Class[_]
   private val logger = Logger[FunctionHubExecutor]
 
   def callFunction(name: String, args: String*): List[String] = {
@@ -43,6 +46,7 @@ class FunctionHubExecutor(val functionsCode: LoadedSource, val parserInfo: Parse
     result match {
       case a: Array[_] => a.toList.map(_.toString)
       case l: List[_] => l.map(_.toString)
+      case c: java.util.Collection[_] => c.toArray.toList.map(_.toString)
       case default => List(default.toString)
     }
   }
@@ -62,7 +66,47 @@ class FunctionHubExecutor(val functionsCode: LoadedSource, val parserInfo: Parse
 
 }
 
+case class ScalaFunctionHubExecutor(functionsCode: LoadedSource, parserInfo: ParserInfo) extends FunctionHubExecutor {
+
+  private val toolBox = ToolBoxSingleton.toolBox
+  private val tree = toolBox.parse(functionsCode.fileContent)
+  private val symbol = toolBox.define(tree.asInstanceOf[toolBox.u.ImplDef])
+
+  protected val theClass: Class[_] = toolBox.synchronized {
+    toolBox.eval(toolBox.parse(functionsCode.fileContent + s"\nscala.reflect.classTag[${symbol.name}].runtimeClass")).asInstanceOf[Class[_]]
+  }
+}
+
 object ToolBoxSingleton {
   private lazy val cm = universe.runtimeMirror(getClass.getClassLoader)
   lazy val toolBox: ToolBox[universe.type] = cm.mkToolBox()
+}
+
+case class JavaFunctionHubExecutor(functionsCode: LoadedSource, parserInfo: ParserInfo) extends FunctionHubExecutor {
+
+  protected val theClass: Class[_] = {
+    val matches = Pattern.compile("(public)\\s*(class)\\s*([a-zA-Z0-9]+)([\\s\\w])*[{]").matcher(functionsCode.fileContent)
+    val className =
+      if(matches.find()) matches.group(3)
+      else throw FunctionExecutionError(s"Impossible to find main class in ${functionsCode.filepath}", parserInfo)
+
+    val tempDir = Files.createTempDirectory("java").toFile
+    val sourceFile = new File(tempDir, s"$className.java")
+    sourceFile.getParentFile.mkdirs()
+    Files.write(sourceFile.toPath, functionsCode.fileContent.getBytes(StandardCharsets.UTF_8))
+    tempDir.deleteOnExit()
+
+    val compiler = ToolProvider.getSystemJavaCompiler
+    val classpath = System.getProperty("java.class.path")
+    val errors = new ByteArrayOutputStream()
+    val result = compiler.run(null, null, errors, "-classpath", classpath, sourceFile.getPath)
+    Option(tempDir.listFiles()).map(_.toList).getOrElse(List.empty).foreach(_.deleteOnExit())
+    if(result != 0)
+      throw FunctionExecutionError(s"The Java source code ${functionsCode.filepath} could not be compiled:\n" +
+        new String(errors.toByteArray, StandardCharsets.UTF_8), parserInfo)
+
+    val classLoader = URLClassLoader.newInstance(Array[URL](tempDir.toURI.toURL))
+    Class.forName(className, true, classLoader)
+  }
+
 }

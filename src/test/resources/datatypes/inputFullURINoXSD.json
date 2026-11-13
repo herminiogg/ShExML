@@ -1,0 +1,18 @@
+{
+  "persons": [
+    {
+      "firstname": "John",
+      "lastname": "Doe",
+      "lang": "en",
+      "num": 3,
+      "dt": "http://schema.org/Number"
+    },
+    {
+      "firstname": "Jane",
+      "lastname": "Smith",
+      "lang": "fr",
+      "num": "3.14",
+      "dt": "http://schema.org/Number"
+    }
+  ]
+}

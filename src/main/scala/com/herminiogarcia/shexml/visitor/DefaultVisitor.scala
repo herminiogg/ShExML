@@ -46,7 +46,7 @@ abstract class DefaultVisitor[A, B] {
       doVisit(rightJoinClause, optionalArgument)
     }
 
-    case StringOperation(left, right, _, _) => {
+    case StringOperation(left, right, _) => {
       doVisit(left, optionalArgument)
       doVisit(right, optionalArgument)
     }

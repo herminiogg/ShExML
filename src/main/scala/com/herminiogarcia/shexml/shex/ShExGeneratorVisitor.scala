@@ -75,7 +75,7 @@ class ShExGeneratorVisitor(inferences: List[ShExMLInferredCardinalitiesAndDataty
         if(literalValue.isDefined && langTag.isDefined) "rdf:langString"
         else { dataType match {
           case Some(value) => value match {
-            case dt: DataTypeLiteral => dt.value
+            case dt: DataTypeLiteral => dt.prefix.name + dt.value
             case _ => "" //change for generated datatype
           }
           case None => getInferredDatatype(shapeName, predicateIRI).getOrElse("xsd:string")

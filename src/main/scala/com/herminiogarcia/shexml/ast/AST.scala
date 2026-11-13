@@ -21,7 +21,13 @@ sealed trait DeclarationStatement extends AST
 case class Prefix(name: Var, url: URL, parserInfo: ParserInfo) extends DeclarationStatement
 case class Source(name: Var, path: FilePathOrStdin, parserInfo: ParserInfo) extends DeclarationStatement
 case class Query(name: Var, query: QueryOrURL, parserInfo: ParserInfo) extends DeclarationStatement
-case class Functions(name: Var, query: FilePath, parserInfo: ParserInfo) extends DeclarationStatement
+sealed trait Functions extends DeclarationStatement with VarResult {
+  val name: Var
+  val query: FilePath
+  val parserInfo: ParserInfo
+}
+case class ScalaFunctions(name: Var, query: FilePath, parserInfo: ParserInfo) extends Functions
+case class JavaFunctions(name: Var, query: FilePath, parserInfo: ParserInfo) extends Functions
 case class Iterator(name: Var, queryClause: QueryOrVar, fields: List[Field], iterators: List[NestedIterator], parserInfo: ParserInfo) extends Iterators with DeclarationStatement with VarResult
 case class NestedIterator(name: Var, queryClause: QueryClause, fields: List[Field], iterators: List[NestedIterator], parserInfo: ParserInfo) extends Iterators with DeclarationStatement with VarResult
 case class Field(name: Var, queryClause: QueryClause, pushed: Boolean, popped: Boolean, parserInfo: ParserInfo) extends AST
@@ -54,12 +60,15 @@ sealed trait LeftUnion extends Exp
 sealed trait RightUnion extends Exp
 
 case class Union(left: LeftUnion, right: RightUnion, parserInfo: ParserInfo) extends RightUnion
-case class StringOperation(left: IteratorQuery, right: IteratorQuery, unionString: String, parserInfo: ParserInfo) extends LeftUnion with RightUnion
+case class StringOperation(left: StringValueProducer, right: StringOperationOrStringValueProducer, parserInfo: ParserInfo) extends LeftUnion with RightUnion with StringOperationOrStringValueProducer
 case class Substitution(leftUnion: IteratorQuery, rightUnion: IteratorQuery, joinClause: IteratorQuery, parserInfo: ParserInfo) extends Exp
 case class Join(leftUnion: IteratorQuery, rightUnion: IteratorQuery, leftJoinClause: IteratorQuery, rightJoinClause: IteratorQuery, parserInfo: ParserInfo) extends Exp
-case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery, builtinFunction: Option[BuiltinFunction] = None, parserInfo: ParserInfo) extends LeftUnion with RightUnion with VarOrIteratorQuery
+case class IteratorQuery(firstVar: Var, composedVar: VarOrIteratorQuery, builtinFunction: Option[BuiltinFunction] = None, parserInfo: ParserInfo) extends LeftUnion with RightUnion with VarOrIteratorQuery with StringValueProducer
 
 sealed trait VarOrIteratorQuery extends AST
+sealed trait StringOperationOrStringValueProducer extends AST
+sealed trait StringValueProducer extends StringOperationOrStringValueProducer
+case class StringValue(value: String, parserInfo: ParserInfo) extends StringValueProducer
 sealed trait ExpOrVar extends AST
 sealed trait QueryOrURL extends VarResult
 sealed trait QueryOrVar extends VarResult
@@ -104,7 +113,7 @@ case class ShapeLink(shape: ShapeVar, parserInfo: ParserInfo) extends ObjectOrSh
 
 sealed trait DataType extends AST
 case class DataTypeGeneration(prefix: Option[Var], action: ExpOrVar, matcher: Option[Var], parserInfo: ParserInfo) extends DataType
-case class DataTypeLiteral(value: String, parserInfo: ParserInfo) extends DataType
+case class DataTypeLiteral(prefix: Var, value: String, parserInfo: ParserInfo) extends DataType
 
 sealed trait LangTag extends AST
 case class LangTagGeneration(action: ExpOrVar, matcher: Option[Var], parserInfo: ParserInfo) extends LangTag

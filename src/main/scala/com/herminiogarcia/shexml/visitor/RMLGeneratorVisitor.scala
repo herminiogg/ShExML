@@ -176,15 +176,7 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
               ) ::: termType
               RMLMap(logicalSource, objectMap, Nil, Nil)
             } else {
-              val datatypePrefix = arguments.get("dataType").map({
-                case dt: DataTypeLiteral => prefixTable(dt.value.split(":")(0) + ":")
-                case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
-              })
-              val datatype = arguments.get("dataType").map({
-                case dt: DataTypeLiteral => dt.value.split(":")(1)
-                case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
-              })
-              val datatypeURI = datatypePrefix.map(_ + datatype.get)
+              val datatypeURI = getDataTypeURI(arguments.get("dataType"))
               val langTagStatement = arguments.get("langTag").map({
                 case lt: LangTagLiteral => List(createStatementWithLiteral(objectMapID, rrPrefix + "language", lt.value))
                 case ltg: LangTagGeneration => {
@@ -252,26 +244,43 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
       leftMap.union(rightMap)
     }
 
-    case StringOperation(left, right, unionString, _) => {
-      val leftMap = doVisit(left, optionalArgument).asInstanceOf[RMLMap]
-      val rightMap = doVisit(right, optionalArgument).asInstanceOf[RMLMap]
-      val leftTemplate = leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
-      val rightTemplate = rightMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
-      val leftDiff = leftTemplate.split('{')(1).dropRight(1)
-      val rightDiff = rightTemplate.split('{')(1).dropRight(1)
-      val intersection = leftTemplate.intersect(rightTemplate).split('{')(0)
-      val newTemplate =
-        intersection + "{" + leftDiff + "}" + unionString + "{" + rightDiff + "}"
-      val newStatement = createStatementWithLiteral(
-        getURIOrBNode(leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getSubject),
-        leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getPredicate.getURI,
-        newTemplate)
-      val index = leftMap.objectMap.indexOf(leftMap.objectMap.filter(s => s.getPredicate.getLocalName == "template").head)
-      val objectMap = leftMap.objectMap.updated(index, newStatement)
-      List(
-        RMLMap(leftMap.logicalSource, objectMap, leftMap.predicateObjectMap, leftMap.predicateMap),
-        RMLMap(rightMap.logicalSource, objectMap, rightMap.predicateObjectMap, rightMap.predicateMap)
-      )
+    case StringOperation(left, right, _) => {
+      val leftMap = doVisit(left, optionalArgument) match {
+        case lr: List[RMLMap] => lr
+        case r: RMLMap => List(r)
+      }
+      val rightMap = doVisit(right, optionalArgument) match {
+        case lr: List[RMLMap] => lr
+        case r: RMLMap => List(r)
+      }
+      leftMap.flatMap(l => {
+        rightMap.flatMap(r => {
+          val leftTemplate = l.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
+          val rightTemplate = r.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getObject.asLiteral().getString
+          val leftDiff = if(leftTemplate.startsWith("http")) "{" + leftTemplate.split("\\{", 2)(1) else leftTemplate
+          val intersection =
+            if(leftTemplate.startsWith("http") && rightTemplate.startsWith("http")) leftTemplate.intersect(rightTemplate).split('{')(0)
+            else if(leftTemplate.startsWith("http") && !rightTemplate.startsWith("http")) leftTemplate.split('{')(0)
+            else if(rightTemplate.startsWith("http") && !leftTemplate.startsWith("http")) rightTemplate.split('{')(0)
+            else ""
+          val rightDiff = if(rightTemplate.startsWith("http")) rightTemplate.replace(intersection, "") else rightTemplate
+          val newTemplate = intersection + leftDiff + rightDiff
+          val termType = l.objectMap.find(s => s.getPredicate.getLocalName == "termType")
+            .orElse(r.objectMap.find(s => s.getPredicate.getLocalName == "termType"))
+          List(l, r).map(triplesToUpdate => {
+            val newStatement = createStatementWithLiteral(
+              getURIOrBNode(triplesToUpdate.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getSubject),
+              triplesToUpdate.objectMap.filter(s => s.getPredicate.getLocalName == "template").head.getPredicate.getURI,
+              newTemplate)
+            val index = triplesToUpdate.objectMap.indexOf(triplesToUpdate.objectMap.filter(s => s.getPredicate.getLocalName == "template").head)
+            val objectMap = triplesToUpdate.objectMap.updated(index, newStatement)
+            val objectMapWithTermType = termType
+              .map(s => createStatement(newStatement.getSubject.getURI, s.getPredicate.getURI, s.getObject.asResource().getURI))
+              .map(objectMap :+ _).getOrElse(objectMap)
+            RMLMap(triplesToUpdate.logicalSource, objectMapWithTermType, triplesToUpdate.predicateObjectMap, triplesToUpdate.predicateMap)
+          })
+        })
+      })
     }
 
     case Substitution(left, right, join, _) => {
@@ -387,9 +396,8 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
 
     case LiteralObjectValue(value, _) => {
       val arguments = optionalArgument.asInstanceOf[Map[String, Any]]
-      val datatypePrefix = arguments.get("dataType").map(d => prefixTable(d.toString.split(":")(0) + ":"))
-      val datatype = arguments.get("dataType").map(d => d.toString.split(":")(1))
-      val datatypeURI = datatypePrefix.map(_ + datatype.get)
+      val datatype = arguments.get("dataType")
+      val datatypeURI = getDataTypeURI(datatype)
       val langTag = arguments.get("langTag").map(_.asInstanceOf[String])
       val objectMapID = mapPrefixOrBNode + "o_" + objectIndex.next
       val datatypeStatement =
@@ -416,6 +424,15 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         )
         RMLMap(sr._2.logicalSource, objectMap, Nil, Nil)
       })
+    }
+
+    case s: StringValue => {
+      val objectId = mapPrefixOrBNode + "o_" + objectIndex.next
+      val objectMap = List(
+        createStatement(objectId, rdfPrefix + "type", rrPrefix + "ObjectMap"),
+        createStatementWithLiteral(objectId, rrPrefix + "template", s.value)
+      )
+      RMLMap(Nil, objectMap, Nil, Nil)
     }
 
     case v: Var => doVisit(varTable(v), optionalArgument)
@@ -475,6 +492,22 @@ class RMLGeneratorVisitor(dataset: Dataset, varTable: Map[Variable, VarResult], 
         case None => None
       }
     }
+  }
+
+  private def getDataTypePrefix(dataType: DataType): String = dataType match {
+    case dt: DataTypeLiteral => prefixTable(dt.prefix.name)
+    case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
+  }
+
+  private def getDataTypeValue(dataType: DataType): String = dataType match {
+    case dt: DataTypeLiteral => dt.value
+    case dtg: DataTypeGeneration => throw RMLGenerationError("DataType generation from data not supported in RML", dtg.parserInfo)
+  }
+
+  private def getDataTypeURI(dataType: Option[Any]): Option[String] = dataType.map {
+    case dt: DataType =>
+      getDataTypePrefix(dt) + getDataTypeValue(dt)
+    case _ => throw RMLGenerationError("Not a dataType", UnknownParserInfo)
   }
 
   private def getQueryFromVarTable(variable: Var): QueryClause = {
