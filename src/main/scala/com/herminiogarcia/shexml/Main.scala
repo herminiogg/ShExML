@@ -15,6 +15,9 @@ import java.nio.file.Path
 object Main {
 
   def main(args: Array[String]): Unit = {
+    // Not named logback.xml so library users don't pick it up
+    if(System.getProperty("logback.configurationFile") == null)
+      System.setProperty("logback.configurationFile", "shexml-logback.xml")
     val commandLine = new CommandLine(new Main())
       .setPosixClusteredShortOptionsAllowed(false)
       .setHelpFactory(PicocliLeftAlignedLayout.createCustomizedUsageHelp())

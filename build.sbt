@@ -16,7 +16,6 @@ lazy val shexml = project
       "org.apache.jena" % "jena-shacl" % "3.17.0",
       ("org.scalatest" %% "scalatest" % "3.2.9" % "test"),
       "info.picocli" % "picocli" % "4.7.7",
-      "org.slf4j" % "slf4j-nop" % "1.7.27",
       ("com.github.tototoshi" %% "scala-csv" % "1.3.6").cross(CrossVersion.for3Use2_13),
       "org.xerial" % "sqlite-jdbc" % "3.53.2.1",
       "mysql" % "mysql-connector-java" % "8.0.21",
@@ -25,7 +24,10 @@ lazy val shexml = project
       "com.microsoft.sqlserver" % "mssql-jdbc" % "8.4.1.jre8",
       ("com.github.vickumar1981" %% "stringdistance" % "1.2.6").cross(CrossVersion.for3Use2_13),
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-      "ch.qos.logback" % "logback-classic" % "1.3.5",
+      "org.slf4j" % "slf4j-api" % "2.0.4",
+      "ch.qos.logback" % "logback-classic" % "1.3.5" % Provided,
+      // must precede rmlmapper (bundles old slf4j/logback) on the classpath
+      "ch.qos.logback" % "logback-core" % "1.3.5" % Provided,
       "be.ugent.rml" % "rmlmapper" % "4.9.0" % "test",
       "es.weso" %% "shex" % "0.1.97" % "test",
       "es.weso" %% "srdf4j" % "0.1.104" % "test",
@@ -42,6 +44,9 @@ lazy val shexml = project
       case Some((m, n)) if m >= 3 || m >= 2 && n >= 13 => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
       case _ => Nil
       }),
+      // include Provided logback in the CLI
+      Compile / run := Defaults.runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner).evaluated,
+      assembly / fullClasspath := (Compile / fullClasspath).value,
       assembly / assemblyMergeStrategy := {
         case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
         case PathList("META-INF", xs @ _*) => MergeStrategy.discard
