@@ -229,13 +229,19 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
   def resolveImports(mappingRules: String): String = {
     val sourceHelper = new SourceHelper()
     val regex = "[Ii][Mm][Pp][Oo][Rr][Tt]\\s*<(.+)>".r
-    regex.replaceAllIn(mappingRules, matchedPart => {
-      val importSource = matchedPart.group(1)
-      val loadedSource =
-        if(importSource.contains("://")) sourceHelper.getURLContent(importSource)
-        else sourceHelper.getContentFromRelativePath(importSource, basePath)
-      java.util.regex.Matcher.quoteReplacement(loadedSource.fileContent)
-    })
+    regex.findFirstIn(mappingRules) match {
+      case Some(_) =>
+        val expandedMappingRules = regex.replaceAllIn(mappingRules, matchedPart => {
+          val importSource = matchedPart.group(1)
+          val loadedSource =
+            if(importSource.contains("://")) sourceHelper.getURLContent(importSource)
+            else sourceHelper.getContentFromRelativePath(importSource, basePath)
+          java.util.regex.Matcher.quoteReplacement(loadedSource.fileContent)
+        })
+        resolveImports(expandedMappingRules)
+      case None => mappingRules
+    }
+
   }
 
 }

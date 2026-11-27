@@ -1,0 +1,5 @@
+:Actor :[films.actors.name] {
+    :name [films.actors.name] ;
+    :appear_on :[films.actors.film] ;
+}
+IMPORT <src/test/resources/importTestShapesLevel3WithError.shexml>
