@@ -1,0 +1,10 @@
+:Films :[films.id] {
+    :type :Film ;
+    :name [films.name] ;
+    :year [films.year] xs:gYear ;
+    :country [films.country] ;
+    :director [films.directors] ;
+    :actor @:Actor ;
+    :actor @:Actress ;
+}
+IMPORT <src/test/resources/importTestShapesLevel2WithError.shexml>
