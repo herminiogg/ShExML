@@ -226,7 +226,7 @@ class MappingLauncher(val username: String = "", val password: String = "", driv
 
   private def searchForPushedOrPoppedFields(ast: AST): Boolean = new PushedOrPoppedValueSearchVisitor().doVisit(ast, null)
 
-  private def resolveImports(mappingRules: String): String = {
+  def resolveImports(mappingRules: String): String = {
     val sourceHelper = new SourceHelper()
     val regex = "[Ii][Mm][Pp][Oo][Rr][Tt]\\s*<(.+)>".r
     regex.replaceAllIn(mappingRules, matchedPart => {

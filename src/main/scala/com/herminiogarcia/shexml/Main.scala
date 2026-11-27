@@ -48,16 +48,16 @@ class Main extends Callable[Int] {
       if(generalTransformationOptions.parallel) ParallelExecutionConfigurator(generalTransformationOptions.parallelAspects, generalTransformationOptions.numberOfThreads)
       else ParallelExecutionConfigurator.empty
     val fileContent = fileHandler.mkString
+    val mappingLauncher = new MappingLauncher(
+      generalTransformationOptions.username,
+      generalTransformationOptions.password,
+      generalTransformationOptions.drivers,
+      transformationModifiers.inferenceDatatype,
+      transformationModifiers.normaliseURIs,
+      parallelExecutionConfiguration,
+      Path.of(generalTransformationOptions.workingDir)
+    )
     try {
-      val mappingLauncher = new MappingLauncher(
-        generalTransformationOptions.username,
-        generalTransformationOptions.password,
-        generalTransformationOptions.drivers,
-        transformationModifiers.inferenceDatatype,
-        transformationModifiers.normaliseURIs,
-        parallelExecutionConfiguration,
-        Path.of(generalTransformationOptions.workingDir)
-      )
       val outputContent = if(otherTransformations.rmlOutput) {
         mappingLauncher.launchRMLTranslation(fileContent)
       } else if(otherTransformations.rmlPrettifyOutput) {
@@ -88,7 +88,7 @@ class Main extends Callable[Int] {
         e.printStackTrace(pw)
         val stackTrace = sw.toString
         pw.close(); sw.close()
-        logger.error(s"${e.getEnrichedErrorMessage(fileContent)}\n$stackTrace")
+        logger.error(s"${e.getEnrichedErrorMessage(mappingLauncher.resolveImports(fileContent))}\n$stackTrace")
         1 // badly finished
     } finally { fileHandler.close() }
   }
